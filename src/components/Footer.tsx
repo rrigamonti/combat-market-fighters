@@ -1,9 +1,10 @@
+import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import logo from "@/assets/combat-market-logo.svg";
 
-export function Footer() {
+export const Footer = forwardRef<HTMLElement>((props, ref) => {
   return (
-    <footer className="border-t border-border bg-card py-12">
+    <footer ref={ref} className="border-t border-border bg-card py-12">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center gap-8 md:flex-row md:justify-between">
           <div className="flex items-center gap-2">
@@ -31,4 +32,6 @@ export function Footer() {
       </div>
     </footer>
   );
-}
+});
+
+Footer.displayName = "Footer";

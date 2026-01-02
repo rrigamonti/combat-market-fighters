@@ -1,9 +1,10 @@
+import { forwardRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/combat-market-logo.svg";
 
-export function Navbar() {
+export const Navbar = forwardRef<HTMLElement>((props, ref) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -13,7 +14,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+    <nav ref={ref} className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="Combat Market" className="h-8" />
@@ -66,4 +67,6 @@ export function Navbar() {
       </div>
     </nav>
   );
-}
+});
+
+Navbar.displayName = "Navbar";
