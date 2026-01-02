@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,16 +9,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
+import { Upload, User } from "lucide-react";
 import logo from "@/assets/combat-market-logo.svg";
+
+// Reserved handles that cannot be used by fighters
+const RESERVED_HANDLES = [
+  "login", "dashboard", "admin", "fighter-signup", "terms", "privacy-policy",
+  "api", "about", "contact", "help", "support", "settings", "profile",
+  "p", "products", "fighters", "search", "explore"
+];
 
 const signupSchema = z.object({
   email: z.string().email("Invalid email address").max(255),
   password: z.string().min(8, "Password must be at least 8 characters").max(100),
   fullName: z.string().min(2, "Full name is required").max(100),
-  handle: z.string().min(3, "Handle must be at least 3 characters").max(50).regex(/^[a-z0-9-]+$/, "Handle can only contain lowercase letters, numbers, and hyphens"),
+  handle: z.string()
+    .min(3, "Handle must be at least 3 characters")
+    .max(50)
+    .regex(/^[a-z0-9-]+$/, "Handle can only contain lowercase letters, numbers, and hyphens")
+    .refine((val) => !RESERVED_HANDLES.includes(val), "This handle is reserved"),
   sport: z.string().min(1, "Please select a sport"),
   country: z.string().min(1, "Please select a country"),
-  shortBio: z.string().max(500, "Bio must be 500 characters or less").optional(),
+  appUsername: z.string().min(2, "App username is required").max(50),
+  shortBio: z.string().min(50, "Bio must be at least 50 characters").max(500, "Bio must be 500 characters or less"),
 });
 
 const sports = [
@@ -55,6 +68,10 @@ export default function FighterSignup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -62,12 +79,56 @@ export default function FighterSignup() {
     handle: "",
     sport: "",
     country: "",
+    appUsername: "",
     shortBio: "",
   });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid file type",
+        description: "Please upload a JPG, PNG, or WebP image.",
+      });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Image must be less than 5MB.",
+      });
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate image is uploaded
+    if (!imageFile) {
+      toast({
+        variant: "destructive",
+        title: "Profile Picture Required",
+        description: "Please upload a profile picture.",
+      });
+      return;
+    }
+
     const result = signupSchema.safeParse(formData);
     if (!result.success) {
       toast({
@@ -129,6 +190,29 @@ export default function FighterSignup() {
       return;
     }
 
+    // Upload profile image
+    const fileExt = imageFile.name.split('.').pop();
+    const filePath = `${authData.user.id}/avatar.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from("fighter-avatars")
+      .upload(filePath, imageFile, { upsert: true });
+
+    if (uploadError) {
+      setLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Image Upload Failed",
+        description: "Failed to upload profile picture. Please try again.",
+      });
+      return;
+    }
+
+    // Get public URL for the uploaded image
+    const { data: publicUrlData } = supabase.storage
+      .from("fighter-avatars")
+      .getPublicUrl(filePath);
+
     // Add fighter role
     const { error: roleError } = await supabase
       .from("user_roles")
@@ -153,7 +237,9 @@ export default function FighterSignup() {
         full_name: formData.fullName,
         sport: formData.sport,
         country: formData.country,
-        short_bio: formData.shortBio || null,
+        short_bio: formData.shortBio,
+        app_username: formData.appUsername,
+        profile_image_url: publicUrlData.publicUrl,
         status: "pending",
       });
 
@@ -232,7 +318,7 @@ export default function FighterSignup() {
               <div className="space-y-2">
                 <Label htmlFor="handle">Handle (URL)</Label>
                 <div className="flex items-center">
-                  <span className="text-sm text-muted-foreground mr-1">/f/</span>
+                  <span className="text-sm text-muted-foreground mr-1">/</span>
                   <Input
                     id="handle"
                     placeholder="liam-the-reaper"
@@ -275,16 +361,71 @@ export default function FighterSignup() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="shortBio">Short Bio (optional)</Label>
+              <Label htmlFor="appUsername">Combat Market App Username</Label>
+              <Input
+                id="appUsername"
+                placeholder="Your username on the Combat Market app"
+                value={formData.appUsername}
+                onChange={(e) => setFormData({ ...formData, appUsername: e.target.value })}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                We'll use this to verify your subscription
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Profile Picture</Label>
+              <div className="flex items-center gap-4">
+                <div 
+                  className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-dashed border-muted-foreground/50 bg-muted flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {imagePreview ? (
+                    <img 
+                      src={imagePreview} 
+                      alt="Profile preview" 
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-10 w-10 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Photo
+                  </Button>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    JPG, PNG, or WebP. Max 5MB.
+                  </p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="shortBio">Short Bio</Label>
               <Textarea
                 id="shortBio"
                 placeholder="Tell fans about your fighting career, achievements, and what drives you..."
                 value={formData.shortBio}
                 onChange={(e) => setFormData({ ...formData, shortBio: e.target.value })}
                 rows={4}
+                required
               />
               <p className="text-xs text-muted-foreground">
-                {formData.shortBio.length}/500 characters
+                {formData.shortBio.length}/500 characters (minimum 50)
               </p>
             </div>
 

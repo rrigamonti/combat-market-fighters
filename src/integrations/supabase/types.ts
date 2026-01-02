@@ -55,36 +55,42 @@ export type Database = {
       }
       fighters: {
         Row: {
+          app_username: string | null
           country: string
           created_at: string
           full_name: string
           handle: string
           id: string
-          short_bio: string | null
+          profile_image_url: string | null
+          short_bio: string
           sport: string
           status: Database["public"]["Enums"]["fighter_status"]
           updated_at: string
           user_id: string
         }
         Insert: {
+          app_username?: string | null
           country: string
           created_at?: string
           full_name: string
           handle: string
           id?: string
-          short_bio?: string | null
+          profile_image_url?: string | null
+          short_bio: string
           sport: string
           status?: Database["public"]["Enums"]["fighter_status"]
           updated_at?: string
           user_id: string
         }
         Update: {
+          app_username?: string | null
           country?: string
           created_at?: string
           full_name?: string
           handle?: string
           id?: string
-          short_bio?: string | null
+          profile_image_url?: string | null
+          short_bio?: string
           sport?: string
           status?: Database["public"]["Enums"]["fighter_status"]
           updated_at?: string
