@@ -101,10 +101,12 @@ export default function AdminFighters() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Handle</TableHead>
                 <TableHead>Sport</TableHead>
                 <TableHead>Country</TableHead>
+                <TableHead>App Username</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Applied</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -113,7 +115,7 @@ export default function AdminFighters() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={9} className="text-center py-8">
                     <div className="flex items-center justify-center">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     </div>
@@ -121,7 +123,7 @@ export default function AdminFighters() {
                 </TableRow>
               ) : fighters.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     No fighters found
                   </TableCell>
                 </TableRow>
@@ -131,10 +133,26 @@ export default function AdminFighters() {
                   const StatusIcon = config.icon;
                   return (
                     <TableRow key={fighter.id}>
+                      <TableCell>
+                        <div className="h-10 w-10 overflow-hidden rounded-full bg-muted">
+                          {fighter.profile_image_url ? (
+                            <img 
+                              src={fighter.profile_image_url} 
+                              alt={fighter.full_name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs font-medium text-muted-foreground">
+                              {fighter.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="font-medium">{fighter.full_name}</TableCell>
                       <TableCell className="text-muted-foreground">@{fighter.handle}</TableCell>
                       <TableCell>{fighter.sport}</TableCell>
                       <TableCell>{fighter.country}</TableCell>
+                      <TableCell className="text-muted-foreground">{fighter.app_username || "—"}</TableCell>
                       <TableCell>
                         <Badge variant={config.variant} className="gap-1">
                           <StatusIcon className="h-3 w-3" />
