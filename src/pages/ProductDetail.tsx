@@ -83,7 +83,7 @@ export default function ProductDetail() {
 
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Product Image */}
-          <div className="overflow-hidden rounded-lg border border-border bg-card">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
             {product.image_url ? (
               <img
                 src={product.image_url}
@@ -100,27 +100,33 @@ export default function ProductDetail() {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <p className="text-lg text-primary">{product.brand}</p>
-              <h1 className="mt-2 font-display text-4xl md:text-5xl">{product.name}</h1>
+              <p className="text-sm font-medium uppercase tracking-wider text-primary">
+                {product.brand}
+              </p>
+              <h1 className="mt-2 font-display text-3xl md:text-4xl">
+                {product.name}
+              </h1>
               <p className="mt-4 text-3xl font-bold">{product.price}</p>
             </div>
 
             {product.short_description && (
-              <p className="text-lg text-muted-foreground">{product.short_description}</p>
+              <p className="text-lg text-muted-foreground">
+                {product.short_description}
+              </p>
             )}
 
             {/* CTA Button */}
             <Button
               asChild
               size="lg"
-              className="w-full gap-2 text-lg glow-primary"
+              className="w-full gap-2 text-lg"
             >
               <a
                 href={product.external_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Shop Here
+                Buy Now
                 <ExternalLink className="h-5 w-5" />
               </a>
             </Button>
@@ -134,7 +140,7 @@ export default function ProductDetail() {
             {product.long_description && (
               <div className="border-t border-border pt-6">
                 <h3 className="mb-4 font-display text-xl">About This Product</h3>
-                <div className="prose prose-invert max-w-none text-muted-foreground">
+                <div className="space-y-3 text-muted-foreground">
                   {product.long_description.split("\n").map((paragraph, i) => (
                     <p key={i}>{paragraph}</p>
                   ))}
@@ -145,7 +151,10 @@ export default function ProductDetail() {
             {product.category && (
               <div className="border-t border-border pt-6">
                 <p className="text-sm text-muted-foreground">
-                  Category: <span className="text-foreground">{product.category}</span>
+                  Category:{" "}
+                  <span className="rounded-full bg-muted px-3 py-1 text-foreground">
+                    {product.category}
+                  </span>
                 </p>
               </div>
             )}
