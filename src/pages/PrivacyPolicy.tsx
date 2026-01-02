@@ -1,9 +1,11 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { PageMeta } from "@/components/PageMeta";
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title="Privacy Policy" description="Combat Market Privacy Policy. Learn how we collect, use, and protect your personal information." />
       <Navbar />
 
       <main className="container mx-auto max-w-3xl px-4 py-24">

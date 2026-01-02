@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
+import { PageMeta } from "@/components/PageMeta";
 import { Upload, User } from "lucide-react";
 import logo from "@/assets/combat-market-logo.svg";
 
@@ -264,6 +265,7 @@ export default function FighterSignup() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title="Apply as a Fighter" description="Join Combat Market and turn your fight career into royalties. Apply now to get your personalized storefront." />
       <Navbar />
       
       <div className="flex min-h-screen items-center justify-center px-4 py-24">

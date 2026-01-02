@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -154,6 +155,7 @@ export default function AdminProducts() {
 
   return (
     <AdminLayout>
+      <PageMeta title="Manage Products - Admin" description="Admin panel for managing affiliate products on Combat Market." />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
