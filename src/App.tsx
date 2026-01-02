@@ -77,6 +77,8 @@ const App = () => (
             <Route path="/:handle/:productSlug" element={<FighterProductDetail />} />
             {/* Fighter storefront - must be last dynamic route */}
             <Route path="/:handle" element={<FighterStorefront />} />
+            {/* Catch-all 404 route */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
