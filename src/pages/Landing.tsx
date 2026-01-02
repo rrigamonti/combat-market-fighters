@@ -2,11 +2,13 @@ import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Users, Award, ShoppingBag, TrendingUp, Heart, Store } from "lucide-react";
+import { DollarSign, Users, Award, ShoppingBag, TrendingUp, Heart, Store, ChevronRight } from "lucide-react";
 import { useScrollToHash } from "@/hooks/useScrollToHash";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Landing = () => {
   useScrollToHash();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,6 +182,18 @@ const Landing = () => {
       </section>
 
       <Footer />
+
+      {/* Sticky Mobile CTA - only show when not logged in */}
+      {!user && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md p-4 md:hidden">
+          <Button asChild size="lg" className="w-full glow-primary">
+            <Link to="/fighter-signup" className="flex items-center justify-center gap-2">
+              Apply as a Fighter
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
