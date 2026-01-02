@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      fighter_products: {
+        Row: {
+          created_at: string
+          fighter_id: string
+          id: string
+          order_index: number
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          fighter_id: string
+          id?: string
+          order_index?: number
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          fighter_id?: string
+          id?: string
+          order_index?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fighter_products_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fighter_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fighters: {
         Row: {
           country: string
@@ -50,6 +89,54 @@ export type Database = {
           status?: Database["public"]["Enums"]["fighter_status"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          active: boolean
+          brand: string
+          category: string | null
+          created_at: string
+          external_url: string
+          id: string
+          image_url: string | null
+          long_description: string | null
+          name: string
+          price: string
+          short_description: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          brand: string
+          category?: string | null
+          created_at?: string
+          external_url: string
+          id?: string
+          image_url?: string | null
+          long_description?: string | null
+          name: string
+          price: string
+          short_description?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          brand?: string
+          category?: string | null
+          created_at?: string
+          external_url?: string
+          id?: string
+          image_url?: string | null
+          long_description?: string | null
+          name?: string
+          price?: string
+          short_description?: string | null
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
