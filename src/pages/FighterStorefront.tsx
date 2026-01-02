@@ -189,7 +189,7 @@ export default function FighterStorefront() {
               {products.map(({ products: product }) => (
                 <Link
                   key={product.id}
-                  to={`/p/${product.slug}`}
+                  to={`/${handle}/${product.slug}`}
                   className="group block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
                 >
                   {/* Product Image */}

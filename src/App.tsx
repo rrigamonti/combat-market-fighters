@@ -12,6 +12,7 @@ import FighterSignup from "./pages/FighterSignup";
 import Dashboard from "./pages/Dashboard";
 import FighterStorefront from "./pages/FighterStorefront";
 import ProductDetail from "./pages/ProductDetail";
+import FighterProductDetail from "./pages/FighterProductDetail";
 import AdminFighters from "./pages/admin/AdminFighters";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminAssignments from "./pages/admin/AdminAssignments";
@@ -72,9 +73,10 @@ const App = () => (
             />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            {/* Fighter storefront - must be after all other routes */}
+            {/* Fighter product detail - must be before /:handle */}
+            <Route path="/:handle/:productSlug" element={<FighterProductDetail />} />
+            {/* Fighter storefront - must be last dynamic route */}
             <Route path="/:handle" element={<FighterStorefront />} />
-            {/* Catch-all 404 is handled by FighterStorefront's notFound state */}
           </Routes>
         </AuthProvider>
       </BrowserRouter>
