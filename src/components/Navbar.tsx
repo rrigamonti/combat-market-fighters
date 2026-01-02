@@ -27,6 +27,9 @@ export function Navbar() {
 
         {/* Desktop navigation */}
         <div className="hidden items-center gap-8 md:flex">
+          <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Home
+          </Link>
           <Link to="/#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Features
           </Link>
@@ -68,6 +71,13 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px]">
               <nav className="flex flex-col gap-6 mt-8">
+                <Link 
+                  to="/" 
+                  onClick={closeMobileMenu}
+                  className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                >
+                  Home
+                </Link>
                 <Link 
                   to="/#features" 
                   onClick={closeMobileMenu}
