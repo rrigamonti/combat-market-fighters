@@ -181,9 +181,25 @@ export default function Dashboard() {
 
       <main className="container mx-auto px-4 py-24">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-center justify-between">
-            <h1 className="font-display text-4xl">Fighter Dashboard</h1>
-            {getStatusBadge(fighter.status)}
+          <div className="flex items-center gap-4">
+            {/* Profile Image */}
+            <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-primary bg-muted shrink-0">
+              {fighter.profile_image_url ? (
+                <img 
+                  src={fighter.profile_image_url} 
+                  alt={fighter.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xl font-display text-primary">
+                  {fighter.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 flex items-center justify-between">
+              <h1 className="font-display text-4xl">Fighter Dashboard</h1>
+              {getStatusBadge(fighter.status)}
+            </div>
           </div>
 
           {/* Status Message */}
@@ -205,7 +221,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <Button asChild variant="outline" size="sm">
-                  <a href={`/f/${fighter.handle}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`/${fighter.handle}`} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="mr-2 h-4 w-4" />
                     View Storefront
                   </a>
@@ -303,7 +319,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Handle</p>
-                    <p className="font-medium">/f/{fighter.handle}</p>
+                    <p className="font-medium">/{fighter.handle}</p>
                   </div>
                 </div>
 
@@ -333,13 +349,13 @@ export default function Dashboard() {
             <h2 className="font-display text-2xl">Storefront URL</h2>
             <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted p-3">
               <code className="flex-1 text-sm">
-                {window.location.origin}/f/{fighter.handle}
+                {window.location.origin}/{fighter.handle}
               </code>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/f/${fighter.handle}`);
+                  navigator.clipboard.writeText(`${window.location.origin}/${fighter.handle}`);
                   toast({
                     title: "Copied!",
                     description: "Storefront URL copied to clipboard.",
