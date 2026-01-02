@@ -61,6 +61,7 @@ export type Database = {
           full_name: string
           handle: string
           id: string
+          pending_changes: Json | null
           profile_image_url: string | null
           short_bio: string
           sport: string
@@ -75,6 +76,7 @@ export type Database = {
           full_name: string
           handle: string
           id?: string
+          pending_changes?: Json | null
           profile_image_url?: string | null
           short_bio: string
           sport: string
@@ -89,6 +91,7 @@ export type Database = {
           full_name?: string
           handle?: string
           id?: string
+          pending_changes?: Json | null
           profile_image_url?: string | null
           short_bio?: string
           sport?: string
