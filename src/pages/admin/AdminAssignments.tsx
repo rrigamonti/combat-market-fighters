@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -130,6 +131,7 @@ export default function AdminAssignments() {
 
   return (
     <AdminLayout>
+      <PageMeta title="Product Assignments - Admin" description="Admin panel for assigning products to fighter storefronts on Combat Market." />
       <div className="space-y-6">
         <div>
           <h1 className="font-display text-3xl">Product Assignments</h1>

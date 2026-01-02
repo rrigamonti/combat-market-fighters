@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, Users, Award, ShoppingBag, TrendingUp, Heart, Store, ChevronRight } from "lucide-react";
 import { useScrollToHash } from "@/hooks/useScrollToHash";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageMeta } from "@/components/PageMeta";
 
 const Landing = () => {
   useScrollToHash();
@@ -12,6 +13,7 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta description="Turn your fight career into lifetime royalties. Combat Market gives fighters a personal storefront packed with curated affiliate products." />
       <Navbar />
 
       {/* Hero Section */}

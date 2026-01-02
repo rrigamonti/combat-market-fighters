@@ -1,9 +1,11 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { PageMeta } from "@/components/PageMeta";
 
 export default function Terms() {
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title="Terms of Service" description="Combat Market Terms of Service. Read our terms and conditions for using the platform." />
       <Navbar />
 
       <main className="container mx-auto max-w-3xl px-4 py-24">

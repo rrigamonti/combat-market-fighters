@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
+import { PageMeta } from "@/components/PageMeta";
 import logo from "@/assets/combat-market-logo.svg";
 
 const loginSchema = z.object({
@@ -66,6 +67,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title="Login" description="Sign in to your Combat Market fighter dashboard to manage your storefront and track earnings." />
       <Navbar />
       
       <div className="flex min-h-screen items-center justify-center px-4 pt-16">

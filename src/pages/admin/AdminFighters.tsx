@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -77,6 +78,7 @@ export default function AdminFighters() {
 
   return (
     <AdminLayout>
+      <PageMeta title="Manage Fighters - Admin" description="Admin panel for managing fighter applications and statuses on Combat Market." />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

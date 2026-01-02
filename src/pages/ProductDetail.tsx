@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -68,6 +69,10 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta 
+        title={product.name} 
+        description={product.short_description || `${product.name} by ${product.brand}. Shop on Combat Market.`} 
+      />
       <Navbar />
 
       <main className="container mx-auto px-4 pt-24 pb-16">

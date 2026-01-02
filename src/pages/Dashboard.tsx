@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { PageMeta } from "@/components/PageMeta";
 import { CheckCircle, Clock, XCircle, ExternalLink, Pencil } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -177,6 +178,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageMeta title="Fighter Dashboard" description="Manage your Combat Market fighter profile, storefront, and track your affiliate earnings." />
       <Navbar />
 
       <main className="container mx-auto px-4 py-24">
