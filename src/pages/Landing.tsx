@@ -1,13 +1,12 @@
-import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, DollarSign, Users, Award, ShoppingBag, TrendingUp, Heart, Star, Store } from "lucide-react";
+import { DollarSign, Users, Award, ShoppingBag, TrendingUp, Heart, Store } from "lucide-react";
 
-const Landing = forwardRef<HTMLDivElement>((props, ref) => {
+const Landing = () => {
   return (
-    <div ref={ref} className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       {/* Hero Section */}
@@ -180,8 +179,6 @@ const Landing = forwardRef<HTMLDivElement>((props, ref) => {
       <Footer />
     </div>
   );
-});
-
-Landing.displayName = "Landing";
+};
 
 export default Landing;
