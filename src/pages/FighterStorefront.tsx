@@ -113,13 +113,23 @@ export default function FighterStorefront() {
       <section className="border-b border-border bg-gradient-to-b from-primary/10 via-transparent to-transparent pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center text-center">
-            {/* Avatar Placeholder */}
-            <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-primary bg-card text-4xl font-display text-primary">
-              {fighter?.full_name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .slice(0, 2)}
+            {/* Fighter Avatar */}
+            <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-primary bg-card">
+              {fighter?.profile_image_url ? (
+                <img 
+                  src={fighter.profile_image_url} 
+                  alt={fighter.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-4xl font-display text-primary">
+                  {fighter?.full_name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)}
+                </div>
+              )}
             </div>
 
             <h1 className="mt-6 font-display text-4xl md:text-5xl">{fighter?.full_name}</h1>

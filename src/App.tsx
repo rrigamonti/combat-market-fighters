@@ -40,8 +40,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            {/* Public storefront and product routes */}
-            <Route path="/f/:handle" element={<FighterStorefront />} />
+            {/* Product detail route */}
             <Route path="/p/:slug" element={<ProductDetail />} />
             {/* Admin routes */}
             <Route path="/admin" element={<Navigate to="/admin/fighters" replace />} />
@@ -71,8 +70,9 @@ const App = () => (
             />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            {/* Fighter storefront - must be after all other routes */}
+            <Route path="/:handle" element={<FighterStorefront />} />
+            {/* Catch-all 404 is handled by FighterStorefront's notFound state */}
           </Routes>
         </AuthProvider>
       </BrowserRouter>
