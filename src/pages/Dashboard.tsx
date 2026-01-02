@@ -11,10 +11,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
-import { CheckCircle, Clock, XCircle, ExternalLink, Pencil } from "lucide-react";
+import { CheckCircle, Clock, XCircle, ExternalLink, Pencil, FileText } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
+
+interface PendingChanges {
+  sport?: string;
+  country?: string;
+  short_bio?: string;
+  submitted_at?: string;
+}
 
 const sports = [
   "MMA",
@@ -95,17 +102,32 @@ export default function Dashboard() {
     }
   };
 
+  const getPendingChanges = (): PendingChanges | null => {
+    if (!fighter?.pending_changes) return null;
+    return fighter.pending_changes as PendingChanges;
+  };
+
+  const hasPendingChanges = (): boolean => {
+    return getPendingChanges() !== null;
+  };
+
   const handleSave = async () => {
     if (!fighter) return;
 
     setSaving(true);
 
+    // Save to pending_changes for admin approval instead of direct update
+    const pendingChanges = {
+      sport: editData.sport,
+      country: editData.country,
+      short_bio: editData.short_bio || "",
+      submitted_at: new Date().toISOString(),
+    };
+
     const { error } = await supabase
       .from("fighters")
       .update({
-        sport: editData.sport,
-        country: editData.country,
-        short_bio: editData.short_bio || null,
+        pending_changes: pendingChanges,
       })
       .eq("id", fighter.id);
 
@@ -115,14 +137,14 @@ export default function Dashboard() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to update profile.",
+        description: "Failed to submit changes.",
       });
       return;
     }
 
     toast({
-      title: "Profile Updated",
-      description: "Your changes have been saved.",
+      title: "Changes Submitted",
+      description: "Your profile changes have been submitted for admin review.",
     });
 
     setEditing(false);
@@ -176,6 +198,8 @@ export default function Dashboard() {
     );
   }
 
+  const pendingChanges = getPendingChanges();
+
   return (
     <div className="min-h-screen bg-background">
       <PageMeta title="Fighter Dashboard" description="Manage your Combat Market fighter profile, storefront, and track your affiliate earnings." />
@@ -204,8 +228,39 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Pending Changes Banner */}
+          {pendingChanges && (
+            <div className="mt-6 rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4">
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 text-yellow-500 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-yellow-500">Changes Pending Approval</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    You have submitted profile changes that are waiting for admin review. You cannot make additional changes until these are processed.
+                  </p>
+                  <div className="mt-3 space-y-2 text-sm">
+                    {pendingChanges.sport && pendingChanges.sport !== fighter.sport && (
+                      <p><span className="text-muted-foreground">Sport:</span> {fighter.sport} → <span className="text-yellow-500">{pendingChanges.sport}</span></p>
+                    )}
+                    {pendingChanges.country && pendingChanges.country !== fighter.country && (
+                      <p><span className="text-muted-foreground">Country:</span> {fighter.country} → <span className="text-yellow-500">{pendingChanges.country}</span></p>
+                    )}
+                    {pendingChanges.short_bio !== undefined && pendingChanges.short_bio !== (fighter.short_bio || "") && (
+                      <p><span className="text-muted-foreground">Bio:</span> <span className="text-yellow-500">Updated</span></p>
+                    )}
+                  </div>
+                  {pendingChanges.submitted_at && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Submitted on {new Date(pendingChanges.submitted_at).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Status Message */}
-          {fighter.status === "pending" && (
+          {fighter.status === "pending" && !pendingChanges && (
             <div className="mt-6 rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-4">
               <p className="text-yellow-500">
                 <strong>Your application is under review.</strong> Once approved, your Combat Market storefront will go live and you'll be able to start earning.
@@ -213,7 +268,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {fighter.status === "approved" && (
+          {fighter.status === "approved" && !pendingChanges && (
             <div className="mt-6 rounded-lg border border-green-500/20 bg-green-500/5 p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -236,7 +291,7 @@ export default function Dashboard() {
           <div className="mt-8 rounded-lg border border-border bg-card p-6">
             <div className="flex items-start justify-between">
               <h2 className="font-display text-2xl">Your Profile</h2>
-              {!editing && (
+              {!editing && !hasPendingChanges() && (
                 <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
@@ -303,9 +358,15 @@ export default function Dashboard() {
                   </p>
                 </div>
 
+                <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-3">
+                  <p className="text-sm text-yellow-500">
+                    <strong>Note:</strong> Your changes will be submitted for admin approval and won't take effect immediately.
+                  </p>
+                </div>
+
                 <div className="flex gap-2">
                   <Button onClick={handleSave} disabled={saving}>
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? "Submitting..." : "Submit for Review"}
                   </Button>
                   <Button variant="ghost" onClick={() => setEditing(false)}>
                     Cancel
