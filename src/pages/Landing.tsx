@@ -3,8 +3,11 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Users, Award, ShoppingBag, TrendingUp, Heart, Store } from "lucide-react";
+import { useScrollToHash } from "@/hooks/useScrollToHash";
 
 const Landing = () => {
+  useScrollToHash();
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
