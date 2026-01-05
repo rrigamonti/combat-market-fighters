@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight } from "lucide-react";
+import { sendNotification } from "@/lib/notifications";
+import { getStorefrontUrl } from "@/lib/config";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -128,16 +130,41 @@ export default function AdminFighters() {
     fetchFighters();
   }, [filter]);
 
-  async function updateStatus(fighterId: string, newStatus: FighterStatus) {
+  async function updateStatus(fighter: Fighter, newStatus: FighterStatus) {
     const { error } = await supabase
       .from("fighters")
       .update({ status: newStatus })
-      .eq("id", fighterId);
+      .eq("id", fighter.id);
 
     if (error) {
       toast({ title: "Error updating status", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Status updated", description: `Fighter status changed to ${newStatus}` });
+      
+      // Get fighter's email from profiles table
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", fighter.user_id)
+        .maybeSingle();
+      
+      if (profile?.email) {
+        if (newStatus === "approved") {
+          sendNotification({
+            type: "application_approved",
+            fighterEmail: profile.email,
+            fighterName: fighter.full_name,
+            storefrontUrl: getStorefrontUrl(fighter.handle),
+          });
+        } else if (newStatus === "rejected") {
+          sendNotification({
+            type: "application_rejected",
+            fighterEmail: profile.email,
+            fighterName: fighter.full_name,
+          });
+        }
+      }
+      
       fetchFighters();
     }
   }
@@ -216,6 +243,23 @@ export default function AdminFighters() {
       toast({ title: "Error approving changes", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Changes approved", description: "Fighter profile has been updated." });
+      
+      // Send notification email
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", reviewingFighter.user_id)
+        .maybeSingle();
+      
+      if (profile?.email) {
+        sendNotification({
+          type: "changes_approved",
+          fighterEmail: profile.email,
+          fighterName: reviewingFighter.full_name,
+          storefrontUrl: getStorefrontUrl(reviewingFighter.handle),
+        });
+      }
+      
       setReviewDialogOpen(false);
       setReviewingFighter(null);
       fetchFighters();
@@ -239,6 +283,22 @@ export default function AdminFighters() {
       toast({ title: "Error rejecting changes", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Changes rejected", description: "Pending changes have been discarded." });
+      
+      // Send notification email
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", reviewingFighter.user_id)
+        .maybeSingle();
+      
+      if (profile?.email) {
+        sendNotification({
+          type: "changes_rejected",
+          fighterEmail: profile.email,
+          fighterName: reviewingFighter.full_name,
+        });
+      }
+      
       setReviewDialogOpen(false);
       setReviewingFighter(null);
       fetchFighters();
@@ -374,7 +434,7 @@ export default function AdminFighters() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => updateStatus(fighter.id, "approved")}
+                              onClick={() => updateStatus(fighter, "approved")}
                             >
                               Approve
                             </Button>
@@ -384,7 +444,7 @@ export default function AdminFighters() {
                               size="sm"
                               variant="outline"
                               className="text-destructive hover:text-destructive"
-                              onClick={() => updateStatus(fighter.id, "rejected")}
+                              onClick={() => updateStatus(fighter, "rejected")}
                             >
                               Reject
                             </Button>

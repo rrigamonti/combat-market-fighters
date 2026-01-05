@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { PageMeta } from "@/components/PageMeta";
 import { Upload, User } from "lucide-react";
+import { sendNotification } from "@/lib/notifications";
 import logo from "@/assets/combat-market-logo.svg";
 
 // Reserved handles that cannot be used by fighters
@@ -255,9 +256,16 @@ export default function FighterSignup() {
       return;
     }
 
+    // Send application submitted notification email
+    sendNotification({
+      type: "application_submitted",
+      fighterEmail: formData.email,
+      fighterName: formData.fullName,
+    });
+
     toast({
       title: "Application Submitted!",
-      description: "Your fighter application is now pending review.",
+      description: "Your fighter application is now pending review. Check your email for confirmation.",
     });
     
     navigate("/dashboard");
