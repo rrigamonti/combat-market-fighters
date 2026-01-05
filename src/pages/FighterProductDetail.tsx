@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -18,6 +19,7 @@ export default function FighterProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const { trackProductClick } = useAnalytics();
 
   useEffect(() => {
     async function fetchData() {
@@ -62,6 +64,12 @@ export default function FighterProductDetail() {
 
     fetchData();
   }, [handle, productSlug]);
+
+  const handleBuyClick = () => {
+    if (fighter && product) {
+      trackProductClick(fighter.id, product.id);
+    }
+  };
 
   if (loading) {
     return (
@@ -147,6 +155,7 @@ export default function FighterProductDetail() {
               asChild
               size="lg"
               className="w-full gap-2 text-lg"
+              onClick={handleBuyClick}
             >
               <a
                 href={product.external_url}
