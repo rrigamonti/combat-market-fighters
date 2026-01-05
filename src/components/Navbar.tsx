@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu } from "lucide-react";
+import { Menu, Shield } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/combat-market-logo.svg";
 
 export function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -45,6 +45,12 @@ export function Navbar() {
               <Link to="/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
                 Dashboard
               </Link>
+              {isAdmin && (
+                <Link to="/admin" className="flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80">
+                  <Shield className="h-4 w-4" />
+                  Admin
+                </Link>
+              )}
               <Button variant="ghost" onClick={handleSignOut}>
                 Logout
               </Button>
@@ -109,6 +115,16 @@ export function Navbar() {
                     >
                       Dashboard
                     </Link>
+                    {isAdmin && (
+                      <Link 
+                        to="/admin" 
+                        onClick={closeMobileMenu}
+                        className="flex items-center gap-2 text-lg font-medium text-primary transition-colors hover:text-primary/80"
+                      >
+                        <Shield className="h-5 w-5" />
+                        Admin Panel
+                      </Link>
+                    )}
                     <Button 
                       variant="ghost" 
                       onClick={() => { handleSignOut(); closeMobileMenu(); }}
