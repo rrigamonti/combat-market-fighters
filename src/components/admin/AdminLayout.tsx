@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ const navItems = [
   { to: "/admin/fighters", label: "Fighters", icon: Users },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/assignments", label: "Assignments", icon: LinkIcon },
+  { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/users", label: "Admins", icon: ShieldCheck },
 ];
 

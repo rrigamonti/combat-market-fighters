@@ -101,6 +101,45 @@ export type Database = {
         }
         Relationships: []
       }
+      product_clicks: {
+        Row: {
+          clicked_at: string
+          fighter_id: string
+          id: string
+          product_id: string
+          referrer: string | null
+        }
+        Insert: {
+          clicked_at?: string
+          fighter_id: string
+          id?: string
+          product_id: string
+          referrer?: string | null
+        }
+        Update: {
+          clicked_at?: string
+          fighter_id?: string
+          id?: string
+          product_id?: string
+          referrer?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_clicks_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_clicks_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean
@@ -169,6 +208,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      storefront_views: {
+        Row: {
+          fighter_id: string
+          id: string
+          referrer: string | null
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          fighter_id: string
+          id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          fighter_id?: string
+          id?: string
+          referrer?: string | null
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "storefront_views_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

@@ -7,6 +7,7 @@ import { PageMeta } from "@/components/PageMeta";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -24,6 +25,7 @@ export default function FighterStorefront() {
   const [products, setProducts] = useState<FighterProductWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const { trackStorefrontView } = useAnalytics();
 
   useEffect(() => {
     async function fetchStorefront() {
@@ -47,7 +49,10 @@ export default function FighterStorefront() {
 
       setFighter(fighterData);
 
+      // Track storefront view for approved fighters
       if (fighterData.status === "approved") {
+        trackStorefrontView(fighterData.id);
+
         const { data: productsData } = await supabase
           .from("fighter_products")
           .select("id, order_index, products(*)")
@@ -63,7 +68,7 @@ export default function FighterStorefront() {
     }
 
     fetchStorefront();
-  }, [handle]);
+  }, [handle, trackStorefrontView]);
 
   const handleShare = async () => {
     const url = window.location.href;
