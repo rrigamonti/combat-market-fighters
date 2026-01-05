@@ -26,8 +26,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users, Package } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -44,6 +45,12 @@ export default function AdminAssignments() {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string>("");
+
+  // Bulk assignment state
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [selectedFighters, setSelectedFighters] = useState<Set<string>>(new Set());
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -126,6 +133,133 @@ export default function AdminAssignments() {
     }
   }
 
+  // Bulk assignment functions
+  function toggleFighter(fighterId: string) {
+    setSelectedFighters((prev) => {
+      const next = new Set(prev);
+      if (next.has(fighterId)) {
+        next.delete(fighterId);
+      } else {
+        next.add(fighterId);
+      }
+      return next;
+    });
+  }
+
+  function toggleProduct(productId: string) {
+    setSelectedProducts((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else {
+        next.add(productId);
+      }
+      return next;
+    });
+  }
+
+  function selectAllFighters() {
+    if (selectedFighters.size === fighters.length) {
+      setSelectedFighters(new Set());
+    } else {
+      setSelectedFighters(new Set(fighters.map((f) => f.id)));
+    }
+  }
+
+  function selectAllProducts() {
+    if (selectedProducts.size === products.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products.map((p) => p.id)));
+    }
+  }
+
+  async function executeBulkAssignment() {
+    if (selectedFighters.size === 0 || selectedProducts.size === 0) {
+      toast({ title: "Please select at least one fighter and one product", variant: "destructive" });
+      return;
+    }
+
+    setBulkLoading(true);
+
+    try {
+      // Get existing assignments for selected fighters
+      const { data: existingAssignments, error: fetchError } = await supabase
+        .from("fighter_products")
+        .select("fighter_id, product_id")
+        .in("fighter_id", Array.from(selectedFighters));
+
+      if (fetchError) throw fetchError;
+
+      // Create a set of existing assignments for quick lookup
+      const existingSet = new Set(
+        (existingAssignments || []).map((a) => `${a.fighter_id}-${a.product_id}`)
+      );
+
+      // Get current max order_index for each fighter
+      const { data: maxOrders, error: maxError } = await supabase
+        .from("fighter_products")
+        .select("fighter_id, order_index")
+        .in("fighter_id", Array.from(selectedFighters));
+
+      if (maxError) throw maxError;
+
+      const fighterMaxOrder: Record<string, number> = {};
+      (maxOrders || []).forEach((row) => {
+        if (!fighterMaxOrder[row.fighter_id] || row.order_index > fighterMaxOrder[row.fighter_id]) {
+          fighterMaxOrder[row.fighter_id] = row.order_index;
+        }
+      });
+
+      // Build insert records for new assignments only
+      const inserts: { fighter_id: string; product_id: string; order_index: number }[] = [];
+
+      selectedFighters.forEach((fighterId) => {
+        let currentOrder = fighterMaxOrder[fighterId] ?? -1;
+        selectedProducts.forEach((productId) => {
+          const key = `${fighterId}-${productId}`;
+          if (!existingSet.has(key)) {
+            currentOrder++;
+            inserts.push({
+              fighter_id: fighterId,
+              product_id: productId,
+              order_index: currentOrder,
+            });
+          }
+        });
+      });
+
+      if (inserts.length === 0) {
+        toast({ title: "All selected products are already assigned to selected fighters" });
+        setBulkLoading(false);
+        return;
+      }
+
+      const { error: insertError } = await supabase.from("fighter_products").insert(inserts);
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Bulk assignment complete",
+        description: `${inserts.length} product assignments created`,
+      });
+
+      // Reset selections and close dialog
+      setSelectedFighters(new Set());
+      setSelectedProducts(new Set());
+      setBulkDialogOpen(false);
+
+      // Refresh current fighter's assignments if viewing one
+      if (selectedFighter) {
+        fetchAssignments(selectedFighter);
+      }
+    } catch (error: any) {
+      toast({ title: "Error during bulk assignment", description: error.message, variant: "destructive" });
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
   const assignedProductIds = new Set(assignments.map((a) => a.product_id));
   const availableProducts = products.filter((p) => !assignedProductIds.has(p.id));
 
@@ -133,9 +267,125 @@ export default function AdminAssignments() {
     <AdminLayout>
       <PageMeta title="Product Assignments - Admin" description="Admin panel for assigning products to fighter storefronts on Combat Market." />
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-3xl">Product Assignments</h1>
-          <p className="text-muted-foreground">Assign products to fighter storefronts</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="font-display text-3xl">Product Assignments</h1>
+            <p className="text-muted-foreground">Assign products to fighter storefronts</p>
+          </div>
+
+          <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Bulk Assign
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+              <DialogHeader>
+                <DialogTitle>Bulk Product Assignment</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto">
+                <div className="grid gap-6 md:grid-cols-2 py-4">
+                  {/* Fighters Selection */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Fighters ({selectedFighters.size} selected)
+                      </h3>
+                      <Button variant="ghost" size="sm" onClick={selectAllFighters}>
+                        {selectedFighters.size === fighters.length ? "Deselect All" : "Select All"}
+                      </Button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-2 rounded-md border border-border p-3">
+                      {fighters.map((fighter) => (
+                        <label
+                          key={fighter.id}
+                          className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded-md"
+                        >
+                          <Checkbox
+                            checked={selectedFighters.has(fighter.id)}
+                            onCheckedChange={() => toggleFighter(fighter.id)}
+                          />
+                          <div className="flex items-center gap-2">
+                            {fighter.profile_image_url && (
+                              <img
+                                src={fighter.profile_image_url}
+                                alt={fighter.full_name}
+                                className="h-8 w-8 rounded-full object-cover"
+                              />
+                            )}
+                            <div>
+                              <div className="font-medium text-sm">{fighter.full_name}</div>
+                              <div className="text-xs text-muted-foreground">@{fighter.handle}</div>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                      {fighters.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No approved fighters</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Products Selection */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Products ({selectedProducts.size} selected)
+                      </h3>
+                      <Button variant="ghost" size="sm" onClick={selectAllProducts}>
+                        {selectedProducts.size === products.length ? "Deselect All" : "Select All"}
+                      </Button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto space-y-2 rounded-md border border-border p-3">
+                      {products.map((product) => (
+                        <label
+                          key={product.id}
+                          className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded-md"
+                        >
+                          <Checkbox
+                            checked={selectedProducts.has(product.id)}
+                            onCheckedChange={() => toggleProduct(product.id)}
+                          />
+                          <div className="flex items-center gap-2">
+                            {product.image_url && (
+                              <img
+                                src={product.image_url}
+                                alt={product.name}
+                                className="h-8 w-8 rounded object-cover"
+                              />
+                            )}
+                            <div>
+                              <div className="font-medium text-sm">{product.name}</div>
+                              <div className="text-xs text-muted-foreground">{product.brand} • {product.price}</div>
+                            </div>
+                          </div>
+                        </label>
+                      ))}
+                      {products.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No active products</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <p className="text-sm text-muted-foreground">
+                  {selectedFighters.size} fighters × {selectedProducts.size} products = up to{" "}
+                  {selectedFighters.size * selectedProducts.size} assignments
+                </p>
+                <Button
+                  onClick={executeBulkAssignment}
+                  disabled={bulkLoading || selectedFighters.size === 0 || selectedProducts.size === 0}
+                >
+                  {bulkLoading ? "Assigning..." : "Assign Products"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="flex items-center gap-4">
