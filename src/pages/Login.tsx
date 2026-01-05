@@ -39,14 +39,13 @@ export default function Login() {
 
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password,
     });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       toast({
         variant: "destructive",
         title: "Login Failed",
@@ -57,12 +56,24 @@ export default function Login() {
       return;
     }
 
+    // Check if user is admin
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: authData.user.id,
+      _role: "admin",
+    });
+
+    setLoading(false);
+
     toast({
       title: "Welcome back!",
       description: "You have successfully logged in.",
     });
     
-    navigate("/dashboard");
+    if (isAdmin) {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   return (
