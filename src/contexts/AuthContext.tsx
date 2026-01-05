@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isAdmin: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -15,6 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -23,6 +25,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Check admin role after auth state change
+        if (session?.user) {
+          setTimeout(() => {
+            supabase.rpc("has_role", {
+              _user_id: session.user.id,
+              _role: "admin",
+            }).then(({ data }) => {
+              setIsAdmin(data === true);
+            });
+          }, 0);
+        } else {
+          setIsAdmin(false);
+        }
       }
     );
 
@@ -31,6 +47,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      if (session?.user) {
+        supabase.rpc("has_role", {
+          _user_id: session.user.id,
+          _role: "admin",
+        }).then(({ data }) => {
+          setIsAdmin(data === true);
+        });
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -38,10 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setIsAdmin(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );
