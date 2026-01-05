@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFighters from "./pages/admin/AdminFighters";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminAssignments from "./pages/admin/AdminAssignments";
+import AdminUsers from "./pages/admin/AdminUsers";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
@@ -76,6 +77,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminAssignments />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminRoute>
+                  <AdminUsers />
                 </AdminRoute>
               }
             />
