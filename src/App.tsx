@@ -14,12 +14,12 @@ import Dashboard from "./pages/Dashboard";
 import FighterStorefront from "./pages/FighterStorefront";
 import ProductDetail from "./pages/ProductDetail";
 import FighterProductDetail from "./pages/FighterProductDetail";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFighters from "./pages/admin/AdminFighters";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminAssignments from "./pages/admin/AdminAssignments";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import AdminSetup from "./pages/AdminSetup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,7 +36,6 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/fighter-signup" element={<FighterSignup />} />
-            <Route path="/admin-setup" element={<AdminSetup />} />
             <Route
               path="/dashboard"
               element={
@@ -48,7 +47,14 @@ const App = () => (
             {/* Product detail route */}
             <Route path="/p/:slug" element={<ProductDetail />} />
             {/* Admin routes */}
-            <Route path="/admin" element={<Navigate to="/admin/fighters" replace />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              }
+            />
             <Route
               path="/admin/fighters"
               element={
