@@ -12,6 +12,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
 import { CheckCircle, Clock, XCircle, ExternalLink, Pencil, FileText } from "lucide-react";
+import { getStorefrontUrl } from "@/lib/config";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -412,13 +413,13 @@ export default function Dashboard() {
             <h2 className="font-display text-2xl">Storefront URL</h2>
             <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted p-3">
               <code className="flex-1 text-sm">
-                {window.location.origin}/{fighter.handle}
+                {getStorefrontUrl(fighter.handle)}
               </code>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/${fighter.handle}`);
+                  navigator.clipboard.writeText(getStorefrontUrl(fighter.handle));
                   toast({
                     title: "Copied!",
                     description: "Storefront URL copied to clipboard.",
