@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      brands: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fighter_products: {
         Row: {
           created_at: string
@@ -64,6 +88,11 @@ export type Database = {
           pending_changes: Json | null
           profile_image_url: string | null
           short_bio: string
+          social_facebook: string | null
+          social_instagram: string | null
+          social_tiktok: string | null
+          social_twitter: string | null
+          social_youtube: string | null
           sport: string
           status: Database["public"]["Enums"]["fighter_status"]
           updated_at: string
@@ -79,6 +108,11 @@ export type Database = {
           pending_changes?: Json | null
           profile_image_url?: string | null
           short_bio: string
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_tiktok?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
           sport: string
           status?: Database["public"]["Enums"]["fighter_status"]
           updated_at?: string
@@ -94,6 +128,11 @@ export type Database = {
           pending_changes?: Json | null
           profile_image_url?: string | null
           short_bio?: string
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_tiktok?: string | null
+          social_twitter?: string | null
+          social_youtube?: string | null
           sport?: string
           status?: Database["public"]["Enums"]["fighter_status"]
           updated_at?: string
@@ -144,8 +183,10 @@ export type Database = {
         Row: {
           active: boolean
           brand: string
+          brand_id: string | null
           category: string | null
           created_at: string
+          discount_percentage: number | null
           external_url: string
           id: string
           image_url: string | null
@@ -159,8 +200,10 @@ export type Database = {
         Insert: {
           active?: boolean
           brand: string
+          brand_id?: string | null
           category?: string | null
           created_at?: string
+          discount_percentage?: number | null
           external_url: string
           id?: string
           image_url?: string | null
@@ -174,8 +217,10 @@ export type Database = {
         Update: {
           active?: boolean
           brand?: string
+          brand_id?: string | null
           category?: string | null
           created_at?: string
+          discount_percentage?: number | null
           external_url?: string
           id?: string
           image_url?: string | null
@@ -186,7 +231,15 @@ export type Database = {
           slug?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

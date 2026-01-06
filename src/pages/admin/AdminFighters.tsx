@@ -34,10 +34,29 @@ import { toast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight } from "lucide-react";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
-import type { Database } from "@/integrations/supabase/types";
 
-type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
-type FighterStatus = Database["public"]["Enums"]["fighter_status"];
+interface Fighter {
+  id: string;
+  user_id: string;
+  handle: string;
+  full_name: string;
+  sport: string;
+  country: string;
+  short_bio: string | null;
+  app_username: string | null;
+  profile_image_url: string | null;
+  status: "pending" | "approved" | "rejected";
+  pending_changes: Record<string, unknown> | null;
+  social_instagram: string | null;
+  social_twitter: string | null;
+  social_youtube: string | null;
+  social_tiktok: string | null;
+  social_facebook: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+type FighterStatus = "pending" | "approved" | "rejected";
 
 interface PendingChanges {
   sport?: string;
@@ -97,6 +116,11 @@ export default function AdminFighters() {
     country: "",
     short_bio: "",
     app_username: "",
+    social_instagram: "",
+    social_twitter: "",
+    social_youtube: "",
+    social_tiktok: "",
+    social_facebook: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
   
@@ -121,7 +145,7 @@ export default function AdminFighters() {
     if (error) {
       toast({ title: "Error loading fighters", description: error.message, variant: "destructive" });
     } else {
-      setFighters(data || []);
+      setFighters((data as Fighter[]) || []);
     }
     setLoading(false);
   }
@@ -179,6 +203,11 @@ export default function AdminFighters() {
       country: fighter.country,
       short_bio: fighter.short_bio || "",
       app_username: fighter.app_username || "",
+      social_instagram: fighter.social_instagram || "",
+      social_twitter: fighter.social_twitter || "",
+      social_youtube: fighter.social_youtube || "",
+      social_tiktok: fighter.social_tiktok || "",
+      social_facebook: fighter.social_facebook || "",
     });
     setEditDialogOpen(true);
   }
@@ -198,6 +227,11 @@ export default function AdminFighters() {
         country: editData.country,
         short_bio: editData.short_bio || null,
         app_username: editData.app_username || null,
+        social_instagram: editData.social_instagram || null,
+        social_twitter: editData.social_twitter || null,
+        social_youtube: editData.social_youtube || null,
+        social_tiktok: editData.social_tiktok || null,
+        social_facebook: editData.social_facebook || null,
       })
       .eq("id", editingFighter.id);
     
@@ -462,7 +496,7 @@ export default function AdminFighters() {
 
       {/* Edit Fighter Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Fighter</DialogTitle>
             <DialogDescription>
@@ -540,6 +574,60 @@ export default function AdminFighters() {
               <p className="text-xs text-muted-foreground">
                 {editData.short_bio.length}/500 characters
               </p>
+            </div>
+
+            {/* Social Media Links */}
+            <div className="border-t border-border pt-4">
+              <Label className="text-sm font-medium">Social Media Links</Label>
+              <p className="text-xs text-muted-foreground mb-3">Add social media profile URLs</p>
+              
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-instagram" className="text-xs text-muted-foreground">Instagram</Label>
+                  <Input
+                    id="edit-instagram"
+                    value={editData.social_instagram}
+                    onChange={(e) => setEditData({ ...editData, social_instagram: e.target.value })}
+                    placeholder="https://instagram.com/username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-twitter" className="text-xs text-muted-foreground">X (Twitter)</Label>
+                  <Input
+                    id="edit-twitter"
+                    value={editData.social_twitter}
+                    onChange={(e) => setEditData({ ...editData, social_twitter: e.target.value })}
+                    placeholder="https://x.com/username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-youtube" className="text-xs text-muted-foreground">YouTube</Label>
+                  <Input
+                    id="edit-youtube"
+                    value={editData.social_youtube}
+                    onChange={(e) => setEditData({ ...editData, social_youtube: e.target.value })}
+                    placeholder="https://youtube.com/@channel"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tiktok" className="text-xs text-muted-foreground">TikTok</Label>
+                  <Input
+                    id="edit-tiktok"
+                    value={editData.social_tiktok}
+                    onChange={(e) => setEditData({ ...editData, social_tiktok: e.target.value })}
+                    placeholder="https://tiktok.com/@username"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-facebook" className="text-xs text-muted-foreground">Facebook</Label>
+                  <Input
+                    id="edit-facebook"
+                    value={editData.social_facebook}
+                    onChange={(e) => setEditData({ ...editData, social_facebook: e.target.value })}
+                    placeholder="https://facebook.com/username"
+                  />
+                </div>
+              </div>
             </div>
           </div>
           

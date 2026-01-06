@@ -23,16 +23,59 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
+import { Plus, Pencil, Trash2, Percent } from "lucide-react";
 
-type Product = Database["public"]["Tables"]["products"]["Row"];
-type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
+interface Brand {
+  id: string;
+  name: string;
+  logo_url: string | null;
+}
 
-const emptyProduct: Partial<ProductInsert> = {
+interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  brand_id: string | null;
+  price: string;
+  slug: string;
+  category: string | null;
+  image_url: string | null;
+  short_description: string | null;
+  long_description: string | null;
+  external_url: string;
+  active: boolean;
+  discount_percentage: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ProductForm {
+  name: string;
+  brand: string;
+  brand_id: string | null;
+  price: string;
+  slug: string;
+  category: string | null;
+  image_url: string | null;
+  short_description: string | null;
+  long_description: string | null;
+  external_url: string;
+  active: boolean;
+  discount_percentage: number | null;
+}
+
+const emptyProduct: ProductForm = {
   name: "",
   brand: "",
+  brand_id: null,
   price: "",
   slug: "",
   category: "",
@@ -41,13 +84,15 @@ const emptyProduct: Partial<ProductInsert> = {
   long_description: "",
   external_url: "",
   active: true,
+  discount_percentage: null,
 };
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Partial<ProductInsert>>(emptyProduct);
+  const [editingProduct, setEditingProduct] = useState<ProductForm & { id?: string }>(emptyProduct);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -61,13 +106,25 @@ export default function AdminProducts() {
     if (error) {
       toast({ title: "Error loading products", description: error.message, variant: "destructive" });
     } else {
-      setProducts(data || []);
+      setProducts((data as Product[]) || []);
     }
     setLoading(false);
   }
 
+  async function fetchBrands() {
+    const { data } = await supabase
+      .from("brands")
+      .select("id, name, logo_url")
+      .order("name");
+    
+    if (data) {
+      setBrands(data);
+    }
+  }
+
   useEffect(() => {
     fetchProducts();
+    fetchBrands();
   }, []);
 
   function openNewDialog() {
@@ -77,9 +134,33 @@ export default function AdminProducts() {
   }
 
   function openEditDialog(product: Product) {
-    setEditingProduct(product);
+    setEditingProduct({
+      id: product.id,
+      name: product.name,
+      brand: product.brand,
+      brand_id: product.brand_id,
+      price: product.price,
+      slug: product.slug,
+      category: product.category,
+      image_url: product.image_url,
+      short_description: product.short_description,
+      long_description: product.long_description,
+      external_url: product.external_url,
+      active: product.active,
+      discount_percentage: product.discount_percentage,
+    });
     setIsEditing(true);
     setDialogOpen(true);
+  }
+
+  // When brand is selected from dropdown, update both brand_id and brand name
+  function handleBrandChange(brandId: string) {
+    const selectedBrand = brands.find(b => b.id === brandId);
+    setEditingProduct({
+      ...editingProduct,
+      brand_id: brandId,
+      brand: selectedBrand?.name || editingProduct.brand,
+    });
   }
 
   async function handleSave() {
@@ -88,24 +169,36 @@ export default function AdminProducts() {
       return;
     }
 
+    // Validate discount percentage
+    if (editingProduct.discount_percentage !== null) {
+      if (editingProduct.discount_percentage < 0 || editingProduct.discount_percentage > 100) {
+        toast({ title: "Invalid discount", description: "Discount must be between 0 and 100", variant: "destructive" });
+        return;
+      }
+    }
+
     setSaving(true);
 
-    if (isEditing && "id" in editingProduct) {
+    const productData = {
+      name: editingProduct.name,
+      brand: editingProduct.brand,
+      brand_id: editingProduct.brand_id,
+      price: editingProduct.price,
+      slug: editingProduct.slug,
+      category: editingProduct.category || null,
+      image_url: editingProduct.image_url || null,
+      short_description: editingProduct.short_description || null,
+      long_description: editingProduct.long_description || null,
+      external_url: editingProduct.external_url,
+      active: editingProduct.active ?? true,
+      discount_percentage: editingProduct.discount_percentage,
+    };
+
+    if (isEditing && editingProduct.id) {
       const { error } = await supabase
         .from("products")
-        .update({
-          name: editingProduct.name,
-          brand: editingProduct.brand,
-          price: editingProduct.price,
-          slug: editingProduct.slug,
-          category: editingProduct.category || null,
-          image_url: editingProduct.image_url || null,
-          short_description: editingProduct.short_description || null,
-          long_description: editingProduct.long_description || null,
-          external_url: editingProduct.external_url,
-          active: editingProduct.active ?? true,
-        })
-        .eq("id", (editingProduct as Product).id);
+        .update(productData)
+        .eq("id", editingProduct.id);
 
       if (error) {
         toast({ title: "Error updating product", description: error.message, variant: "destructive" });
@@ -115,18 +208,7 @@ export default function AdminProducts() {
         fetchProducts();
       }
     } else {
-      const { error } = await supabase.from("products").insert({
-        name: editingProduct.name!,
-        brand: editingProduct.brand!,
-        price: editingProduct.price!,
-        slug: editingProduct.slug!,
-        category: editingProduct.category || null,
-        image_url: editingProduct.image_url || null,
-        short_description: editingProduct.short_description || null,
-        long_description: editingProduct.long_description || null,
-        external_url: editingProduct.external_url!,
-        active: editingProduct.active ?? true,
-      });
+      const { error } = await supabase.from("products").insert(productData);
 
       if (error) {
         toast({ title: "Error creating product", description: error.message, variant: "destructive" });
@@ -151,6 +233,13 @@ export default function AdminProducts() {
       toast({ title: "Product deleted" });
       fetchProducts();
     }
+  }
+
+  // Get brand logo for display
+  function getBrandLogo(brandId: string | null): string | null {
+    if (!brandId) return null;
+    const brand = brands.find(b => b.id === brandId);
+    return brand?.logo_url || null;
   }
 
   return (
@@ -185,12 +274,38 @@ export default function AdminProducts() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="brand">Brand *</Label>
-                    <Input
-                      id="brand"
-                      value={editingProduct.brand || ""}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
-                    />
+                    <Label>Brand *</Label>
+                    {brands.length > 0 ? (
+                      <Select
+                        value={editingProduct.brand_id || ""}
+                        onValueChange={handleBrandChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select brand" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {brands.map((brand) => (
+                            <SelectItem key={brand.id} value={brand.id}>
+                              <div className="flex items-center gap-2">
+                                {brand.logo_url && (
+                                  <img src={brand.logo_url} alt="" className="h-4 w-4 object-contain" />
+                                )}
+                                {brand.name}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        value={editingProduct.brand || ""}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
+                        placeholder="Enter brand name"
+                      />
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {brands.length === 0 ? "Add brands in the Brands section to use dropdown" : ""}
+                    </p>
                   </div>
                 </div>
 
@@ -205,6 +320,28 @@ export default function AdminProducts() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="discount">Discount %</Label>
+                    <div className="relative">
+                      <Input
+                        id="discount"
+                        type="number"
+                        min="0"
+                        max="100"
+                        placeholder="0"
+                        value={editingProduct.discount_percentage ?? ""}
+                        onChange={(e) => setEditingProduct({ 
+                          ...editingProduct, 
+                          discount_percentage: e.target.value ? parseInt(e.target.value) : null 
+                        })}
+                      />
+                      <Percent className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">Leave empty for no discount</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label htmlFor="slug">Slug *</Label>
                     <Input
                       id="slug"
@@ -213,9 +350,6 @@ export default function AdminProducts() {
                       onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
                     <Input
@@ -224,14 +358,15 @@ export default function AdminProducts() {
                       onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="image_url">Image URL</Label>
-                    <Input
-                      id="image_url"
-                      value={editingProduct.image_url || ""}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
-                    />
-                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="image_url">Image URL</Label>
+                  <Input
+                    id="image_url"
+                    value={editingProduct.image_url || ""}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -289,6 +424,7 @@ export default function AdminProducts() {
                 <TableHead>Brand</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
+                <TableHead>Discount</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -296,7 +432,7 @@ export default function AdminProducts() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center">
+                  <TableCell colSpan={7} className="py-8 text-center">
                     <div className="flex items-center justify-center">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     </div>
@@ -304,7 +440,7 @@ export default function AdminProducts() {
                 </TableRow>
               ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                     No products yet
                   </TableCell>
                 </TableRow>
@@ -323,9 +459,29 @@ export default function AdminProducts() {
                         <span className="font-medium">{product.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{product.brand}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getBrandLogo(product.brand_id) && (
+                          <img
+                            src={getBrandLogo(product.brand_id)!}
+                            alt=""
+                            className="h-5 w-5 object-contain"
+                          />
+                        )}
+                        {product.brand}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{product.category || "—"}</TableCell>
                     <TableCell>{product.price}</TableCell>
+                    <TableCell>
+                      {product.discount_percentage ? (
+                        <Badge variant="secondary" className="bg-green-500/10 text-green-500">
+                          -{product.discount_percentage}%
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={product.active ? "default" : "secondary"}>
                         {product.active ? "Active" : "Inactive"}

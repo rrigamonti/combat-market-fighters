@@ -34,6 +34,11 @@ const signupSchema = z.object({
   country: z.string().min(1, "Please select a country"),
   appUsername: z.string().min(2, "App username is required").max(50),
   shortBio: z.string().min(50, "Bio must be at least 50 characters").max(500, "Bio must be 500 characters or less"),
+  socialInstagram: z.string().url("Invalid URL").optional().or(z.literal("")),
+  socialTwitter: z.string().url("Invalid URL").optional().or(z.literal("")),
+  socialYoutube: z.string().url("Invalid URL").optional().or(z.literal("")),
+  socialTiktok: z.string().url("Invalid URL").optional().or(z.literal("")),
+  socialFacebook: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
 const sports = [
@@ -73,6 +78,7 @@ export default function FighterSignup() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showSocials, setShowSocials] = useState(false);
   
   const [formData, setFormData] = useState({
     email: "",
@@ -83,6 +89,11 @@ export default function FighterSignup() {
     country: "",
     appUsername: "",
     shortBio: "",
+    socialInstagram: "",
+    socialTwitter: "",
+    socialYoutube: "",
+    socialTiktok: "",
+    socialFacebook: "",
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,6 +254,11 @@ export default function FighterSignup() {
         app_username: formData.appUsername,
         profile_image_url: publicUrlData.publicUrl,
         status: "pending",
+        social_instagram: formData.socialInstagram || null,
+        social_twitter: formData.socialTwitter || null,
+        social_youtube: formData.socialYoutube || null,
+        social_tiktok: formData.socialTiktok || null,
+        social_facebook: formData.socialFacebook || null,
       });
 
     setLoading(false);
@@ -437,6 +453,72 @@ export default function FighterSignup() {
               <p className="text-xs text-muted-foreground">
                 {formData.shortBio.length}/500 characters (minimum 50)
               </p>
+            </div>
+
+            {/* Social Media Links (Optional) */}
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowSocials(!showSocials)}
+                className="text-sm text-primary hover:underline"
+              >
+                {showSocials ? "Hide social media links" : "+ Add social media links (optional)"}
+              </button>
+              
+              {showSocials && (
+                <div className="space-y-3 rounded-lg border border-border p-4">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    These links will appear on your storefront
+                  </p>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="socialInstagram" className="text-xs text-muted-foreground">Instagram</Label>
+                      <Input
+                        id="socialInstagram"
+                        placeholder="https://instagram.com/username"
+                        value={formData.socialInstagram}
+                        onChange={(e) => setFormData({ ...formData, socialInstagram: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="socialTwitter" className="text-xs text-muted-foreground">X (Twitter)</Label>
+                      <Input
+                        id="socialTwitter"
+                        placeholder="https://x.com/username"
+                        value={formData.socialTwitter}
+                        onChange={(e) => setFormData({ ...formData, socialTwitter: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="socialYoutube" className="text-xs text-muted-foreground">YouTube</Label>
+                      <Input
+                        id="socialYoutube"
+                        placeholder="https://youtube.com/@channel"
+                        value={formData.socialYoutube}
+                        onChange={(e) => setFormData({ ...formData, socialYoutube: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="socialTiktok" className="text-xs text-muted-foreground">TikTok</Label>
+                      <Input
+                        id="socialTiktok"
+                        placeholder="https://tiktok.com/@username"
+                        value={formData.socialTiktok}
+                        onChange={(e) => setFormData({ ...formData, socialTiktok: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="socialFacebook" className="text-xs text-muted-foreground">Facebook</Label>
+                      <Input
+                        id="socialFacebook"
+                        placeholder="https://facebook.com/username"
+                        value={formData.socialFacebook}
+                        onChange={(e) => setFormData({ ...formData, socialFacebook: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
