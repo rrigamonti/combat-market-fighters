@@ -17,6 +17,7 @@ import FighterProductDetail from "./pages/FighterProductDetail";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFighters from "./pages/admin/AdminFighters";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminBrands from "./pages/admin/AdminBrands";
 import AdminAssignments from "./pages/admin/AdminAssignments";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -70,6 +71,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminProducts />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/brands"
+              element={
+                <AdminRoute>
+                  <AdminBrands />
                 </AdminRoute>
               }
             />
