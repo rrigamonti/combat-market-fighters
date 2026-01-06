@@ -11,12 +11,14 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
+type Brand = Database["public"]["Tables"]["brands"]["Row"];
 
 export default function FighterProductDetail() {
   const { handle, productSlug } = useParams<{ handle: string; productSlug: string }>();
   const navigate = useNavigate();
   const [fighter, setFighter] = useState<Fighter | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
+  const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { trackProductClick } = useAnalytics();
@@ -59,6 +61,20 @@ export default function FighterProductDetail() {
       }
 
       setProduct(productData);
+
+      // Fetch brand if product has brand_id
+      if (productData.brand_id) {
+        const { data: brandData } = await supabase
+          .from("brands")
+          .select("*")
+          .eq("id", productData.brand_id)
+          .maybeSingle();
+        
+        if (brandData) {
+          setBrand(brandData);
+        }
+      }
+
       setLoading(false);
     }
 
@@ -118,7 +134,12 @@ export default function FighterProductDetail() {
 
         <div className="grid gap-12 lg:grid-cols-2">
           {/* Product Image */}
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
+            {product.discount_percentage && product.discount_percentage > 0 && (
+              <div className="absolute top-4 left-4 z-10 rounded-full bg-destructive px-3 py-1 text-sm font-bold text-destructive-foreground">
+                -{product.discount_percentage}%
+              </div>
+            )}
             {product.image_url ? (
               <img
                 src={product.image_url}
@@ -135,9 +156,18 @@ export default function FighterProductDetail() {
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <p className="text-sm font-medium uppercase tracking-wider text-primary">
-                {product.brand}
-              </p>
+              <div className="flex items-center gap-3">
+                {brand?.logo_url && (
+                  <img
+                    src={brand.logo_url}
+                    alt={brand.name}
+                    className="h-8 w-8 rounded-full object-contain"
+                  />
+                )}
+                <p className="text-sm font-medium uppercase tracking-wider text-primary">
+                  {brand?.name || product.brand}
+                </p>
+              </div>
               <h1 className="mt-2 font-display text-3xl md:text-4xl">
                 {product.name}
               </h1>
