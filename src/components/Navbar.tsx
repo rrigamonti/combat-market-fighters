@@ -30,8 +30,8 @@ export function Navbar() {
           <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Home
           </Link>
-          <Link to="/#features" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Features
+          <Link to="/marketplace" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            Marketplace
           </Link>
           <Link to="/#for-fighters" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             For Fighters
@@ -85,11 +85,11 @@ export function Navbar() {
                   Home
                 </Link>
                 <Link 
-                  to="/#features" 
+                  to="/marketplace" 
                   onClick={closeMobileMenu}
                   className="text-lg font-medium text-foreground transition-colors hover:text-primary"
                 >
-                  Features
+                  Marketplace
                 </Link>
                 <Link 
                   to="/#for-fighters" 

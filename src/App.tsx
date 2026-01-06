@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import FighterStorefront from "./pages/FighterStorefront";
 import ProductDetail from "./pages/ProductDetail";
 import FighterProductDetail from "./pages/FighterProductDetail";
+import Marketplace from "./pages/Marketplace";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminFighters from "./pages/admin/AdminFighters";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -37,6 +38,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/fighter-signup" element={<FighterSignup />} />
             <Route
