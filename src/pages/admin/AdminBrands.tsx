@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { PageMeta } from "@/components/PageMeta";
@@ -21,7 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Loader2, X } from "lucide-react";
 
 interface Brand {
   id: string;
@@ -36,6 +36,9 @@ const emptyBrand = {
   logo_url: "",
 };
 
+const ACCEPTED_FILE_TYPES = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
 export default function AdminBrands() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +46,8 @@ export default function AdminBrands() {
   const [editingBrand, setEditingBrand] = useState<Partial<Brand>>(emptyBrand);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchBrands() {
     setLoading(true);
@@ -73,6 +78,75 @@ export default function AdminBrands() {
     setEditingBrand(brand);
     setIsEditing(true);
     setDialogOpen(true);
+  }
+
+  async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PNG, JPG, SVG, or WEBP file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 2MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "png";
+      const fileName = `${editingBrand.id || "new"}-${Date.now()}.${fileExt}`;
+
+      // Upload to brand-logos bucket
+      const { error: uploadError } = await supabase.storage
+        .from("brand-logos")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("brand-logos")
+        .getPublicUrl(fileName);
+
+      setEditingBrand({ ...editingBrand, logo_url: urlData.publicUrl });
+      toast({ title: "Logo uploaded successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload logo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
+  function clearLogo() {
+    setEditingBrand({ ...editingBrand, logo_url: "" });
   }
 
   async function handleSave() {
@@ -178,27 +252,77 @@ export default function AdminBrands() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="logo_url">Logo URL</Label>
-                  <Input
-                    id="logo_url"
-                    value={editingBrand.logo_url || ""}
-                    onChange={(e) => setEditingBrand({ ...editingBrand, logo_url: e.target.value })}
-                    placeholder="https://example.com/logo.png"
-                  />
+                  <Label>Logo</Label>
+                  
+                  {/* Logo Preview */}
                   {editingBrand.logo_url && (
-                    <div className="mt-2">
-                      <p className="text-xs text-muted-foreground mb-1">Preview:</p>
+                    <div className="relative inline-block">
                       <img
                         src={editingBrand.logo_url}
                         alt="Logo preview"
-                        className="h-12 w-auto rounded border border-border bg-white p-1"
+                        className="h-16 w-auto rounded border border-border bg-white p-2"
                         onError={(e) => (e.currentTarget.style.display = "none")}
                       />
+                      <button
+                        type="button"
+                        onClick={clearLogo}
+                        className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
                     </div>
                   )}
+
+                  {/* File Upload */}
+                  <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".png,.jpg,.jpeg,.svg,.webp"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload Logo
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    PNG, JPG, SVG, or WEBP. Max 2MB.
+                  </p>
+
+                  {/* URL Input (Fallback) */}
+                  <div className="space-y-1">
+                    <Label htmlFor="logo_url" className="text-xs text-muted-foreground">
+                      Or enter URL directly
+                    </Label>
+                    <Input
+                      id="logo_url"
+                      value={editingBrand.logo_url || ""}
+                      onChange={(e) => setEditingBrand({ ...editingBrand, logo_url: e.target.value })}
+                      placeholder="https://example.com/logo.png"
+                      className="text-sm"
+                    />
+                  </div>
                 </div>
 
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving || uploading}>
                   {saving ? "Saving..." : isEditing ? "Update Brand" : "Create Brand"}
                 </Button>
               </div>
