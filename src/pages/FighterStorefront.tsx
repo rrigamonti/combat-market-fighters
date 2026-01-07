@@ -26,6 +26,7 @@ interface Fighter {
   social_youtube: string | null;
   social_tiktok: string | null;
   social_facebook: string | null;
+  social_snapchat: string | null;
 }
 
 interface Product {
@@ -85,6 +86,13 @@ const SocialIcons = {
     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1877F2]">
       <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
         <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+      </svg>
+    </div>
+  ),
+  snapchat: (
+    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FFFC00]">
+      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-black">
+        <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.135-.052-.21-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-1.107-.435-1.257-.93-1.197-1.273.09-.479.674-.793 1.168-.793.146 0 .27.029.383.074.42.194.789.3 1.104.3.234 0 .384-.06.465-.105l-.046-.569c-.098-1.626-.225-3.651.307-4.837C7.392 1.077 10.739.807 11.727.807l.419-.015h.06z"/>
       </svg>
     </div>
   ),
@@ -179,6 +187,7 @@ export default function FighterStorefront() {
     { key: "tiktok", url: fighter.social_tiktok, icon: SocialIcons.tiktok },
     { key: "youtube", url: fighter.social_youtube, icon: SocialIcons.youtube },
     { key: "twitter", url: fighter.social_twitter, icon: SocialIcons.twitter },
+    { key: "snapchat", url: fighter.social_snapchat, icon: SocialIcons.snapchat },
   ].filter(s => s.url) : [];
 
   if (loading) {
@@ -243,11 +252,11 @@ export default function FighterStorefront() {
       {/* Profile Card - Overlapping Hero */}
       <section className="relative z-10 -mt-24 px-4 pb-8">
         <div className="container mx-auto max-w-4xl">
-          <div className="rounded-2xl border border-border/50 bg-card/80 p-6 backdrop-blur-md md:p-8">
+          <div className="rounded-2xl bg-white shadow-lg dark:border dark:border-border/50 dark:bg-card/80 p-6 backdrop-blur-md md:p-8">
             <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
               {/* Profile Image */}
               <div className="relative shrink-0">
-                <div className="h-28 w-28 overflow-hidden rounded-xl border-4 border-primary bg-muted shadow-lg md:h-32 md:w-32">
+                <div className="h-28 w-28 overflow-hidden rounded-xl border-l-4 border-primary bg-muted shadow-md dark:border-4 md:h-32 md:w-32">
                   {fighter?.profile_image_url ? (
                     <img 
                       src={fighter.profile_image_url} 
@@ -284,10 +293,10 @@ export default function FighterStorefront() {
                 <div className="mt-4 flex flex-col items-center gap-4 md:flex-row md:items-center md:justify-between md:w-full">
                   {/* Tags */}
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground">
+                    <span className="rounded-full border-2 border-primary px-4 py-1.5 text-sm font-semibold text-primary dark:border-0 dark:bg-primary dark:text-primary-foreground">
                       {fighter?.sport}
                     </span>
-                    <span className="rounded-full bg-muted px-4 py-1.5 text-sm font-medium text-muted-foreground">
+                    <span className="rounded-full border-2 border-foreground/30 px-4 py-1.5 text-sm font-medium text-foreground dark:border-0 dark:bg-muted dark:text-muted-foreground">
                       {fighter?.country}
                     </span>
                   </div>
@@ -350,7 +359,7 @@ export default function FighterStorefront() {
                 <Link
                   key={product.id}
                   to={`/${handle}/${product.slug}`}
-                  className="group relative block overflow-hidden rounded-xl border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10"
+                  className="group relative block overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg hover:shadow-primary/10 dark:border dark:border-border dark:bg-card dark:shadow-none"
                 >
                   {/* Product Image Container */}
                   <div className="relative aspect-[3/4] overflow-hidden bg-muted">
@@ -375,11 +384,11 @@ export default function FighterStorefront() {
 
                     {/* Brand Logo Strip - Bottom */}
                     {getBrandLogo(product.brand_id) && (
-                      <div className="absolute bottom-0 left-0 right-0 flex items-center bg-black/60 px-3 py-2">
+                      <div className="absolute bottom-0 left-0 right-0 flex items-center bg-gray-100 px-3 py-2 dark:bg-black/60">
                         <img
                           src={getBrandLogo(product.brand_id)!}
                           alt=""
-                          className="h-5 w-auto object-contain brightness-0 invert"
+                          className="h-5 w-auto object-contain dark:brightness-0 dark:invert"
                         />
                       </div>
                     )}
@@ -390,7 +399,7 @@ export default function FighterStorefront() {
                     <h3 className="text-sm font-semibold uppercase leading-tight line-clamp-2">
                       {product.name}
                     </h3>
-                    <p className="mt-1 text-right text-sm font-bold text-foreground">
+                    <p className="mt-1 text-right text-sm font-bold text-primary dark:text-foreground">
                       {product.price}
                     </p>
                   </div>
