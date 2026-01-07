@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
@@ -31,11 +32,12 @@ const queryClient = new QueryClient();
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
+      <ThemeProvider attribute="class" defaultTheme="dark">
+        <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/marketplace" element={<Marketplace />} />
@@ -117,9 +119,10 @@ const App = () => (
             {/* Catch-all 404 route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-      </TooltipProvider>
+          </AuthProvider>
+        </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );
