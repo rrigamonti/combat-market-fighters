@@ -1,0 +1,1 @@
+ALTER TABLE public.fighters ADD COLUMN social_snapchat text;
