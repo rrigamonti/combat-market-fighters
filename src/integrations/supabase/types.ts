@@ -84,6 +84,7 @@ export type Database = {
           created_at: string
           full_name: string
           handle: string
+          hero_image_url: string | null
           id: string
           pending_changes: Json | null
           profile_image_url: string | null
@@ -104,6 +105,7 @@ export type Database = {
           created_at?: string
           full_name: string
           handle: string
+          hero_image_url?: string | null
           id?: string
           pending_changes?: Json | null
           profile_image_url?: string | null
@@ -124,6 +126,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           handle?: string
+          hero_image_url?: string | null
           id?: string
           pending_changes?: Json | null
           profile_image_url?: string | null
