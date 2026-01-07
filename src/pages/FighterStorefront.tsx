@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import demoHeroImage from "@/assets/demo-hero-marcus.jpg";
 
 interface Fighter {
@@ -310,24 +311,30 @@ export default function FighterStorefront() {
                 </div>
               </div>
 
-              {/* Share Button - Desktop */}
+              {/* Theme Toggle & Share Button - Desktop */}
+              <div className="hidden shrink-0 items-center gap-2 md:flex">
+                <ThemeToggle />
+                <button 
+                  onClick={handleShare}
+                  className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </button>
+              </div>
+            </div>
+
+            {/* Theme Toggle & Share Button - Mobile */}
+            <div className="mt-4 flex items-center justify-center gap-2 md:hidden">
+              <ThemeToggle />
               <button 
                 onClick={handleShare}
-                className="hidden shrink-0 items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:flex"
+                className="flex flex-1 items-center justify-center gap-2 rounded-full border border-border py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Share2 className="h-4 w-4" />
                 Share
               </button>
             </div>
-
-            {/* Share Button - Mobile */}
-            <button 
-              onClick={handleShare}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-border py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
-            >
-              <Share2 className="h-4 w-4" />
-              Share
-            </button>
           </div>
         </div>
       </section>
