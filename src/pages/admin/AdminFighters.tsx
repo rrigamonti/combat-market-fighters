@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image } from "lucide-react";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
 
@@ -45,6 +45,7 @@ interface Fighter {
   short_bio: string | null;
   app_username: string | null;
   profile_image_url: string | null;
+  hero_image_url: string | null;
   status: "pending" | "approved" | "rejected";
   pending_changes: Record<string, unknown> | null;
   social_instagram: string | null;
@@ -52,6 +53,7 @@ interface Fighter {
   social_youtube: string | null;
   social_tiktok: string | null;
   social_facebook: string | null;
+  social_snapchat: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -121,7 +123,11 @@ export default function AdminFighters() {
     social_youtube: "",
     social_tiktok: "",
     social_facebook: "",
+    social_snapchat: "",
   });
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+  const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
+  const [uploadingHero, setUploadingHero] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   
   // Review changes dialog state
@@ -208,8 +214,39 @@ export default function AdminFighters() {
       social_youtube: fighter.social_youtube || "",
       social_tiktok: fighter.social_tiktok || "",
       social_facebook: fighter.social_facebook || "",
+      social_snapchat: fighter.social_snapchat || "",
     });
+    setHeroImageFile(null);
+    setHeroImagePreview(fighter.hero_image_url || null);
     setEditDialogOpen(true);
+  }
+
+  // Handle hero image file selection
+  function handleHeroImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPG, PNG, or WebP image.", variant: "destructive" });
+      return;
+    }
+
+    // Validate file size (max 5MB for hero images)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 5MB.", variant: "destructive" });
+      return;
+    }
+
+    setHeroImageFile(file);
+    setHeroImagePreview(URL.createObjectURL(file));
+  }
+
+  // Remove hero image
+  function removeHeroImage() {
+    setHeroImageFile(null);
+    setHeroImagePreview(null);
   }
 
   // Save admin edit (direct update)
@@ -217,6 +254,36 @@ export default function AdminFighters() {
     if (!editingFighter) return;
     
     setSavingEdit(true);
+    
+    let heroUrl = editingFighter.hero_image_url;
+    
+    // Upload hero image if a new file was selected
+    if (heroImageFile) {
+      setUploadingHero(true);
+      const fileExt = heroImageFile.name.split(".").pop();
+      const fileName = `${editingFighter.id}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("fighter-heroes")
+        .upload(fileName, heroImageFile, { upsert: true });
+      
+      if (uploadError) {
+        toast({ title: "Error uploading hero image", description: uploadError.message, variant: "destructive" });
+        setSavingEdit(false);
+        setUploadingHero(false);
+        return;
+      }
+      
+      const { data: urlData } = supabase.storage
+        .from("fighter-heroes")
+        .getPublicUrl(fileName);
+      
+      heroUrl = urlData.publicUrl;
+      setUploadingHero(false);
+    } else if (heroImagePreview === null && editingFighter.hero_image_url) {
+      // Hero image was removed
+      heroUrl = null;
+    }
     
     const { error } = await supabase
       .from("fighters")
@@ -227,11 +294,13 @@ export default function AdminFighters() {
         country: editData.country,
         short_bio: editData.short_bio || null,
         app_username: editData.app_username || null,
+        hero_image_url: heroUrl,
         social_instagram: editData.social_instagram || null,
         social_twitter: editData.social_twitter || null,
         social_youtube: editData.social_youtube || null,
         social_tiktok: editData.social_tiktok || null,
         social_facebook: editData.social_facebook || null,
+        social_snapchat: editData.social_snapchat || null,
       })
       .eq("id", editingFighter.id);
     
@@ -576,6 +645,43 @@ export default function AdminFighters() {
               </p>
             </div>
 
+            {/* Hero Banner Image */}
+            <div className="border-t border-border pt-4">
+              <Label className="text-sm font-medium">Hero Banner Image</Label>
+              <p className="text-xs text-muted-foreground mb-3">Upload a banner image for the storefront (recommended: 1920x600)</p>
+              
+              {heroImagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={heroImagePreview} 
+                    alt="Hero preview"
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeHeroImage}
+                    className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Image className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Click to upload hero image</p>
+                    <p className="text-xs text-muted-foreground/70">JPG, PNG, WebP (max 5MB)</p>
+                  </div>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleHeroImageChange}
+                  />
+                </label>
+              )}
+            </div>
+
             {/* Social Media Links */}
             <div className="border-t border-border pt-4">
               <Label className="text-sm font-medium">Social Media Links</Label>
@@ -627,14 +733,23 @@ export default function AdminFighters() {
                     placeholder="https://facebook.com/username"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-snapchat" className="text-xs text-muted-foreground">Snapchat</Label>
+                  <Input
+                    id="edit-snapchat"
+                    value={editData.social_snapchat}
+                    onChange={(e) => setEditData({ ...editData, social_snapchat: e.target.value })}
+                    placeholder="https://snapchat.com/add/username"
+                  />
+                </div>
               </div>
             </div>
           </div>
           
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} disabled={savingEdit}>
-              {savingEdit ? "Saving..." : "Save Changes"}
+            <Button onClick={handleSaveEdit} disabled={savingEdit || uploadingHero}>
+              {uploadingHero ? "Uploading..." : savingEdit ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
