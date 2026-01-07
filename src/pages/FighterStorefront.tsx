@@ -9,7 +9,7 @@ import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import demoHeroImage from "@/assets/demo-hero-marcus.jpg";
+import defaultHeroImage from "@/assets/demo-hero-marcus.jpg";
 
 interface Fighter {
   id: string;
@@ -241,7 +241,7 @@ export default function FighterStorefront() {
       {/* Hero Banner */}
       <section className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
         <img 
-          src={fighter?.hero_image_url || demoHeroImage} 
+          src={fighter?.hero_image_url || defaultHeroImage} 
           alt={`${fighter?.full_name} banner`}
           className="h-full w-full object-cover"
         />

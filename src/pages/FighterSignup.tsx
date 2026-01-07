@@ -39,6 +39,7 @@ const signupSchema = z.object({
   socialYoutube: z.string().url("Invalid URL").optional().or(z.literal("")),
   socialTiktok: z.string().url("Invalid URL").optional().or(z.literal("")),
   socialFacebook: z.string().url("Invalid URL").optional().or(z.literal("")),
+  socialSnapchat: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
 const sports = [
@@ -94,6 +95,7 @@ export default function FighterSignup() {
     socialYoutube: "",
     socialTiktok: "",
     socialFacebook: "",
+    socialSnapchat: "",
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -259,6 +261,7 @@ export default function FighterSignup() {
         social_youtube: formData.socialYoutube || null,
         social_tiktok: formData.socialTiktok || null,
         social_facebook: formData.socialFacebook || null,
+        social_snapchat: formData.socialSnapchat || null,
       });
 
     setLoading(false);
@@ -514,6 +517,15 @@ export default function FighterSignup() {
                         placeholder="https://facebook.com/username"
                         value={formData.socialFacebook}
                         onChange={(e) => setFormData({ ...formData, socialFacebook: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="socialSnapchat" className="text-xs text-muted-foreground">Snapchat</Label>
+                      <Input
+                        id="socialSnapchat"
+                        placeholder="https://snapchat.com/add/username"
+                        value={formData.socialSnapchat}
+                        onChange={(e) => setFormData({ ...formData, socialSnapchat: e.target.value })}
                       />
                     </div>
                   </div>
