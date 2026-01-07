@@ -270,10 +270,11 @@ export default function Marketplace() {
                         to={`/p/${product.slug}`}
                         className="group relative block overflow-hidden rounded-2xl bg-card border border-border/50 transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1"
                       >
-                        {/* Discount Badge */}
+                        {/* Discount Badge - Top Right */}
                         {product.discount_percentage && product.discount_percentage > 0 && (
-                          <div className="absolute left-3 top-3 z-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
-                            -{product.discount_percentage}%
+                          <div className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-full bg-gray-800 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
+                            <span>🔥</span>
+                            <span>{product.discount_percentage}% OFF</span>
                           </div>
                         )}
 

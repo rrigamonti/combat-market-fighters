@@ -377,19 +377,23 @@ export default function FighterStorefront() {
 
                     {/* Discount Badge - Top Right */}
                     {product.discount_percentage && product.discount_percentage > 0 && (
-                      <div className="absolute right-2 top-2 z-10 rounded-md bg-primary px-2 py-1 text-xs font-bold text-primary-foreground">
-                        {product.discount_percentage}% OFF
+                      <div className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full bg-gray-800 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
+                        <span>🔥</span>
+                        <span>{product.discount_percentage}% OFF</span>
                       </div>
                     )}
 
-                    {/* Brand Logo Strip - Bottom */}
+                    {/* Brand Badge - Bottom Left */}
                     {getBrandLogo(product.brand_id) && (
-                      <div className="absolute bottom-0 left-0 right-0 flex items-center bg-gray-100 px-3 py-2 dark:bg-black/60">
+                      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-md">
                         <img
                           src={getBrandLogo(product.brand_id)!}
                           alt=""
-                          className="h-5 w-auto object-contain dark:brightness-0 dark:invert"
+                          className="h-5 w-auto object-contain"
                         />
+                        <span className="text-xs font-bold uppercase text-gray-900">
+                          {product.brand}
+                        </span>
                       </div>
                     )}
                   </div>

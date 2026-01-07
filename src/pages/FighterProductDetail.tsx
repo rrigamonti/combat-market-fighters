@@ -136,8 +136,9 @@ export default function FighterProductDetail() {
           {/* Product Image */}
           <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
             {product.discount_percentage && product.discount_percentage > 0 && (
-              <div className="absolute top-4 left-4 z-10 rounded-full bg-destructive px-3 py-1 text-sm font-bold text-destructive-foreground">
-                -{product.discount_percentage}%
+              <div className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full bg-gray-800 px-3 py-1.5 text-sm font-bold text-white shadow-lg">
+                <span>🔥</span>
+                <span>{product.discount_percentage}% OFF</span>
               </div>
             )}
             {product.image_url ? (
