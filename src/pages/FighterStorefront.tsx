@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import demoHeroImage from "@/assets/demo-hero-marcus.jpg";
 
 interface Fighter {
   id: string;
@@ -229,15 +230,11 @@ export default function FighterStorefront() {
 
       {/* Hero Banner */}
       <section className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
-        {fighter?.hero_image_url ? (
-          <img 
-            src={fighter.hero_image_url} 
-            alt={`${fighter.full_name} banner`}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-muted via-muted/80 to-muted/60" />
-        )}
+        <img 
+          src={fighter?.hero_image_url || demoHeroImage} 
+          alt={`${fighter?.full_name} banner`}
+          className="h-full w-full object-cover"
+        />
         {/* Dark overlay for better contrast */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
       </section>
