@@ -31,17 +31,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus } from "lucide-react";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
 
 interface Fighter {
   id: string;
-  user_id: string;
+  user_id: string | null;
   handle: string;
   full_name: string;
-  sport: string;
-  country: string;
+  sport: string | null;
+  country: string | null;
   short_bio: string | null;
   app_username: string | null;
   profile_image_url: string | null;
@@ -130,6 +130,29 @@ export default function AdminFighters() {
   const [uploadingHero, setUploadingHero] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   
+  // Create dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createData, setCreateData] = useState({
+    full_name: "",
+    handle: "",
+    sport: "",
+    country: "",
+    short_bio: "",
+    app_username: "",
+    status: "approved" as FighterStatus,
+    social_instagram: "",
+    social_twitter: "",
+    social_youtube: "",
+    social_tiktok: "",
+    social_facebook: "",
+    social_snapchat: "",
+  });
+  const [createProfileImageFile, setCreateProfileImageFile] = useState<File | null>(null);
+  const [createProfileImagePreview, setCreateProfileImagePreview] = useState<string | null>(null);
+  const [createHeroImageFile, setCreateHeroImageFile] = useState<File | null>(null);
+  const [createHeroImagePreview, setCreateHeroImagePreview] = useState<string | null>(null);
+  const [savingCreate, setSavingCreate] = useState(false);
+  
   // Review changes dialog state
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewingFighter, setReviewingFighter] = useState<Fighter | null>(null);
@@ -205,8 +228,8 @@ export default function AdminFighters() {
     setEditData({
       full_name: fighter.full_name,
       handle: fighter.handle,
-      sport: fighter.sport,
-      country: fighter.country,
+      sport: fighter.sport || "",
+      country: fighter.country || "",
       short_bio: fighter.short_bio || "",
       app_username: fighter.app_username || "",
       social_instagram: fighter.social_instagram || "",
@@ -219,6 +242,178 @@ export default function AdminFighters() {
     setHeroImageFile(null);
     setHeroImagePreview(fighter.hero_image_url || null);
     setEditDialogOpen(true);
+  }
+
+  // Generate handle from name
+  function generateHandle(name: string): string {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  }
+
+  // Open create dialog
+  function openCreateDialog() {
+    setCreateData({
+      full_name: "",
+      handle: "",
+      sport: "",
+      country: "",
+      short_bio: "",
+      app_username: "",
+      status: "approved",
+      social_instagram: "",
+      social_twitter: "",
+      social_youtube: "",
+      social_tiktok: "",
+      social_facebook: "",
+      social_snapchat: "",
+    });
+    setCreateProfileImageFile(null);
+    setCreateProfileImagePreview(null);
+    setCreateHeroImageFile(null);
+    setCreateHeroImagePreview(null);
+    setCreateDialogOpen(true);
+  }
+
+  // Handle profile image for create
+  function handleCreateProfileImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPG, PNG, or WebP image.", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 2MB.", variant: "destructive" });
+      return;
+    }
+
+    setCreateProfileImageFile(file);
+    setCreateProfileImagePreview(URL.createObjectURL(file));
+  }
+
+  // Handle hero image for create
+  function handleCreateHeroImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPG, PNG, or WebP image.", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 5MB.", variant: "destructive" });
+      return;
+    }
+
+    setCreateHeroImageFile(file);
+    setCreateHeroImagePreview(URL.createObjectURL(file));
+  }
+
+  // Create new fighter
+  async function handleCreateFighter() {
+    if (!createData.full_name.trim()) {
+      toast({ title: "Name required", description: "Please enter the fighter's name.", variant: "destructive" });
+      return;
+    }
+
+    const handle = createData.handle.trim() || generateHandle(createData.full_name);
+    if (!handle) {
+      toast({ title: "Handle required", description: "Please enter a handle or name to generate one.", variant: "destructive" });
+      return;
+    }
+
+    setSavingCreate(true);
+
+    let profileUrl: string | null = null;
+    let heroUrl: string | null = null;
+
+    // Upload profile image if provided
+    if (createProfileImageFile) {
+      const fileExt = createProfileImageFile.name.split(".").pop();
+      const fileName = `${handle}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("fighter-avatars")
+        .upload(fileName, createProfileImageFile, { upsert: true });
+      
+      if (uploadError) {
+        toast({ title: "Error uploading profile image", description: uploadError.message, variant: "destructive" });
+        setSavingCreate(false);
+        return;
+      }
+      
+      const { data: urlData } = supabase.storage
+        .from("fighter-avatars")
+        .getPublicUrl(fileName);
+      
+      profileUrl = urlData.publicUrl;
+    }
+
+    // Upload hero image if provided
+    if (createHeroImageFile) {
+      const fileExt = createHeroImageFile.name.split(".").pop();
+      const fileName = `${handle}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("fighter-heroes")
+        .upload(fileName, createHeroImageFile, { upsert: true });
+      
+      if (uploadError) {
+        toast({ title: "Error uploading hero image", description: uploadError.message, variant: "destructive" });
+        setSavingCreate(false);
+        return;
+      }
+      
+      const { data: urlData } = supabase.storage
+        .from("fighter-heroes")
+        .getPublicUrl(fileName);
+      
+      heroUrl = urlData.publicUrl;
+    }
+
+    const { error } = await supabase
+      .from("fighters")
+      .insert({
+        full_name: createData.full_name.trim(),
+        handle,
+        sport: createData.sport || null,
+        country: createData.country || null,
+        short_bio: createData.short_bio.trim() || null,
+        app_username: createData.app_username.trim() || null,
+        status: createData.status,
+        profile_image_url: profileUrl,
+        hero_image_url: heroUrl,
+        social_instagram: createData.social_instagram.trim() || null,
+        social_twitter: createData.social_twitter.trim() || null,
+        social_youtube: createData.social_youtube.trim() || null,
+        social_tiktok: createData.social_tiktok.trim() || null,
+        social_facebook: createData.social_facebook.trim() || null,
+        social_snapchat: createData.social_snapchat.trim() || null,
+        user_id: null,
+      });
+
+    setSavingCreate(false);
+
+    if (error) {
+      if (error.code === "23505") {
+        toast({ title: "Handle already exists", description: "Please choose a different handle.", variant: "destructive" });
+      } else {
+        toast({ title: "Error creating fighter", description: error.message, variant: "destructive" });
+      }
+    } else {
+      toast({ title: "Fighter created", description: `${createData.full_name} has been added.` });
+      setCreateDialogOpen(false);
+      fetchFighters();
+    }
   }
 
   // Handle hero image file selection
@@ -424,17 +619,24 @@ export default function AdminFighters() {
             <p className="text-muted-foreground">Manage fighter applications and statuses</p>
           </div>
 
-          <Select value={filter} onValueChange={(v) => setFilter(v as FighterStatus | "all")}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-3">
+            <Button onClick={openCreateDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Fighter
+            </Button>
+            
+            <Select value={filter} onValueChange={(v) => setFilter(v as FighterStatus | "all")}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="rounded-lg border border-border">
@@ -492,8 +694,8 @@ export default function AdminFighters() {
                       </TableCell>
                       <TableCell className="font-medium">{fighter.full_name}</TableCell>
                       <TableCell className="text-muted-foreground">@{fighter.handle}</TableCell>
-                      <TableCell>{fighter.sport}</TableCell>
-                      <TableCell>{fighter.country}</TableCell>
+                      <TableCell>{fighter.sport || "—"}</TableCell>
+                      <TableCell>{fighter.country || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{fighter.app_username || "—"}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
@@ -772,10 +974,10 @@ export default function AdminFighters() {
                 const changedFields: { label: string; current: string; proposed: string }[] = [];
                 
                 if (changes.sport && changes.sport !== reviewingFighter.sport) {
-                  changedFields.push({ label: "Sport", current: reviewingFighter.sport, proposed: changes.sport });
+                  changedFields.push({ label: "Sport", current: reviewingFighter.sport || "(none)", proposed: changes.sport });
                 }
                 if (changes.country && changes.country !== reviewingFighter.country) {
-                  changedFields.push({ label: "Country", current: reviewingFighter.country, proposed: changes.country });
+                  changedFields.push({ label: "Country", current: reviewingFighter.country || "(none)", proposed: changes.country });
                 }
                 if (changes.short_bio !== undefined && changes.short_bio !== (reviewingFighter.short_bio || "")) {
                   changedFields.push({ 
@@ -833,6 +1035,253 @@ export default function AdminFighters() {
               disabled={processingReview}
             >
               {processingReview ? "Processing..." : "Approve Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Fighter Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Fighter</DialogTitle>
+            <DialogDescription>
+              Create a new fighter profile. Only the name is required.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="create-name">Full Name *</Label>
+                <Input
+                  id="create-name"
+                  value={createData.full_name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setCreateData({ 
+                      ...createData, 
+                      full_name: name,
+                      handle: createData.handle || generateHandle(name)
+                    });
+                  }}
+                  placeholder="Fighter's full name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-handle">Handle</Label>
+                <Input
+                  id="create-handle"
+                  value={createData.handle}
+                  onChange={(e) => setCreateData({ ...createData, handle: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                  placeholder="url-friendly-handle"
+                />
+                <p className="text-xs text-muted-foreground">Auto-generated from name</p>
+              </div>
+            </div>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Sport</Label>
+                <Select value={createData.sport} onValueChange={(value) => setCreateData({ ...createData, sport: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select sport" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sports.map((sport) => (
+                      <SelectItem key={sport} value={sport}>{sport}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Country</Label>
+                <Select value={createData.country} onValueChange={(value) => setCreateData({ ...createData, country: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country} value={country}>{country}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="create-username">App Username</Label>
+                <Input
+                  id="create-username"
+                  value={createData.app_username}
+                  onChange={(e) => setCreateData({ ...createData, app_username: e.target.value })}
+                  placeholder="Combat Market App username"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={createData.status} onValueChange={(value) => setCreateData({ ...createData, status: value as FighterStatus })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="create-bio">Short Bio</Label>
+              <Textarea
+                id="create-bio"
+                value={createData.short_bio}
+                onChange={(e) => setCreateData({ ...createData, short_bio: e.target.value })}
+                placeholder="Brief description of the fighter"
+                rows={3}
+              />
+            </div>
+
+            {/* Profile Image */}
+            <div className="border-t border-border pt-4">
+              <Label className="text-sm font-medium">Profile Image</Label>
+              <p className="text-xs text-muted-foreground mb-3">Avatar image for the fighter (max 2MB)</p>
+              
+              {createProfileImagePreview ? (
+                <div className="relative w-24 h-24">
+                  <img 
+                    src={createProfileImagePreview} 
+                    alt="Profile preview"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setCreateProfileImageFile(null); setCreateProfileImagePreview(null); }}
+                    className="absolute -top-1 -right-1 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-border rounded-full cursor-pointer hover:bg-muted/50 transition-colors">
+                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleCreateProfileImageChange}
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Hero Banner Image */}
+            <div className="border-t border-border pt-4">
+              <Label className="text-sm font-medium">Hero Banner Image</Label>
+              <p className="text-xs text-muted-foreground mb-3">Banner image for the storefront (max 5MB)</p>
+              
+              {createHeroImagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={createHeroImagePreview} 
+                    alt="Hero preview"
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setCreateHeroImageFile(null); setCreateHeroImagePreview(null); }}
+                    className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <Image className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Click to upload hero image</p>
+                  </div>
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleCreateHeroImageChange}
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Social Media Links */}
+            <div className="border-t border-border pt-4">
+              <Label className="text-sm font-medium">Social Media Links</Label>
+              <p className="text-xs text-muted-foreground mb-3">Add social media profile URLs</p>
+              
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="create-instagram" className="text-xs text-muted-foreground">Instagram</Label>
+                  <Input
+                    id="create-instagram"
+                    value={createData.social_instagram}
+                    onChange={(e) => setCreateData({ ...createData, social_instagram: e.target.value })}
+                    placeholder="https://instagram.com/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="create-twitter" className="text-xs text-muted-foreground">X (Twitter)</Label>
+                  <Input
+                    id="create-twitter"
+                    value={createData.social_twitter}
+                    onChange={(e) => setCreateData({ ...createData, social_twitter: e.target.value })}
+                    placeholder="https://x.com/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="create-youtube" className="text-xs text-muted-foreground">YouTube</Label>
+                  <Input
+                    id="create-youtube"
+                    value={createData.social_youtube}
+                    onChange={(e) => setCreateData({ ...createData, social_youtube: e.target.value })}
+                    placeholder="https://youtube.com/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="create-tiktok" className="text-xs text-muted-foreground">TikTok</Label>
+                  <Input
+                    id="create-tiktok"
+                    value={createData.social_tiktok}
+                    onChange={(e) => setCreateData({ ...createData, social_tiktok: e.target.value })}
+                    placeholder="https://tiktok.com/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="create-facebook" className="text-xs text-muted-foreground">Facebook</Label>
+                  <Input
+                    id="create-facebook"
+                    value={createData.social_facebook}
+                    onChange={(e) => setCreateData({ ...createData, social_facebook: e.target.value })}
+                    placeholder="https://facebook.com/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="create-snapchat" className="text-xs text-muted-foreground">Snapchat</Label>
+                  <Input
+                    id="create-snapchat"
+                    value={createData.social_snapchat}
+                    onChange={(e) => setCreateData({ ...createData, social_snapchat: e.target.value })}
+                    placeholder="https://snapchat.com/..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateFighter} disabled={savingCreate}>
+              {savingCreate ? "Creating..." : "Create Fighter"}
             </Button>
           </DialogFooter>
         </DialogContent>
