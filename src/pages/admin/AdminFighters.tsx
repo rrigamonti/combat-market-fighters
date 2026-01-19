@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { PageMeta } from "@/components/PageMeta";
@@ -34,6 +34,7 @@ import { toast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus } from "lucide-react";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
+import ImageCropper from "@/components/ImageCropper";
 
 interface Fighter {
   id: string;
@@ -156,6 +157,11 @@ export default function AdminFighters() {
   const [createHeroImagePreview, setCreateHeroImagePreview] = useState<string | null>(null);
   const [savingCreate, setSavingCreate] = useState(false);
   
+  // Image cropper state
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperImage, setCropperImage] = useState<string>("");
+  const [cropperType, setCropperType] = useState<"edit-profile" | "edit-hero" | "create-profile" | "create-hero">("edit-profile");
+  
   // Review changes dialog state
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewingFighter, setReviewingFighter] = useState<Fighter | null>(null);
@@ -249,7 +255,7 @@ export default function AdminFighters() {
     setEditDialogOpen(true);
   }
 
-  // Handle profile image for edit
+  // Handle profile image for edit - open cropper
   function handleEditProfileImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -265,10 +271,15 @@ export default function AdminFighters() {
       return;
     }
 
-    setProfileImageFile(file);
     const reader = new FileReader();
-    reader.onload = (e) => setProfileImagePreview(e.target?.result as string);
+    reader.onload = (e) => {
+      setCropperImage(e.target?.result as string);
+      setCropperType("edit-profile");
+      setCropperOpen(true);
+    };
     reader.readAsDataURL(file);
+    // Reset input so same file can be selected again
+    e.target.value = "";
   }
 
   // Remove profile image in edit
@@ -276,6 +287,31 @@ export default function AdminFighters() {
     setProfileImageFile(null);
     setProfileImagePreview(null);
   }
+
+  // Handle cropper completion
+  const handleCropComplete = useCallback((croppedBlob: Blob) => {
+    const file = new File([croppedBlob], `cropped-${Date.now()}.jpg`, { type: "image/jpeg" });
+    const previewUrl = URL.createObjectURL(croppedBlob);
+
+    switch (cropperType) {
+      case "edit-profile":
+        setProfileImageFile(file);
+        setProfileImagePreview(previewUrl);
+        break;
+      case "edit-hero":
+        setHeroImageFile(file);
+        setHeroImagePreview(previewUrl);
+        break;
+      case "create-profile":
+        setCreateProfileImageFile(file);
+        setCreateProfileImagePreview(previewUrl);
+        break;
+      case "create-hero":
+        setCreateHeroImageFile(file);
+        setCreateHeroImagePreview(previewUrl);
+        break;
+    }
+  }, [cropperType]);
 
   // Generate handle from name
   function generateHandle(name: string): string {
@@ -311,7 +347,7 @@ export default function AdminFighters() {
     setCreateDialogOpen(true);
   }
 
-  // Handle profile image for create
+  // Handle profile image for create - open cropper
   function handleCreateProfileImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -327,11 +363,17 @@ export default function AdminFighters() {
       return;
     }
 
-    setCreateProfileImageFile(file);
-    setCreateProfileImagePreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCropperImage(e.target?.result as string);
+      setCropperType("create-profile");
+      setCropperOpen(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
 
-  // Handle hero image for create
+  // Handle hero image for create - open cropper
   function handleCreateHeroImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -347,8 +389,14 @@ export default function AdminFighters() {
       return;
     }
 
-    setCreateHeroImageFile(file);
-    setCreateHeroImagePreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCropperImage(e.target?.result as string);
+      setCropperType("create-hero");
+      setCropperOpen(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
 
   // Check if slug is already in use
@@ -474,7 +522,7 @@ export default function AdminFighters() {
     }
   }
 
-  // Handle hero image file selection
+  // Handle hero image file selection - open cropper
   function handleHeroImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -492,8 +540,14 @@ export default function AdminFighters() {
       return;
     }
 
-    setHeroImageFile(file);
-    setHeroImagePreview(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCropperImage(e.target?.result as string);
+      setCropperType("edit-hero");
+      setCropperOpen(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   }
 
   // Remove hero image
@@ -1435,6 +1489,16 @@ export default function AdminFighters() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Image Cropper */}
+      <ImageCropper
+        open={cropperOpen}
+        onClose={() => setCropperOpen(false)}
+        imageSrc={cropperImage}
+        aspectRatio={cropperType.includes("profile") ? 1 : 16 / 6}
+        cropShape={cropperType.includes("profile") ? "round" : "rect"}
+        onCropComplete={handleCropComplete}
+      />
     </AdminLayout>
   );
 }
