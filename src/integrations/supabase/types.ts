@@ -82,8 +82,8 @@ export type Database = {
           app_username: string | null
           country: string | null
           created_at: string
-          full_name: string
-          handle: string
+          full_name: string | null
+          handle: string | null
           hero_image_url: string | null
           id: string
           pending_changes: Json | null
@@ -104,8 +104,8 @@ export type Database = {
           app_username?: string | null
           country?: string | null
           created_at?: string
-          full_name: string
-          handle: string
+          full_name?: string | null
+          handle?: string | null
           hero_image_url?: string | null
           id?: string
           pending_changes?: Json | null
@@ -126,8 +126,8 @@ export type Database = {
           app_username?: string | null
           country?: string | null
           created_at?: string
-          full_name?: string
-          handle?: string
+          full_name?: string | null
+          handle?: string | null
           hero_image_url?: string | null
           id?: string
           pending_changes?: Json | null
