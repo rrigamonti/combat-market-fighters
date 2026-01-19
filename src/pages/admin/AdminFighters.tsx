@@ -128,6 +128,9 @@ export default function AdminFighters() {
   const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
   const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
   const [uploadingHero, setUploadingHero] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   
   // Create dialog state
@@ -241,7 +244,37 @@ export default function AdminFighters() {
     });
     setHeroImageFile(null);
     setHeroImagePreview(fighter.hero_image_url || null);
+    setProfileImageFile(null);
+    setProfileImagePreview(fighter.profile_image_url || null);
     setEditDialogOpen(true);
+  }
+
+  // Handle profile image for edit
+  function handleEditProfileImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPG, PNG, or WebP image.", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Profile image must be under 2MB.", variant: "destructive" });
+      return;
+    }
+
+    setProfileImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setProfileImagePreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  // Remove profile image in edit
+  function removeEditProfileImage() {
+    setProfileImageFile(null);
+    setProfileImagePreview(null);
   }
 
   // Generate handle from name
@@ -489,6 +522,35 @@ export default function AdminFighters() {
     setSavingEdit(true);
     
     let heroUrl = editingFighter.hero_image_url;
+    let profileUrl = editingFighter.profile_image_url;
+    
+    // Upload profile image if a new file was selected
+    if (profileImageFile) {
+      setUploadingProfile(true);
+      const fileExt = profileImageFile.name.split(".").pop();
+      const fileName = `${editingFighter.id}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("fighter-avatars")
+        .upload(fileName, profileImageFile, { upsert: true });
+      
+      if (uploadError) {
+        toast({ title: "Error uploading profile image", description: uploadError.message, variant: "destructive" });
+        setSavingEdit(false);
+        setUploadingProfile(false);
+        return;
+      }
+      
+      const { data: urlData } = supabase.storage
+        .from("fighter-avatars")
+        .getPublicUrl(fileName);
+      
+      profileUrl = urlData.publicUrl;
+      setUploadingProfile(false);
+    } else if (profileImagePreview === null && editingFighter.profile_image_url) {
+      // Profile image was removed
+      profileUrl = null;
+    }
     
     // Upload hero image if a new file was selected
     if (heroImageFile) {
@@ -527,6 +589,7 @@ export default function AdminFighters() {
         country: editData.country,
         short_bio: editData.short_bio || null,
         app_username: editData.app_username || null,
+        profile_image_url: profileUrl,
         hero_image_url: heroUrl,
         social_instagram: editData.social_instagram || null,
         social_twitter: editData.social_twitter || null,
@@ -891,6 +954,39 @@ export default function AdminFighters() {
               <p className="text-xs text-muted-foreground">
                 {editData.short_bio.length}/500 characters
               </p>
+            </div>
+
+            {/* Profile Image */}
+            <div className="border-t border-border pt-4">
+              <Label className="text-sm font-medium">Profile Image</Label>
+              <p className="text-xs text-muted-foreground mb-3">Avatar image for the fighter (max 2MB)</p>
+              
+              {profileImagePreview ? (
+                <div className="relative w-24 h-24">
+                  <img 
+                    src={profileImagePreview} 
+                    alt="Profile preview"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeEditProfileImage}
+                    className="absolute -top-1 -right-1 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed border-border rounded-full cursor-pointer hover:bg-muted/50 transition-colors">
+                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleEditProfileImageChange}
+                  />
+                </label>
+              )}
             </div>
 
             {/* Hero Banner Image */}
