@@ -38,8 +38,8 @@ import { getStorefrontUrl } from "@/lib/config";
 interface Fighter {
   id: string;
   user_id: string | null;
-  handle: string;
-  full_name: string;
+  handle: string | null;
+  full_name: string | null;
   sport: string | null;
   country: string | null;
   short_bio: string | null;
@@ -320,15 +320,14 @@ export default function AdminFighters() {
 
   // Create new fighter
   async function handleCreateFighter() {
-    if (!createData.full_name.trim()) {
-      toast({ title: "Name required", description: "Please enter the fighter's name.", variant: "destructive" });
-      return;
+    // Generate handle from name, or create a random one if no name provided
+    let handle = createData.handle.trim();
+    if (!handle && createData.full_name.trim()) {
+      handle = generateHandle(createData.full_name);
     }
-
-    const handle = createData.handle.trim() || generateHandle(createData.full_name);
     if (!handle) {
-      toast({ title: "Handle required", description: "Please enter a handle or name to generate one.", variant: "destructive" });
-      return;
+      // Generate random handle if nothing provided
+      handle = `fighter-${Date.now()}`;
     }
 
     setSavingCreate(true);
@@ -383,8 +382,8 @@ export default function AdminFighters() {
     const { error } = await supabase
       .from("fighters")
       .insert({
-        full_name: createData.full_name.trim(),
-        handle,
+        full_name: createData.full_name.trim() || null,
+        handle: handle || null,
         sport: createData.sport || null,
         country: createData.country || null,
         short_bio: createData.short_bio.trim() || null,
@@ -410,7 +409,7 @@ export default function AdminFighters() {
         toast({ title: "Error creating fighter", description: error.message, variant: "destructive" });
       }
     } else {
-      toast({ title: "Fighter created", description: `${createData.full_name} has been added.` });
+      toast({ title: "Fighter created", description: `${createData.full_name || "New fighter"} has been added.` });
       setCreateDialogOpen(false);
       fetchFighters();
     }
@@ -682,18 +681,18 @@ export default function AdminFighters() {
                           {fighter.profile_image_url ? (
                             <img 
                               src={fighter.profile_image_url} 
-                              alt={fighter.full_name}
+                              alt={fighter.full_name || "Fighter"}
                               className="h-full w-full object-cover"
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-xs font-medium text-muted-foreground">
-                              {fighter.full_name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                              {fighter.full_name ? fighter.full_name.split(" ").map(n => n[0]).join("").slice(0, 2) : "?"}
                             </div>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{fighter.full_name}</TableCell>
-                      <TableCell className="text-muted-foreground">@{fighter.handle}</TableCell>
+                      <TableCell className="font-medium">{fighter.full_name || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{fighter.handle ? `@${fighter.handle}` : "—"}</TableCell>
                       <TableCell>{fighter.sport || "—"}</TableCell>
                       <TableCell>{fighter.country || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{fighter.app_username || "—"}</TableCell>
