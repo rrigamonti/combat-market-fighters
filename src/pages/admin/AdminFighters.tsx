@@ -1050,33 +1050,40 @@ export default function AdminFighters() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="create-name">Full Name *</Label>
-                <Input
-                  id="create-name"
-                  value={createData.full_name}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    setCreateData({ 
-                      ...createData, 
-                      full_name: name,
-                      handle: createData.handle || generateHandle(name)
-                    });
-                  }}
-                  placeholder="Fighter's full name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-handle">Handle</Label>
-                <Input
-                  id="create-handle"
-                  value={createData.handle}
-                  onChange={(e) => setCreateData({ ...createData, handle: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-                  placeholder="url-friendly-handle"
-                />
-                <p className="text-xs text-muted-foreground">Auto-generated from name</p>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-name">Full Name</Label>
+              <Input
+                id="create-name"
+                value={createData.full_name}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setCreateData({ 
+                    ...createData, 
+                    full_name: name,
+                    handle: createData.handle || generateHandle(name)
+                  });
+                }}
+                placeholder="Fighter's full name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="create-handle">Storefront Slug</Label>
+              <Input
+                id="create-handle"
+                value={createData.handle}
+                onChange={(e) => setCreateData({ ...createData, handle: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                placeholder="url-friendly-slug"
+              />
+              <p className="text-xs text-muted-foreground">Auto-generated from name. Leave blank for auto-generation.</p>
+              {(createData.handle || createData.full_name) && (
+                <div className="mt-2 p-2 bg-muted rounded-md">
+                  <p className="text-xs text-muted-foreground">Storefront URL:</p>
+                  <p className="text-sm font-mono text-primary break-all">
+                    combat-market-fighters.lovable.app/{createData.handle || generateHandle(createData.full_name) || "fighter-xxx"}
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
