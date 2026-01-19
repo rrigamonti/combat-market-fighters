@@ -775,23 +775,31 @@ export default function AdminFighters() {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Full Name</Label>
-                <Input
-                  id="edit-name"
-                  value={editData.full_name}
-                  onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-handle">Handle</Label>
-                <Input
-                  id="edit-handle"
-                  value={editData.handle}
-                  onChange={(e) => setEditData({ ...editData, handle: e.target.value })}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={editData.full_name}
+                onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-handle">Storefront Slug</Label>
+              <Input
+                id="edit-handle"
+                value={editData.handle}
+                onChange={(e) => setEditData({ ...editData, handle: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                placeholder="url-friendly-slug"
+              />
+              {editData.handle && (
+                <div className="mt-2 p-2 bg-muted rounded-md">
+                  <p className="text-xs text-muted-foreground">Storefront URL:</p>
+                  <p className="text-sm font-mono text-primary break-all">
+                    cm.automationsuite.ai/{editData.handle}
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
@@ -1080,7 +1088,7 @@ export default function AdminFighters() {
                 <div className="mt-2 p-2 bg-muted rounded-md">
                   <p className="text-xs text-muted-foreground">Storefront URL:</p>
                   <p className="text-sm font-mono text-primary break-all">
-                    combat-market-fighters.lovable.app/{createData.handle || generateHandle(createData.full_name) || "fighter-xxx"}
+                    cm.automationsuite.ai/{createData.handle || generateHandle(createData.full_name) || "fighter-xxx"}
                   </p>
                 </div>
               )}
