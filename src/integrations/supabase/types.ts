@@ -80,7 +80,7 @@ export type Database = {
       fighters: {
         Row: {
           app_username: string | null
-          country: string
+          country: string | null
           created_at: string
           full_name: string
           handle: string
@@ -88,21 +88,21 @@ export type Database = {
           id: string
           pending_changes: Json | null
           profile_image_url: string | null
-          short_bio: string
+          short_bio: string | null
           social_facebook: string | null
           social_instagram: string | null
           social_snapchat: string | null
           social_tiktok: string | null
           social_twitter: string | null
           social_youtube: string | null
-          sport: string
+          sport: string | null
           status: Database["public"]["Enums"]["fighter_status"]
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           app_username?: string | null
-          country: string
+          country?: string | null
           created_at?: string
           full_name: string
           handle: string
@@ -110,21 +110,21 @@ export type Database = {
           id?: string
           pending_changes?: Json | null
           profile_image_url?: string | null
-          short_bio: string
+          short_bio?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_snapchat?: string | null
           social_tiktok?: string | null
           social_twitter?: string | null
           social_youtube?: string | null
-          sport: string
+          sport?: string | null
           status?: Database["public"]["Enums"]["fighter_status"]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           app_username?: string | null
-          country?: string
+          country?: string | null
           created_at?: string
           full_name?: string
           handle?: string
@@ -132,17 +132,17 @@ export type Database = {
           id?: string
           pending_changes?: Json | null
           profile_image_url?: string | null
-          short_bio?: string
+          short_bio?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_snapchat?: string | null
           social_tiktok?: string | null
           social_twitter?: string | null
           social_youtube?: string | null
-          sport?: string
+          sport?: string | null
           status?: Database["public"]["Enums"]["fighter_status"]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
