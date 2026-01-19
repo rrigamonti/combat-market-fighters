@@ -318,6 +318,21 @@ export default function AdminFighters() {
     setCreateHeroImagePreview(URL.createObjectURL(file));
   }
 
+  // Check if slug is already in use
+  async function checkSlugExists(slug: string, excludeFighterId?: string): Promise<boolean> {
+    const query = supabase
+      .from("fighters")
+      .select("id")
+      .eq("handle", slug);
+    
+    if (excludeFighterId) {
+      query.neq("id", excludeFighterId);
+    }
+    
+    const { data } = await query.maybeSingle();
+    return !!data;
+  }
+
   // Create new fighter
   async function handleCreateFighter() {
     // Generate handle from name, or create a random one if no name provided
@@ -328,6 +343,17 @@ export default function AdminFighters() {
     if (!handle) {
       // Generate random handle if nothing provided
       handle = `fighter-${Date.now()}`;
+    }
+
+    // Check if slug is already in use
+    const slugExists = await checkSlugExists(handle);
+    if (slugExists) {
+      toast({ 
+        title: "Slug already in use", 
+        description: `The storefront slug "${handle}" is already taken. Please choose a different one.`, 
+        variant: "destructive" 
+      });
+      return;
     }
 
     setSavingCreate(true);
@@ -446,6 +472,19 @@ export default function AdminFighters() {
   // Save admin edit (direct update)
   async function handleSaveEdit() {
     if (!editingFighter) return;
+    
+    // Check if slug changed and is already in use
+    if (editData.handle && editData.handle !== editingFighter.handle) {
+      const slugExists = await checkSlugExists(editData.handle, editingFighter.id);
+      if (slugExists) {
+        toast({ 
+          title: "Slug already in use", 
+          description: `The storefront slug "${editData.handle}" is already taken. Please choose a different one.`, 
+          variant: "destructive" 
+        });
+        return;
+      }
+    }
     
     setSavingEdit(true);
     
