@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy } from "lucide-react";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
 import ImageCropper from "@/components/ImageCropper";
@@ -871,6 +871,20 @@ export default function AdminFighters() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {fighter.handle && fighter.status === "approved" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const url = getStorefrontUrl(fighter.handle!);
+                                navigator.clipboard.writeText(url);
+                                toast({ title: "URL copied!", description: url });
+                              }}
+                            >
+                              <Copy className="h-3 w-3 mr-1" />
+                              Copy URL
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
