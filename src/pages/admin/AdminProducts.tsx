@@ -244,7 +244,7 @@ export default function AdminProducts() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Manage Products - Admin" description="Admin panel for managing affiliate products on Combat Market." />
+      <PageMeta title="Manage Products - Admin" description="Admin panel for managing affiliate products on Combat Market." noindex />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

@@ -203,7 +203,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageMeta title="Fighter Dashboard" description="Manage your Combat Market fighter profile, storefront, and track your affiliate earnings." />
+      <PageMeta title="Fighter Dashboard" description="Manage your Combat Market fighter profile, storefront, and track your affiliate earnings." noindex />
       <Navbar />
 
       <main className="container mx-auto px-4 py-24">

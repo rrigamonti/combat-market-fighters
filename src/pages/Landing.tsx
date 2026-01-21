@@ -6,10 +6,20 @@ import { Store, ShoppingBag, TrendingUp, Check, ChevronRight } from "lucide-reac
 import { useScrollToHash } from "@/hooks/useScrollToHash";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageMeta } from "@/components/PageMeta";
+import { OrganizationSchema, FAQSchema, WebSiteSchema } from "@/components/StructuredData";
 import PhotoGrid from "@/components/landing/PhotoGrid";
 import heroImage from "@/assets/landing/hero-fighter-silhouette.jpg";
 import glovesImage from "@/assets/landing/gloves-product.jpg";
 import equipmentImage from "@/assets/landing/equipment-flatlay.jpg";
+
+// FAQ data for schema
+const faqItems = [
+  { question: "Is this free?", answer: "Yes. Claiming a storefront is free for fighters." },
+  { question: "Do I need sponsors or a big following?", answer: "No. You earn from what you already use and share." },
+  { question: "Who can join?", answer: "Fighters, coaches, and combat athletes at any level." },
+  { question: "How do payouts work?", answer: "Sales are tracked automatically and paid out directly." },
+  { question: "When will fans be able to browse fighters?", answer: "The public fighter directory will be added as the platform expands." },
+];
 
 const Landing = () => {
   useScrollToHash();
@@ -18,6 +28,9 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       <PageMeta description="Turn your fight gear into income. Claim your personal Combat Market storefront and earn from the brands you already use." />
+      <OrganizationSchema />
+      <WebSiteSchema />
+      <FAQSchema items={faqItems} />
       <Navbar />
 
       {/* Hero Section */}

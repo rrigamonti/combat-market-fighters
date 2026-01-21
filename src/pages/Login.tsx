@@ -78,7 +78,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageMeta title="Login" description="Sign in to your Combat Market fighter dashboard to manage your storefront and track earnings." />
+      <PageMeta title="Login" description="Sign in to your Combat Market fighter dashboard to manage your storefront and track earnings." noindex />
       <Navbar />
       
       <div className="flex min-h-screen items-center justify-center px-4 pt-16">

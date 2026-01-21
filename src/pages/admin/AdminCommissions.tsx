@@ -226,7 +226,7 @@ export default function AdminCommissions() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Commission Rates | Admin" />
+      <PageMeta title="Commission Rates | Admin" noindex />
       
       <div className="space-y-6">
         <div className="flex items-center justify-between">

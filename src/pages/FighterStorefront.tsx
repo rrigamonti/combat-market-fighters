@@ -4,11 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
+import { PersonSchema } from "@/components/StructuredData";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { getCanonicalUrl } from "@/lib/config";
 import defaultHeroImage from "@/assets/demo-hero-marcus.jpg";
 
 interface Fighter {
@@ -230,11 +232,31 @@ export default function FighterStorefront() {
     );
   }
 
+  // Build social links for Person schema
+  const schemaSocialLinks = fighter ? [
+    fighter.social_instagram,
+    fighter.social_twitter,
+    fighter.social_youtube,
+    fighter.social_tiktok,
+    fighter.social_facebook,
+    fighter.social_snapchat,
+  ].filter(Boolean) as string[] : [];
+
   return (
     <div className="min-h-screen bg-background">
       <PageMeta 
         title={`${fighter?.full_name}'s Store`} 
-        description={`Shop products recommended by ${fighter?.full_name}. ${fighter?.sport} fighter from ${fighter?.country}.`} 
+        description={`Shop products recommended by ${fighter?.full_name}. ${fighter?.sport} fighter from ${fighter?.country}.`}
+        image={fighter?.profile_image_url || fighter?.hero_image_url || undefined}
+      />
+      <PersonSchema
+        name={fighter?.full_name || ""}
+        description={fighter?.short_bio || `${fighter?.sport} fighter from ${fighter?.country}`}
+        image={fighter?.profile_image_url || undefined}
+        url={getCanonicalUrl(`/${fighter?.handle}`)}
+        sameAs={schemaSocialLinks}
+        jobTitle={fighter?.sport ? `${fighter.sport} Fighter` : "Combat Athlete"}
+        nationality={fighter?.country || undefined}
       />
       <Navbar />
 

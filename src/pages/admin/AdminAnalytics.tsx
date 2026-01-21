@@ -233,7 +233,7 @@ export default function AdminAnalytics() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Analytics" />
+      <PageMeta title="Analytics" noindex />
 
       <div className="space-y-6">
         {/* Header */}

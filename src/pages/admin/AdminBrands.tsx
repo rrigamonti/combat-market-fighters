@@ -221,7 +221,7 @@ export default function AdminBrands() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Manage Brands - Admin" description="Admin panel for managing brands on Combat Market." />
+      <PageMeta title="Manage Brands - Admin" description="Admin panel for managing brands on Combat Market." noindex />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

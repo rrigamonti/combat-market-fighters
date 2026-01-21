@@ -138,7 +138,7 @@ export default function AdminSales() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Sales | Admin" />
+      <PageMeta title="Sales | Admin" noindex />
       
       <div className="space-y-6">
         <div>
