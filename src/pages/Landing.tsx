@@ -57,10 +57,10 @@ const Landing = () => {
       {/* Social Proof */}
       <section className="border-t border-border py-12">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-lg font-medium text-foreground">
+          <h2 className="font-display text-2xl uppercase tracking-wide text-foreground md:text-3xl">
             Built for fighters, coaches, and combat athletes worldwide
-          </p>
-          <p className="mt-3 text-muted-foreground">
+          </h2>
+          <p className="mt-4 text-sm uppercase tracking-widest text-muted-foreground md:text-base">
             MMA • Boxing • Muay Thai • BJJ • Wrestling • Functional Fitness
           </p>
         </div>
