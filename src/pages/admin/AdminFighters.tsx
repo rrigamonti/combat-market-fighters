@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search } from "lucide-react";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
 import ImageCropper from "@/components/ImageCropper";
@@ -108,6 +108,7 @@ export default function AdminFighters() {
   const [fighters, setFighters] = useState<Fighter[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FighterStatus | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -775,6 +776,16 @@ export default function AdminFighters() {
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search fighters..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-64"
+              />
+            </div>
+            
             <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               Add Fighter
@@ -818,14 +829,34 @@ export default function AdminFighters() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : fighters.length === 0 ? (
+              ) : fighters.filter((fighter) => {
+                if (!searchQuery.trim()) return true;
+                const query = searchQuery.toLowerCase();
+                return (
+                  fighter.full_name?.toLowerCase().includes(query) ||
+                  fighter.handle?.toLowerCase().includes(query) ||
+                  fighter.sport?.toLowerCase().includes(query) ||
+                  fighter.country?.toLowerCase().includes(query) ||
+                  fighter.app_username?.toLowerCase().includes(query)
+                );
+              }).length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                    No fighters found
+                    {searchQuery.trim() ? "No fighters match your search" : "No fighters found"}
                   </TableCell>
                 </TableRow>
               ) : (
-                fighters.map((fighter) => {
+                fighters.filter((fighter) => {
+                  if (!searchQuery.trim()) return true;
+                  const query = searchQuery.toLowerCase();
+                  return (
+                    fighter.full_name?.toLowerCase().includes(query) ||
+                    fighter.handle?.toLowerCase().includes(query) ||
+                    fighter.sport?.toLowerCase().includes(query) ||
+                    fighter.country?.toLowerCase().includes(query) ||
+                    fighter.app_username?.toLowerCase().includes(query)
+                  );
+                }).map((fighter) => {
                   const config = statusConfig[fighter.status];
                   const StatusIcon = config.icon;
                   const pendingChanges = getPendingChanges(fighter);
