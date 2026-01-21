@@ -18,7 +18,7 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-16">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent" />
+        
         <div className="container relative z-10 mx-auto px-4 py-20 text-center">
           <h1 className="font-display text-5xl uppercase leading-tight tracking-wide md:text-7xl lg:text-8xl">
             Turn Your Fight Gear Into{" "}
@@ -212,7 +212,7 @@ const Landing = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="border-t border-border bg-gradient-to-b from-primary/10 to-transparent py-24">
+      <section className="border-t border-border py-24">
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-4xl uppercase tracking-wide md:text-5xl">Don't Promote Brands. Build Income.</h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
