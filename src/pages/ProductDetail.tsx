@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
+import { ProductSchema } from "@/components/StructuredData";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
+import { getCanonicalUrl } from "@/lib/config";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -71,7 +73,16 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background">
       <PageMeta 
         title={product.name} 
-        description={product.short_description || `${product.name} by ${product.brand}. Shop on Combat Market.`} 
+        description={product.short_description || `${product.name} by ${product.brand}. Shop on Combat Market.`}
+        image={product.image_url || undefined}
+      />
+      <ProductSchema
+        name={product.name}
+        description={product.short_description || undefined}
+        image={product.image_url || undefined}
+        brand={product.brand}
+        price={product.price}
+        url={getCanonicalUrl(`/p/${product.slug}`)}
       />
       <Navbar />
 

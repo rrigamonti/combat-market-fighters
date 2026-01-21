@@ -265,7 +265,7 @@ export default function AdminAssignments() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Product Assignments - Admin" description="Admin panel for assigning products to fighter storefronts on Combat Market." />
+      <PageMeta title="Product Assignments - Admin" description="Admin panel for assigning products to fighter storefronts on Combat Market." noindex />
       <div className="space-y-6">
         <div className="flex items-start justify-between">
           <div>

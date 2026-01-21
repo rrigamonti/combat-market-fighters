@@ -4,9 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
+import { ProductSchema } from "@/components/StructuredData";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { getCanonicalUrl } from "@/lib/config";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -130,7 +132,16 @@ export default function FighterProductDetail() {
     <div className="min-h-screen bg-background">
       <PageMeta 
         title={`${product.name} - ${fighter.full_name}'s Pick`} 
-        description={product.short_description || `${product.name} recommended by ${fighter.full_name}. Shop on Combat Market.`} 
+        description={product.short_description || `${product.name} recommended by ${fighter.full_name}. Shop on Combat Market.`}
+        image={product.image_url || undefined}
+      />
+      <ProductSchema
+        name={product.name}
+        description={product.short_description || undefined}
+        image={product.image_url || undefined}
+        brand={brand?.name || product.brand}
+        price={product.price}
+        url={getCanonicalUrl(`/${handle}/${product.slug}`)}
       />
       <Navbar />
 

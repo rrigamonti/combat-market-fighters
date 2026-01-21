@@ -794,7 +794,7 @@ export default function AdminFighters() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Manage Fighters - Admin" description="Admin panel for managing fighter applications and statuses on Combat Market." />
+      <PageMeta title="Manage Fighters - Admin" description="Admin panel for managing fighter applications and statuses on Combat Market." noindex />
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>

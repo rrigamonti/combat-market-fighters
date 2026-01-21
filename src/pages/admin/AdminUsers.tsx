@@ -223,7 +223,7 @@ export default function AdminUsers() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Admin Users" />
+      <PageMeta title="Admin Users" noindex />
       
       <div className="space-y-6">
         {/* Header */}

@@ -73,7 +73,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <PageMeta title="Admin Dashboard" description="Combat Market admin dashboard overview." />
+      <PageMeta title="Admin Dashboard" description="Combat Market admin dashboard overview." noindex />
       
       <div className="space-y-8">
         <div>
