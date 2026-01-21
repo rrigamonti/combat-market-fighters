@@ -20,7 +20,7 @@ const Landing = () => {
       <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-16">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent" />
         <div className="container relative z-10 mx-auto px-4 py-20 text-center">
-          <h1 className="font-display text-5xl leading-tight tracking-wide md:text-7xl lg:text-8xl">
+          <h1 className="font-display text-5xl uppercase leading-tight tracking-wide md:text-7xl lg:text-8xl">
             Turn Your Fight Gear Into{" "}
             <span className="text-gradient">Income</span>
           </h1>
@@ -56,7 +56,7 @@ const Landing = () => {
       {/* How It Works */}
       <section id="features" className="border-t border-border py-24">
         <div className="container mx-auto px-4">
-          <h2 className="text-center font-display text-4xl md:text-5xl">How It Works</h2>
+          <h2 className="text-center font-display text-4xl uppercase tracking-wide md:text-5xl">How It Works</h2>
 
           <div className="mt-16 grid gap-8 md:grid-cols-3">
             {/* Step 1 */}
@@ -107,7 +107,7 @@ const Landing = () => {
       {/* Why Combat Market Exists */}
       <section id="for-fighters" className="border-t border-border bg-card py-24">
         <div className="container mx-auto max-w-3xl px-4 text-center">
-          <h2 className="font-display text-4xl md:text-5xl">Built for Fighters, Not Advertisers</h2>
+          <h2 className="font-display text-4xl uppercase tracking-wide md:text-5xl">Built for Fighters, Not Advertisers</h2>
           <div className="mt-8 space-y-4 text-lg text-muted-foreground">
             <p>Most fighters train harder than anyone.</p>
             <p>Most brands profit more than fighters do.</p>
@@ -128,7 +128,7 @@ const Landing = () => {
       {/* What Makes Combat Market Different */}
       <section className="border-t border-border py-24">
         <div className="container mx-auto max-w-3xl px-4">
-          <h2 className="text-center font-display text-4xl md:text-5xl">More Than Affiliate Links</h2>
+          <h2 className="text-center font-display text-4xl uppercase tracking-wide md:text-5xl">More Than Affiliate Links</h2>
 
           <div className="mt-12 grid gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-4 rounded-lg border border-border bg-card p-5">
@@ -170,7 +170,7 @@ const Landing = () => {
       {/* FAQ */}
       <section id="faq" className="border-t border-border bg-card py-24">
         <div className="container mx-auto max-w-3xl px-4">
-          <h2 className="text-center font-display text-4xl md:text-5xl">FAQ</h2>
+          <h2 className="text-center font-display text-4xl uppercase tracking-wide md:text-5xl">FAQ</h2>
 
           <div className="mt-12 space-y-6">
             <div className="rounded-lg border border-border bg-background p-6">
@@ -214,7 +214,7 @@ const Landing = () => {
       {/* Final CTA */}
       <section className="border-t border-border bg-gradient-to-b from-primary/10 to-transparent py-24">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-4xl md:text-5xl">Don't Promote Brands. Build Income.</h2>
+          <h2 className="font-display text-4xl uppercase tracking-wide md:text-5xl">Don't Promote Brands. Build Income.</h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
             Claim your Combat Market storefront and start earning from your fight life.
           </p>

@@ -19,49 +19,59 @@ export function Navbar() {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        {/* Logo - Left */}
         <Link to="/" className="flex items-center gap-2">
           <img src={logo} alt="Combat Market" className="h-8" />
         </Link>
 
-        {/* Desktop navigation */}
+        {/* Desktop navigation - Center */}
         <div className="hidden items-center gap-8 md:flex">
-          <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
             Home
           </Link>
-          <Link to="/marketplace" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/#features" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+            Features
+          </Link>
+          <Link to="/marketplace" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
             Marketplace
           </Link>
-          <Link to="/#for-fighters" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/#faq" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+            FAQs
+          </Link>
+          <Link to="/#for-fighters" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
             For Fighters
           </Link>
-          <Link to="/#faq" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            FAQ
-          </Link>
           
-          {user ? (
+          {user && (
             <>
-              <Link to="/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              <Link to="/dashboard" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
                 Dashboard
               </Link>
               {isAdmin && (
-                <Link to="/admin" className="flex items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80">
+                <Link to="/admin" className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-primary transition-colors hover:text-primary/80">
                   <Shield className="h-4 w-4" />
                   Admin
                 </Link>
               )}
-              <Button variant="ghost" onClick={handleSignOut}>
-                Logout
-              </Button>
             </>
+          )}
+        </div>
+
+        {/* CTA Button - Right (Desktop) */}
+        <div className="hidden items-center gap-4 md:flex">
+          {user ? (
+            <Button variant="outline-primary" onClick={handleSignOut}>
+              Logout
+            </Button>
           ) : (
             <>
-              <Link to="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              <Link to="/login" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
                 Login
               </Link>
-              <Button asChild className="glow-primary">
-                <Link to="/fighter-signup">Apply as a Fighter</Link>
+              <Button asChild variant="outline-primary">
+                <Link to="/fighter-signup">Claim Your Storefront</Link>
               </Button>
             </>
           )}
@@ -80,30 +90,37 @@ export function Navbar() {
                 <Link 
                   to="/" 
                   onClick={closeMobileMenu}
-                  className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                  className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
                 >
                   Home
                 </Link>
                 <Link 
+                  to="/#features" 
+                  onClick={closeMobileMenu}
+                  className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
+                >
+                  Features
+                </Link>
+                <Link 
                   to="/marketplace" 
                   onClick={closeMobileMenu}
-                  className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                  className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
                 >
                   Marketplace
                 </Link>
                 <Link 
-                  to="/#for-fighters" 
-                  onClick={closeMobileMenu}
-                  className="text-lg font-medium text-foreground transition-colors hover:text-primary"
-                >
-                  For Fighters
-                </Link>
-                <Link 
                   to="/#faq" 
                   onClick={closeMobileMenu}
-                  className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                  className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
                 >
-                  FAQ
+                  FAQs
+                </Link>
+                <Link 
+                  to="/#for-fighters" 
+                  onClick={closeMobileMenu}
+                  className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
+                >
+                  For Fighters
                 </Link>
                 
                 {user ? (
@@ -111,7 +128,7 @@ export function Navbar() {
                     <Link 
                       to="/dashboard" 
                       onClick={closeMobileMenu}
-                      className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                      className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
                     >
                       Dashboard
                     </Link>
@@ -119,7 +136,7 @@ export function Navbar() {
                       <Link 
                         to="/admin" 
                         onClick={closeMobileMenu}
-                        className="flex items-center gap-2 text-lg font-medium text-primary transition-colors hover:text-primary/80"
+                        className="flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-primary transition-colors hover:text-primary/80"
                       >
                         <Shield className="h-5 w-5" />
                         Admin Panel
@@ -128,7 +145,7 @@ export function Navbar() {
                     <Button 
                       variant="ghost" 
                       onClick={() => { handleSignOut(); closeMobileMenu(); }}
-                      className="justify-start px-0 text-lg font-medium"
+                      className="justify-start px-0 text-sm font-medium uppercase tracking-widest"
                     >
                       Logout
                     </Button>
@@ -138,13 +155,13 @@ export function Navbar() {
                     <Link 
                       to="/login" 
                       onClick={closeMobileMenu}
-                      className="text-lg font-medium text-foreground transition-colors hover:text-primary"
+                      className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
                     >
                       Login
                     </Link>
-                    <Button asChild className="glow-primary mt-4">
+                    <Button asChild variant="outline-primary" className="mt-4">
                       <Link to="/fighter-signup" onClick={closeMobileMenu}>
-                        Apply as a Fighter
+                        Claim Your Storefront
                       </Link>
                     </Button>
                   </>

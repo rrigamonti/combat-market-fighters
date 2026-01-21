@@ -41,37 +41,39 @@
     --radius: 0.5rem;
 
     /* Custom tokens */
-    --glow: 5 100% 50%;
+    --glow: 14 100% 50%;
   }
 
   .dark {
-    --background: 0 0% 4%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 7%;
+    --card: 0 0% 5%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 7%;
+    --popover: 0 0% 5%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 5 100% 50%;
+    --primary: 14 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 98%;
 
     --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 64%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 5 100% 50%;
+    --accent: 14 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 5 100% 50%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 14 100% 50%;
+
+    --glow: 14 100% 50%;
   }
 }
 
