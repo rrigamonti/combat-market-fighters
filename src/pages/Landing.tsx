@@ -6,6 +6,10 @@ import { Store, ShoppingBag, TrendingUp, Check, ChevronRight } from "lucide-reac
 import { useScrollToHash } from "@/hooks/useScrollToHash";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageMeta } from "@/components/PageMeta";
+import PhotoGrid from "@/components/landing/PhotoGrid";
+import heroImage from "@/assets/landing/hero-fighter-silhouette.jpg";
+import glovesImage from "@/assets/landing/gloves-product.jpg";
+import equipmentImage from "@/assets/landing/equipment-flatlay.jpg";
 
 const Landing = () => {
   useScrollToHash();
@@ -18,6 +22,15 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-16">
+        {/* Hero Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={heroImage}
+            alt="Fighter silhouette"
+            className="h-full w-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
+        </div>
         
         <div className="container relative z-10 mx-auto px-4 py-20 text-center">
           <h1 className="font-display text-5xl uppercase leading-tight tracking-wide md:text-7xl lg:text-8xl">
@@ -60,49 +73,75 @@ const Landing = () => {
 
           <div className="mt-16 grid gap-8 md:grid-cols-3">
             {/* Step 1 */}
-            <div className="rounded-lg border border-border bg-card p-8 text-center transition-all hover:border-primary/50">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <Store className="h-8 w-8 text-primary" />
+            <div className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50">
+              <div className="aspect-[16/9] overflow-hidden">
+                <img
+                  src={glovesImage}
+                  alt="Premium combat gloves"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
               </div>
-              <h3 className="mt-6 font-display text-2xl">1. Claim Your Storefront</h3>
-              <p className="mt-3 text-muted-foreground">
-                Your own page on Combat Market, under your name. This becomes your personal hub for the gear, supplements, and essentials you trust.
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground/80">
-                Simple setup. No tech. No cost.
-              </p>
+              <div className="p-8 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Store className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="mt-4 font-display text-2xl">1. Claim Your Storefront</h3>
+                <p className="mt-3 text-muted-foreground">
+                  Your own page on Combat Market, under your name. This becomes your personal hub for the gear you trust.
+                </p>
+                <p className="mt-3 text-sm text-muted-foreground/80">
+                  Simple setup. No tech. No cost.
+                </p>
+              </div>
             </div>
 
             {/* Step 2 */}
-            <div className="rounded-lg border border-border bg-card p-8 text-center transition-all hover:border-primary/50">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <ShoppingBag className="h-8 w-8 text-primary" />
+            <div className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50">
+              <div className="aspect-[16/9] overflow-hidden">
+                <img
+                  src={equipmentImage}
+                  alt="Combat training equipment"
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
               </div>
-              <h3 className="mt-6 font-display text-2xl">2. Add the Brands You Actually Use</h3>
-              <p className="mt-3 text-muted-foreground">
-                Gloves, tape, supplements, recovery, apparel. If you already use it, you can earn from it.
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground/80">
-                We handle tracking and payouts. You focus on training and performance.
-              </p>
+              <div className="p-8 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <ShoppingBag className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="mt-4 font-display text-2xl">2. Add the Brands You Use</h3>
+                <p className="mt-3 text-muted-foreground">
+                  Gloves, tape, supplements, recovery, apparel. If you already use it, you can earn from it.
+                </p>
+                <p className="mt-3 text-sm text-muted-foreground/80">
+                  We handle tracking and payouts.
+                </p>
+              </div>
             </div>
 
             {/* Step 3 */}
-            <div className="rounded-lg border border-border bg-card p-8 text-center transition-all hover:border-primary/50">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <TrendingUp className="h-8 w-8 text-primary" />
+            <div className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50">
+              <div className="aspect-[16/9] overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                <TrendingUp className="h-16 w-16 text-primary/50" />
               </div>
-              <h3 className="mt-6 font-display text-2xl">3. Share & Earn – For Life</h3>
-              <p className="mt-3 text-muted-foreground">
-                Share your storefront with fans, teammates, and fighters. Earn commissions every time someone buys. Invite other fighters. Earn from their sales too.
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground/80">
-                This isn't a one-off post. It's lifetime income.
-              </p>
+              <div className="p-8 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="mt-4 font-display text-2xl">3. Share & Earn – For Life</h3>
+                <p className="mt-3 text-muted-foreground">
+                  Share your storefront. Earn commissions every time someone buys. Invite other fighters. Earn from their sales too.
+                </p>
+                <p className="mt-3 text-sm text-muted-foreground/80">
+                  This isn't a one-off post. It's lifetime income.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Photo Grid */}
+      <PhotoGrid />
 
       {/* Why Combat Market Exists */}
       <section id="for-fighters" className="border-t border-border bg-card py-24">
