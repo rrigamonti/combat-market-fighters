@@ -81,6 +81,21 @@ export default function FighterProductDetail() {
     fetchData();
   }, [handle, productSlug]);
 
+  // Build affiliate URL with sub_id tracking parameter for commission attribution
+  const getAffiliateUrl = (baseUrl: string): string => {
+    if (!fighter?.handle) return baseUrl;
+    
+    try {
+      const url = new URL(baseUrl);
+      url.searchParams.set('sub_id', fighter.handle);
+      return url.toString();
+    } catch {
+      // If URL parsing fails, append as query param
+      const separator = baseUrl.includes('?') ? '&' : '?';
+      return `${baseUrl}${separator}sub_id=${encodeURIComponent(fighter.handle)}`;
+    }
+  };
+
   const handleBuyClick = () => {
     if (fighter && product) {
       trackProductClick(fighter.id, product.id);
@@ -189,7 +204,7 @@ export default function FighterProductDetail() {
               onClick={handleBuyClick}
             >
               <a
-                href={product.external_url}
+                href={getAffiliateUrl(product.external_url)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
