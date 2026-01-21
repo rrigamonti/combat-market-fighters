@@ -23,6 +23,8 @@ import AdminBrands from "./pages/admin/AdminBrands";
 import AdminAssignments from "./pages/admin/AdminAssignments";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSales from "./pages/admin/AdminSales";
+import AdminCommissions from "./pages/admin/AdminCommissions";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
@@ -107,6 +109,22 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminAnalytics />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/sales"
+              element={
+                <AdminRoute>
+                  <AdminSales />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/commissions"
+              element={
+                <AdminRoute>
+                  <AdminCommissions />
                 </AdminRoute>
               }
             />
