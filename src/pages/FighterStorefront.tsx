@@ -261,7 +261,7 @@ export default function FighterStorefront() {
       <Navbar />
 
       {/* Hero Banner */}
-      <section className="relative h-[40vh] min-h-[300px] w-full overflow-hidden">
+      <section className="relative h-[35vh] min-h-[250px] w-full overflow-hidden sm:h-[40vh] sm:min-h-[300px]">
         <img 
           src={fighter?.hero_image_url || defaultHeroImage} 
           alt={`${fighter?.full_name} banner`}
@@ -272,13 +272,13 @@ export default function FighterStorefront() {
       </section>
 
       {/* Profile Card - Overlapping Hero */}
-      <section className="relative z-10 -mt-24 px-4 pb-8">
+      <section className="relative z-10 -mt-20 px-3 pb-6 sm:-mt-24 sm:px-4 sm:pb-8">
         <div className="container mx-auto max-w-4xl">
-          <div className="rounded-2xl bg-white shadow-lg dark:border dark:border-border/50 dark:bg-card/80 p-6 backdrop-blur-md md:p-8">
-            <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
+          <div className="rounded-xl bg-white shadow-lg dark:border dark:border-border/50 dark:bg-card/80 p-4 backdrop-blur-md sm:rounded-2xl sm:p-6 md:p-8">
+            <div className="flex flex-col items-center gap-4 sm:gap-6 md:flex-row md:items-start">
               {/* Profile Image */}
               <div className="relative shrink-0">
-                <div className="h-28 w-28 overflow-hidden rounded-xl border-l-4 border-primary bg-muted shadow-md dark:border-4 md:h-32 md:w-32">
+                <div className="h-24 w-24 overflow-hidden rounded-xl border-l-4 border-primary bg-muted shadow-md dark:border-4 sm:h-28 sm:w-28 md:h-32 md:w-32">
                   {fighter?.profile_image_url ? (
                     <img 
                       src={fighter.profile_image_url} 
@@ -286,7 +286,7 @@ export default function FighterStorefront() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-4xl font-display text-primary">
+                    <div className="flex h-full w-full items-center justify-center text-3xl font-display text-primary sm:text-4xl">
                       {fighter?.full_name
                         .split(" ")
                         .map((n) => n[0])
@@ -300,39 +300,39 @@ export default function FighterStorefront() {
               {/* Fighter Info */}
               <div className="flex flex-1 flex-col items-center text-center md:items-start md:text-left">
                 {/* Name */}
-                <h1 className="font-display text-4xl uppercase tracking-tight md:text-5xl lg:text-6xl">
+                <h1 className="font-display text-3xl uppercase tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
                   {fighter?.full_name}
                 </h1>
 
                 {/* Bio */}
                 {fighter?.short_bio && (
-                  <p className="mt-2 max-w-lg text-sm text-muted-foreground md:text-base">
+                  <p className="mt-1.5 max-w-lg text-xs text-muted-foreground sm:mt-2 sm:text-sm md:text-base">
                     {fighter.short_bio}
                   </p>
                 )}
 
                 {/* Tags & Social Row */}
-                <div className="mt-4 flex flex-col items-center gap-4 md:flex-row md:items-center md:justify-between md:w-full">
+                <div className="mt-3 flex flex-col items-center gap-3 sm:mt-4 sm:gap-4 md:flex-row md:items-center md:justify-between md:w-full">
                   {/* Tags */}
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full border-2 border-primary px-4 py-1.5 text-sm font-semibold text-primary dark:border-0 dark:bg-primary dark:text-primary-foreground">
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                    <span className="rounded-full border-2 border-primary px-3 py-1 text-xs font-semibold text-primary dark:border-0 dark:bg-primary dark:text-primary-foreground sm:px-4 sm:py-1.5 sm:text-sm">
                       {fighter?.sport}
                     </span>
-                    <span className="rounded-full border-2 border-foreground/30 px-4 py-1.5 text-sm font-medium text-foreground dark:border-0 dark:bg-muted dark:text-muted-foreground">
+                    <span className="rounded-full border-2 border-foreground/30 px-3 py-1 text-xs font-medium text-foreground dark:border-0 dark:bg-muted dark:text-muted-foreground sm:px-4 sm:py-1.5 sm:text-sm">
                       {fighter?.country}
                     </span>
                   </div>
 
                   {/* Social Icons */}
                   {socialLinks.length > 0 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       {socialLinks.map((social) => (
                         <a
                           key={social.key}
                           href={social.url!}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="transition-transform hover:scale-110"
+                          className="transition-transform hover:scale-110 [&>div]:h-8 [&>div]:w-8 sm:[&>div]:h-10 sm:[&>div]:w-10"
                         >
                           {social.icon}
                         </a>
@@ -371,35 +371,36 @@ export default function FighterStorefront() {
       </section>
 
       {/* Products Grid */}
-      <section className="px-4 pb-16">
+      <section className="px-3 pb-12 sm:px-4 sm:pb-16">
         <div className="container mx-auto max-w-6xl">
           {products.length === 0 ? (
-            <p className="text-center text-muted-foreground">No products available yet.</p>
+            <p className="text-center text-sm text-muted-foreground sm:text-base">No products available yet.</p>
           ) : (
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {products.map(({ products: product }) => (
                 <Link
                   key={product.id}
                   to={`/${handle}/${product.slug}`}
-                  className="group relative block overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg hover:shadow-primary/10 dark:border dark:border-border dark:bg-card dark:shadow-none"
+                  className="group relative block overflow-hidden rounded-lg bg-white shadow-md transition-all hover:shadow-lg hover:shadow-primary/10 dark:border dark:border-border dark:bg-card dark:shadow-none sm:rounded-xl"
                 >
                   {/* Product Image Container */}
                   <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
-                        alt={product.name}
+                        alt={`${product.name} - ${product.brand} product`}
+                        loading="lazy"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                      <div className="flex h-full items-center justify-center text-xs text-muted-foreground sm:text-sm">
                         No Image
                       </div>
                     )}
 
                     {/* Discount Badge - Top Right */}
                     {product.discount_percentage && product.discount_percentage > 0 && (
-                      <div className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full bg-gray-800 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
+                      <div className="absolute right-1.5 top-1.5 z-10 flex items-center gap-0.5 rounded-full bg-gray-800 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg sm:right-2 sm:top-2 sm:gap-1 sm:px-2.5 sm:py-1 sm:text-xs">
                         <span>🔥</span>
                         <span>{product.discount_percentage}% OFF</span>
                       </div>
@@ -407,13 +408,13 @@ export default function FighterStorefront() {
 
                     {/* Brand Badge - Bottom Left */}
                     {getBrandLogo(product.brand_id) && (
-                      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-md">
+                      <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 rounded-full bg-white px-2 py-1 shadow-md sm:bottom-3 sm:left-3 sm:gap-2 sm:px-3 sm:py-1.5">
                         <img
                           src={getBrandLogo(product.brand_id)!}
                           alt=""
-                          className="h-5 w-auto object-contain"
+                          className="h-4 w-auto object-contain sm:h-5"
                         />
-                        <span className="text-xs font-bold uppercase text-gray-900">
+                        <span className="hidden text-xs font-bold uppercase text-gray-900 sm:inline">
                           {product.brand}
                         </span>
                       </div>
@@ -421,11 +422,11 @@ export default function FighterStorefront() {
                   </div>
                   
                   {/* Product Info */}
-                  <div className="p-3">
-                    <h3 className="text-sm font-semibold uppercase leading-tight line-clamp-2">
+                  <div className="p-2 sm:p-3">
+                    <h3 className="text-xs font-semibold uppercase leading-tight line-clamp-2 sm:text-sm">
                       {product.name}
                     </h3>
-                    <p className="mt-1 text-right text-sm font-bold text-primary dark:text-foreground">
+                    <p className="mt-0.5 text-right text-xs font-bold text-primary dark:text-foreground sm:mt-1 sm:text-sm">
                       {product.price}
                     </p>
                   </div>
@@ -435,7 +436,7 @@ export default function FighterStorefront() {
           )}
 
           {/* Affiliate Disclosure */}
-          <p className="mt-12 text-center text-xs text-muted-foreground/70">
+          <p className="mt-8 text-center text-[10px] text-muted-foreground/70 sm:mt-12 sm:text-xs">
             Links may be affiliate links. Purchases support this fighter.
           </p>
         </div>
