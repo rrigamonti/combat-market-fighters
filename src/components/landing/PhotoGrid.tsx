@@ -10,9 +10,9 @@ const PhotoGrid = () => {
   ];
 
   return (
-    <section className="border-t border-border py-16" aria-label="Combat sports action photos">
+    <section className="border-t border-border py-8 sm:py-16" aria-label="Combat sports action photos">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-3">
           {photos.map((photo, index) => (
             <div
               key={index}
