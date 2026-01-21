@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { PageMeta } from "@/components/PageMeta";
@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
 import ImageCropper from "@/components/ImageCropper";
@@ -104,11 +104,38 @@ const countries = [
   "Other",
 ];
 
+const ITEMS_PER_PAGE = 20;
+
 export default function AdminFighters() {
   const [fighters, setFighters] = useState<Fighter[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FighterStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Filtered and paginated fighters
+  const filteredFighters = useMemo(() => {
+    if (!searchQuery.trim()) return fighters;
+    const query = searchQuery.toLowerCase();
+    return fighters.filter((fighter) =>
+      fighter.full_name?.toLowerCase().includes(query) ||
+      fighter.handle?.toLowerCase().includes(query) ||
+      fighter.sport?.toLowerCase().includes(query) ||
+      fighter.country?.toLowerCase().includes(query) ||
+      fighter.app_username?.toLowerCase().includes(query)
+    );
+  }, [fighters, searchQuery]);
+  
+  const totalPages = Math.ceil(filteredFighters.length / ITEMS_PER_PAGE);
+  const paginatedFighters = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredFighters.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredFighters, currentPage]);
+  
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filter]);
   
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -829,34 +856,14 @@ export default function AdminFighters() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : fighters.filter((fighter) => {
-                if (!searchQuery.trim()) return true;
-                const query = searchQuery.toLowerCase();
-                return (
-                  fighter.full_name?.toLowerCase().includes(query) ||
-                  fighter.handle?.toLowerCase().includes(query) ||
-                  fighter.sport?.toLowerCase().includes(query) ||
-                  fighter.country?.toLowerCase().includes(query) ||
-                  fighter.app_username?.toLowerCase().includes(query)
-                );
-              }).length === 0 ? (
+              ) : filteredFighters.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                     {searchQuery.trim() ? "No fighters match your search" : "No fighters found"}
                   </TableCell>
                 </TableRow>
               ) : (
-                fighters.filter((fighter) => {
-                  if (!searchQuery.trim()) return true;
-                  const query = searchQuery.toLowerCase();
-                  return (
-                    fighter.full_name?.toLowerCase().includes(query) ||
-                    fighter.handle?.toLowerCase().includes(query) ||
-                    fighter.sport?.toLowerCase().includes(query) ||
-                    fighter.country?.toLowerCase().includes(query) ||
-                    fighter.app_username?.toLowerCase().includes(query)
-                  );
-                }).map((fighter) => {
+                paginatedFighters.map((fighter) => {
                   const config = statusConfig[fighter.status];
                   const StatusIcon = config.icon;
                   const pendingChanges = getPendingChanges(fighter);
@@ -963,6 +970,60 @@ export default function AdminFighters() {
             </TableBody>
           </Table>
         </div>
+        
+        {/* Pagination Controls */}
+        {!loading && filteredFighters.length > 0 && (
+          <div className="flex items-center justify-between border-t border-border pt-4">
+            <p className="text-sm text-muted-foreground">
+              Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredFighters.length)} of {filteredFighters.length} fighters
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      className="w-9"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Fighter Dialog */}
