@@ -28,19 +28,19 @@ export function Navbar() {
 
         {/* Desktop navigation - Center */}
         <div className="hidden items-center gap-8 md:flex">
-          <Link to="/" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/" className="text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary">
             Home
           </Link>
-          <Link to="/#features" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/#features" className="text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary">
             Features
           </Link>
-          <Link to="/marketplace" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/marketplace" className="text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary">
             Marketplace
           </Link>
-          <Link to="/#faq" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/#faq" className="text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary">
             FAQs
           </Link>
-          <Link to="/#for-fighters" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+          <Link to="/#for-fighters" className="text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary">
             For Fighters
           </Link>
           
@@ -67,7 +67,7 @@ export function Navbar() {
             </Button>
           ) : (
             <>
-              <Link to="/login" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+              <Link to="/login" className="text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary">
                 Login
               </Link>
               <Button asChild variant="outline-primary">
