@@ -152,4 +152,14 @@
       font-size: 40px;
     }
   }
+
+  /* Mother-site-like hero surface (subtle grey lift over pure black) */
+  .cm-hero-surface {
+    background:
+      radial-gradient(
+        1200px 700px at 50% 30%,
+        hsl(var(--card) / 0.85) 0%,
+        hsl(var(--background) / 1) 62%
+      );
+  }
 }

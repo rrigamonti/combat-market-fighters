@@ -33,7 +33,7 @@ const Landing = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden pt-16">
+      <section className="cm-hero-surface relative flex min-h-[100svh] items-center justify-center overflow-hidden pt-16">
         
         <div className="container relative z-10 mx-auto px-4 py-16 text-center sm:py-20">
           <h1 className="cm-hero-h1 text-white">
