@@ -49,7 +49,7 @@
     --radius: 0.5rem;
 
     /* Custom tokens */
-    --glow: 14 100% 50%;
+    --glow: 5 100% 50%;
   }
 
   .dark {
@@ -62,7 +62,7 @@
     --popover: 0 0% 5%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 14 100% 50%;
+    --primary: 5 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 12%;
@@ -71,7 +71,7 @@
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 14 100% 50%;
+    --accent: 5 100% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -79,9 +79,9 @@
 
     --border: 0 0% 15%;
     --input: 0 0% 15%;
-    --ring: 14 100% 50%;
+    --ring: 5 100% 50%;
 
-    --glow: 14 100% 50%;
+    --glow: 5 100% 50%;
   }
 }
 
@@ -116,7 +116,7 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent;
+    @apply text-primary;
   }
   
   .glow-primary {

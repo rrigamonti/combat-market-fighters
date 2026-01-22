@@ -36,9 +36,9 @@ const Landing = () => {
       <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden pt-16">
         
         <div className="container relative z-10 mx-auto px-4 py-16 text-center sm:py-20">
-          <h1 className="font-display text-4xl uppercase leading-tight tracking-wide sm:text-5xl md:text-7xl lg:text-8xl">
+          <h1 className="font-display text-4xl uppercase leading-tight tracking-wide text-white sm:text-5xl md:text-7xl lg:text-8xl">
             Turn Your Fight Gear Into{" "}
-            <span className="text-gradient">Income</span>
+            <span className="text-primary">Income</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:mt-6 sm:text-lg md:text-xl">
             Claim your personal Combat Market storefront and earn from the brands you already use.
