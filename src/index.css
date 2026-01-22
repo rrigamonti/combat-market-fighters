@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500&display=swap');
 
 @font-face {
   font-family: 'Titling Gothic FB';
@@ -121,5 +121,26 @@
   
   .glow-primary {
     box-shadow: 0 0 40px hsl(var(--primary) / 0.3);
+  }
+
+  /* Mother-site precise hero typography (desktop reference: 1440px) */
+  .cm-hero-h1 {
+    font-family: "Titling Gothic FB", system-ui, sans-serif;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  @media (min-width: 768px) {
+    .cm-hero-h1 {
+      font-size: 36px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .cm-hero-h1 {
+      font-size: 40px;
+    }
   }
 }
