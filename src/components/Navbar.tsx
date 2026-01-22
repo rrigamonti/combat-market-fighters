@@ -46,7 +46,7 @@ export function Navbar() {
           
           {user && (
             <>
-              <Link to="/dashboard" className="text-xs font-medium uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground">
+              <Link to="/dashboard" className="text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary">
                 Dashboard
               </Link>
               {isAdmin && (
