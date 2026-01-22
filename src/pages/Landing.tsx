@@ -8,7 +8,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { PageMeta } from "@/components/PageMeta";
 import { OrganizationSchema, FAQSchema, WebSiteSchema } from "@/components/StructuredData";
 import PhotoGrid from "@/components/landing/PhotoGrid";
-import heroImage from "@/assets/landing/hero-fighter-silhouette.jpg";
 import glovesImage from "@/assets/landing/gloves-product.jpg";
 import equipmentImage from "@/assets/landing/equipment-flatlay.jpg";
 
@@ -35,15 +34,6 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="relative flex min-h-[100svh] items-center justify-center overflow-hidden pt-16">
-        {/* Hero Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={heroImage}
-            alt="Combat sports fighter silhouette ready to fight"
-            className="h-full w-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
-        </div>
         
         <div className="container relative z-10 mx-auto px-4 py-16 text-center sm:py-20">
           <h1 className="font-display text-4xl uppercase leading-tight tracking-wide sm:text-5xl md:text-7xl lg:text-8xl">
