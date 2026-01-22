@@ -1058,7 +1058,7 @@ export default function AdminFighters() {
                 <div className="mt-2 p-2 bg-muted rounded-md">
                   <p className="text-xs text-muted-foreground">Storefront URL:</p>
                   <p className="text-sm font-mono text-primary break-all">
-                    cm.automationsuite.ai/{editData.handle}
+                    {getStorefrontUrl(editData.handle)}
                   </p>
                 </div>
               )}
@@ -1383,7 +1383,9 @@ export default function AdminFighters() {
                 <div className="mt-2 p-2 bg-muted rounded-md">
                   <p className="text-xs text-muted-foreground">Storefront URL:</p>
                   <p className="text-sm font-mono text-primary break-all">
-                    cm.automationsuite.ai/{createData.handle || generateHandle(createData.full_name) || "fighter-xxx"}
+                    {getStorefrontUrl(
+                      createData.handle || generateHandle(createData.full_name) || "fighter-xxx"
+                    )}
                   </p>
                 </div>
               )}

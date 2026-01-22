@@ -6,7 +6,7 @@ const corsHeaders = {
   "Content-Type": "application/xml",
 };
 
-const PRODUCTION_DOMAIN = "https://cm.automationsuite.ai";
+const PRODUCTION_DOMAIN = "https://combat.market";
 
 Deno.serve(async (req) => {
   // Handle CORS preflight

@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { PRODUCTION_DOMAIN } from "@/lib/config";
 
 // Organization Schema for the entire site
 export function OrganizationSchema() {
@@ -6,8 +7,8 @@ export function OrganizationSchema() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Combat Market",
-    url: "https://cm.automationsuite.ai",
-    logo: "https://cm.automationsuite.ai/favicon.ico",
+    url: PRODUCTION_DOMAIN,
+    logo: `${PRODUCTION_DOMAIN}/favicon.ico`,
     description: "Fighter-focused affiliate platform where combat athletes earn from the brands they trust.",
     sameAs: ["https://twitter.com/CombatMarket"],
   };
@@ -129,12 +130,12 @@ export function WebSiteSchema() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Combat Market",
-    url: "https://cm.automationsuite.ai",
+    url: PRODUCTION_DOMAIN,
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://cm.automationsuite.ai/marketplace?q={search_term_string}",
+        urlTemplate: `${PRODUCTION_DOMAIN}/marketplace?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },
