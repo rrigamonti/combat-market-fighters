@@ -85,7 +85,7 @@ export default function Login() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <img src={logo} alt="Combat Market" className="mx-auto h-12" />
-            <h1 className="mt-6 font-display text-4xl">Welcome Back</h1>
+            <h1 className="mt-6 font-display text-3xl uppercase leading-none tracking-normal text-white sm:text-4xl">Welcome Back</h1>
             <p className="mt-2 text-muted-foreground">
               Sign in to access your fighter dashboard
             </p>
