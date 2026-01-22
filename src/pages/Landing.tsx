@@ -1,288 +1,369 @@
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Store, ShoppingBag, TrendingUp, Check, ChevronRight } from "lucide-react";
-import { useScrollToHash } from "@/hooks/useScrollToHash";
-import { useAuth } from "@/contexts/AuthContext";
 import { PageMeta } from "@/components/PageMeta";
-import { OrganizationSchema, FAQSchema, WebSiteSchema } from "@/components/StructuredData";
-import PhotoGrid from "@/components/landing/PhotoGrid";
-import glovesImage from "@/assets/landing/gloves-product.jpg";
-import equipmentImage from "@/assets/landing/equipment-flatlay.jpg";
+import { OrganizationSchema, WebSiteSchema, FAQSchema } from "@/components/StructuredData";
+import { useScrollToHash } from "@/hooks/useScrollToHash";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Zap, Package, Wallet, Users, Check, ChevronRight } from "lucide-react";
 
-// FAQ data for schema
+// Assets
+import heroPhoneGloves from "@/assets/landing/hero-phone-gloves.png";
+import step1Storefront from "@/assets/landing/step-1-storefront.png";
+import step2Brands from "@/assets/landing/step-2-brands.png";
+import step3Earn from "@/assets/landing/step-3-earn.png";
+import fighterTraining from "@/assets/landing/fighter-training.png";
+import boxingGym from "@/assets/landing/boxing-gym.png";
+
 const faqItems = [
-  { question: "Is this free?", answer: "Yes. Claiming a storefront is free for fighters." },
-  { question: "Do I need sponsors or a big following?", answer: "No. You earn from what you already use and share." },
-  { question: "Who can join?", answer: "Fighters, coaches, and combat athletes at any level." },
-  { question: "How do payouts work?", answer: "Sales are tracked automatically and paid out directly." },
-  { question: "When will fans be able to browse fighters?", answer: "The public fighter directory will be added as the platform expands." },
+  {
+    question: "How do I get invited to Combat Market?",
+    answer: "Combat Market is currently invite-only for verified combat sports athletes. Apply through our signup form and we'll review your profile. We're looking for active fighters, coaches, and combat sports professionals with an engaged audience."
+  },
+  {
+    question: "What brands can I add to my storefront?",
+    answer: "You can promote any brand from our curated catalog of combat sports equipment, apparel, and supplements. We partner with trusted brands that fighters actually use. You can also request brands to be added to the platform."
+  },
+  {
+    question: "How do earnings work?",
+    answer: "You earn a commission on every sale made through your storefront. Payments are processed monthly once you reach the minimum threshold. You also earn royalties when fighters you refer make sales, creating passive income as your network grows."
+  },
+  {
+    question: "Is this just another affiliate program?",
+    answer: "No. Combat Market is built specifically for fighters, not influencers. You own your storefront, control what you promote, and earn from both direct sales and referrals. It's designed to give fighters financial independence, not just one-off commissions."
+  }
 ];
 
-const Landing = () => {
+const sportsCategories = [
+  { name: "MMA", image: "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=600&q=80" },
+  { name: "BOXING", image: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=80" },
+  { name: "MUAY THAI", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80" },
+  { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
+  { name: "WRESTLING", image: "https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=600&q=80" },
+  { name: "FUNCTIONAL FITNESS", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80" }
+];
+
+const featurePills = [
+  { icon: Zap, label: "Instant Set-Up" },
+  { icon: Package, label: "Exclusive Products" },
+  { icon: Wallet, label: "Direct Payments" },
+  { icon: Users, label: "Grow Your Fans" }
+];
+
+const howItWorksSteps = [
+  {
+    image: step1Storefront,
+    title: "Claim Your Storefront",
+    bullets: [
+      "Apply to join the invite-only network",
+      "Get your personal Combat Market URL",
+      "Customize your profile and branding"
+    ]
+  },
+  {
+    image: step2Brands,
+    title: "Add Brands You Use",
+    bullets: [
+      "Browse our curated catalog",
+      "Select products you actually train with",
+      "Organize your storefront your way"
+    ]
+  },
+  {
+    image: step3Earn,
+    title: "Share and Earn",
+    bullets: [
+      "Share your storefront link everywhere",
+      "Earn commission on every sale",
+      "Get royalties from referred fighters"
+    ]
+  }
+];
+
+const builtForFightersBullets = [
+  "No chasing sponsors",
+  "No fake discount codes",
+  "No begging for deals",
+  "Just fighters owning the upside"
+];
+
+const moreThanAffiliateBullets = [
+  "Earn commissions on direct sales",
+  "Get royalties when fighters you refer make sales",
+  "Build passive income as your network grows",
+  "Own your audience and income stream for life"
+];
+
+export default function Landing() {
   useScrollToHash();
-  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageMeta description="Turn your fight gear into income. Claim your personal Combat Market storefront and earn from the brands you already use." />
+    <>
+      <PageMeta
+        title="Combat Market | Turn Your Fight Gear Into Income"
+        description="Claim your personal Combat Market storefront and earn from the brands you already use. Built for fighters, not advertisers."
+      />
       <OrganizationSchema />
       <WebSiteSchema />
-      <FAQSchema items={faqItems} />
-      <Navbar />
+      <FAQSchema
+        items={faqItems.map((item) => ({
+          question: item.question,
+          answer: item.answer,
+        }))}
+      />
 
-      {/* Hero Section */}
-      <section className="cm-hero-surface relative flex min-h-[100svh] items-center justify-center overflow-hidden pt-16">
-        
-        <div className="container relative z-10 mx-auto px-4 py-16 text-center sm:py-20">
-          <h1 className="cm-hero-h1 text-white">
-            Turn Your Fight Gear Into Income
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-foreground/80 sm:mt-6 sm:text-lg md:text-xl">
-            Claim your personal Combat Market storefront and earn from the brands you already use.
-          </p>
-          <p className="mx-auto mt-2 max-w-2xl text-sm text-foreground/70 sm:mt-3 sm:text-base">
-            No sponsors. No gatekeepers. Just fighters getting paid.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:gap-4">
-            <Button asChild size="lg" className="glow-primary text-base sm:text-lg">
-              <Link to="/fighter-signup">Claim Your Storefront</Link>
-            </Button>
-            <p className="text-xs text-foreground/70 sm:text-sm">
-              Invite-only fighter onboarding now open.
+      <div className="min-h-screen bg-background">
+        <Navbar variant="landing" />
+
+        {/* Hero Section */}
+        <section className="relative pt-16 overflow-hidden cm-hero-surface">
+          <div className="container mx-auto px-4 py-20 lg:py-32">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Left Column - Text */}
+              <div className="text-center lg:text-left">
+                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight leading-none text-white mb-6">
+                  Turn Your Fight Gear Into Income
+                </h1>
+                <p className="text-lg lg:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0">
+                  Claim your personal Combat Market storefront and earn from the brands you already use.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <Button asChild size="lg" className="text-base px-8">
+                    <Link to="/fighter-signup">
+                      Claim Your Storefront
+                      <ChevronRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline-primary" size="lg" className="text-base px-8">
+                    <Link to="/marcus-rodriguez">
+                      View Demo Storefront
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Right Column - Hero Image */}
+              <div className="flex justify-center lg:justify-end">
+                <img
+                  src={heroPhoneGloves}
+                  alt="Combat Market storefront on mobile with boxing gloves"
+                  className="w-full max-w-md lg:max-w-lg xl:max-w-xl"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Feature Pills */}
+        <section className="bg-background border-y border-border">
+          <div className="container mx-auto px-4 py-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+              {featurePills.map((feature) => (
+                <div key={feature.label} className="flex items-center justify-center gap-3 py-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <feature.icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-sm font-medium text-foreground">{feature.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Sports Categories Grid */}
+        <section id="brands" className="bg-background py-20 lg:py-28">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-4">
+                Built For Every Combat Sport
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                From MMA to Boxing to BJJ, we support athletes across all combat disciplines.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
+              {sportsCategories.map((sport) => (
+                <div
+                  key={sport.name}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer"
+                >
+                  <img
+                    src={sport.image}
+                    alt={sport.name}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-6">
+                    <h3 className="font-display text-xl lg:text-2xl uppercase tracking-wide text-white">
+                      {sport.name}
+                    </h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section id="features" className="bg-card py-20 lg:py-28">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-4">
+                How It Works
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Get started in minutes. No complicated setup, no hidden fees.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+              {howItWorksSteps.map((step, index) => (
+                <div key={step.title} className="text-center">
+                  <div className="relative mb-6">
+                    <div className="absolute -top-3 -left-3 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-lg z-10">
+                      {index + 1}
+                    </div>
+                    <img
+                      src={step.image}
+                      alt={step.title}
+                      className="w-full max-w-xs mx-auto rounded-lg"
+                    />
+                  </div>
+                  <h3 className="font-display text-xl lg:text-2xl uppercase tracking-tight text-foreground mb-4">
+                    {step.title}
+                  </h3>
+                  <ul className="space-y-2 text-left max-w-xs mx-auto">
+                    {step.bullets.map((bullet) => (
+                      <li key={bullet} className="flex items-start gap-3 text-muted-foreground">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Built for Fighters */}
+        <section className="bg-background py-20 lg:py-28">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Image */}
+              <div className="order-2 lg:order-1">
+                <img
+                  src={fighterTraining}
+                  alt="Fighter training in gym"
+                  className="w-full rounded-lg"
+                />
+              </div>
+              {/* Content */}
+              <div className="order-1 lg:order-2">
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-6">
+                  Built for Fighters, Not Advertisers
+                </h2>
+                <ul className="space-y-4 mb-8">
+                  {builtForFightersBullets.map((bullet) => (
+                    <li key={bullet} className="flex items-center gap-4 text-lg text-foreground">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">
+                        <Check className="h-4 w-4 text-primary" />
+                      </div>
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild size="lg">
+                  <Link to="/fighter-signup">
+                    Claim Your Storefront
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* More Than Affiliate Links */}
+        <section className="bg-card py-20 lg:py-28">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Content */}
+              <div>
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-6">
+                  More Than Affiliate Links
+                </h2>
+                <ul className="space-y-4 mb-8">
+                  {moreThanAffiliateBullets.map((bullet) => (
+                    <li key={bullet} className="flex items-center gap-4 text-lg text-foreground">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">
+                        <Check className="h-4 w-4 text-primary" />
+                      </div>
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {/* Image */}
+              <div>
+                <img
+                  src={boxingGym}
+                  alt="Boxing gym with equipment"
+                  className="w-full rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section id="faq" className="bg-background py-20 lg:py-28">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <div className="text-center mb-12">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-4">
+                Frequently Asked Questions
+              </h2>
+            </div>
+            <Accordion type="single" collapsible className="w-full">
+              {faqItems.map((item, index) => (
+                <AccordionItem key={index} value={`item-${index}`} className="border-border">
+                  <AccordionTrigger className="text-left text-lg font-medium text-foreground hover:text-primary">
+                    {item.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground text-base">
+                    {item.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="bg-card py-20 lg:py-28">
+          <div className="container mx-auto px-4 text-center max-w-3xl">
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-6">
+              Don't Promote Brands. Build Income.
+            </h2>
+            <p className="text-lg lg:text-xl text-muted-foreground mb-8">
+              Claim your Combat Market storefront and start earning from your fight life.
             </p>
+            <Button asChild size="lg" className="text-base px-8">
+              <Link to="/fighter-signup">
+                Claim Your Storefront
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Social Proof */}
-      <section className="border-t border-border py-8 sm:py-12">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-xl uppercase leading-none tracking-normal text-white sm:text-2xl md:text-3xl">
-            Built for fighters, coaches, and combat athletes worldwide
-          </h2>
-          <p className="mt-3 text-xs uppercase tracking-widest text-foreground/70 sm:mt-4 sm:text-sm md:text-base">
-            MMA • Boxing • Muay Thai • BJJ • Wrestling • Functional Fitness
-          </p>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="features" className="border-t border-border py-16 sm:py-24">
-        <div className="container mx-auto px-4">
-          <h2 className="text-center font-display text-2xl uppercase leading-none tracking-normal text-white sm:text-3xl md:text-4xl lg:text-5xl">How It Works</h2>
-
-          <div className="mt-10 grid gap-6 sm:mt-16 sm:gap-8 md:grid-cols-3">
-            {/* Step 1 */}
-            <div className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50">
-              <div className="aspect-[16/9] overflow-hidden">
-                <img
-                  src={glovesImage}
-                  alt="Premium combat gloves for boxing and MMA training"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="p-6 text-center sm:p-8">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 sm:h-12 sm:w-12">
-                  <Store className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
-                </div>
-                <h3 className="mt-3 font-display text-lg uppercase leading-tight tracking-normal text-white sm:mt-4 sm:text-xl md:text-2xl">1. Claim Your Storefront</h3>
-                <p className="mt-2 text-sm text-foreground/80 sm:mt-3 sm:text-base">
-                  Your own page on Combat Market, under your name. This becomes your personal hub for the gear you trust.
-                </p>
-                <p className="mt-2 text-xs text-foreground/70 sm:mt-3 sm:text-sm">
-                  Simple setup. No tech. No cost.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50">
-              <div className="aspect-[16/9] overflow-hidden">
-                <img
-                  src={equipmentImage}
-                  alt="Combat training equipment flatlay with gloves, wraps, and gear"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="p-6 text-center sm:p-8">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 sm:h-12 sm:w-12">
-                  <ShoppingBag className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
-                </div>
-                <h3 className="mt-3 font-display text-lg uppercase leading-tight tracking-normal text-white sm:mt-4 sm:text-xl md:text-2xl">2. Add the Brands You Use</h3>
-                <p className="mt-2 text-sm text-foreground/80 sm:mt-3 sm:text-base">
-                  Gloves, tape, supplements, recovery, apparel. If you already use it, you can earn from it.
-                </p>
-                <p className="mt-2 text-xs text-foreground/70 sm:mt-3 sm:text-sm">
-                  We handle tracking and payouts.
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="group rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50">
-              <div className="aspect-[16/9] overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <TrendingUp className="h-12 w-12 text-primary/50 sm:h-16 sm:w-16" />
-              </div>
-              <div className="p-6 text-center sm:p-8">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 sm:h-12 sm:w-12">
-                  <TrendingUp className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
-                </div>
-                <h3 className="mt-3 font-display text-lg uppercase leading-tight tracking-normal text-white sm:mt-4 sm:text-xl md:text-2xl">3. Share & Earn – For Life</h3>
-                <p className="mt-2 text-sm text-foreground/80 sm:mt-3 sm:text-base">
-                  Share your storefront. Earn commissions every time someone buys. Invite other fighters. Earn from their sales too.
-                </p>
-                <p className="mt-2 text-xs text-foreground/70 sm:mt-3 sm:text-sm">
-                  This isn't a one-off post. It's lifetime income.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Photo Grid */}
-      <PhotoGrid />
-
-      {/* Why Combat Market Exists */}
-      <section id="for-fighters" className="border-t border-border bg-card py-16 sm:py-24">
-        <div className="container mx-auto max-w-3xl px-4 text-center">
-          <h2 className="font-display text-2xl uppercase leading-none tracking-normal text-white sm:text-3xl md:text-4xl lg:text-5xl">Built for Fighters, Not Advertisers</h2>
-          <div className="mt-6 space-y-3 text-base text-foreground/80 sm:mt-8 sm:space-y-4 sm:text-lg">
-            <p>Most fighters train harder than anyone.</p>
-            <p>Most brands profit more than fighters do.</p>
-            <p className="text-foreground font-medium">Combat Market changes that.</p>
-          </div>
-          <p className="mx-auto mt-6 max-w-2xl text-sm text-foreground/80 sm:mt-8 sm:text-base">
-            We're building the world's first fighter-powered commerce platform, where fighters earn from the products they already believe in and the networks they already have.
-          </p>
-          <div className="mt-6 flex flex-col items-center gap-1.5 text-sm text-foreground/80 sm:mt-8 sm:gap-2 sm:text-base">
-            <p>No chasing sponsors.</p>
-            <p>No fake discount codes.</p>
-            <p>No begging for deals.</p>
-            <p className="mt-3 text-base font-semibold text-foreground sm:mt-4 sm:text-lg">Just fighters owning the upside.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* What Makes Combat Market Different */}
-      <section className="border-t border-border py-16 sm:py-24">
-        <div className="container mx-auto max-w-3xl px-4">
-          <h2 className="text-center font-display text-2xl uppercase leading-none tracking-normal text-white sm:text-3xl md:text-4xl lg:text-5xl">More Than Affiliate Links</h2>
-
-          <div className="mt-8 grid gap-3 sm:mt-12 sm:gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 sm:gap-4 sm:p-5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:h-10 sm:w-10">
-                <Check className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-              </div>
-              <p className="text-sm font-medium sm:text-base">Earn from your own sales</p>
-            </div>
-
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 sm:gap-4 sm:p-5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:h-10 sm:w-10">
-                <Check className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-              </div>
-              <p className="text-sm font-medium sm:text-base">Earn from fighters you invite</p>
-            </div>
-
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 sm:gap-4 sm:p-5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:h-10 sm:w-10">
-                <Check className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-              </div>
-              <p className="text-sm font-medium sm:text-base">Earn as your network grows</p>
-            </div>
-
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 sm:gap-4 sm:p-5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:h-10 sm:w-10">
-                <Check className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-              </div>
-              <p className="text-sm font-medium sm:text-base">Get paid for the long term</p>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center sm:mt-10">
-            <p className="text-sm text-foreground/80 sm:text-base">This is how real ecosystems work.</p>
-            <p className="mt-1.5 text-base font-semibold text-foreground sm:mt-2 sm:text-lg">Value compounds. Ownership matters.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="border-t border-border bg-card py-16 sm:py-24">
-        <div className="container mx-auto max-w-3xl px-4">
-          <h2 className="text-center font-display text-2xl uppercase leading-none tracking-normal text-white sm:text-3xl md:text-4xl lg:text-5xl">FAQ</h2>
-
-          <div className="mt-8 space-y-4 sm:mt-12 sm:space-y-6">
-            <div className="rounded-lg border border-border bg-background p-4 sm:p-6">
-              <h4 className="text-sm font-semibold sm:text-base">Is this free?</h4>
-                <p className="mt-1.5 text-sm text-foreground/80 sm:mt-2 sm:text-base">
-                Yes. Claiming a storefront is free for fighters.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4 sm:p-6">
-              <h4 className="text-sm font-semibold sm:text-base">Do I need sponsors or a big following?</h4>
-                <p className="mt-1.5 text-sm text-foreground/80 sm:mt-2 sm:text-base">
-                No. You earn from what you already use and share.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4 sm:p-6">
-              <h4 className="text-sm font-semibold sm:text-base">Who can join?</h4>
-                <p className="mt-1.5 text-sm text-foreground/80 sm:mt-2 sm:text-base">
-                Fighters, coaches, and combat athletes at any level.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4 sm:p-6">
-              <h4 className="text-sm font-semibold sm:text-base">How do payouts work?</h4>
-                <p className="mt-1.5 text-sm text-foreground/80 sm:mt-2 sm:text-base">
-                Sales are tracked automatically and paid out directly.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-border bg-background p-4 sm:p-6">
-              <h4 className="text-sm font-semibold sm:text-base">When will fans be able to browse fighters?</h4>
-                <p className="mt-1.5 text-sm text-foreground/80 sm:mt-2 sm:text-base">
-                The public fighter directory will be added as the platform expands.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="border-t border-border py-16 sm:py-24">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-2xl uppercase leading-none tracking-normal text-white sm:text-3xl md:text-4xl lg:text-5xl">Don't Promote Brands. Build Income.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-foreground/80 sm:mt-4 sm:text-base">
-            Claim your Combat Market storefront and start earning from your fight life.
-          </p>
-          <Button asChild size="lg" className="mt-6 glow-primary text-base sm:mt-8 sm:text-lg">
-            <Link to="/fighter-signup">Claim Your Storefront</Link>
-          </Button>
-        </div>
-      </section>
-
-      <Footer />
-
-      {/* Sticky Mobile CTA - only show when not logged in */}
-      {!user && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur-md p-3 safe-area-inset-bottom md:hidden">
-          <Button asChild size="lg" className="w-full glow-primary">
-            <Link to="/fighter-signup" className="flex items-center justify-center gap-2">
-              Claim Your Storefront
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      )}
-
-      {/* Add padding at bottom for sticky CTA on mobile */}
-      {!user && <div className="h-20 md:hidden" />}
-    </div>
+        <Footer />
+      </div>
+    </>
   );
-};
-
-export default Landing;
+}

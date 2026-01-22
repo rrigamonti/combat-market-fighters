@@ -27,6 +27,7 @@ import AdminSales from "./pages/admin/AdminSales";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -130,6 +131,8 @@ const App = () => (
             />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            {/* Fighter Directory - Coming Soon */}
+            <Route path="/fighter-directory" element={<ComingSoon />} />
             {/* Fighter product detail - must be before /:handle */}
             <Route path="/:handle/:productSlug" element={<FighterProductDetail />} />
             {/* Fighter storefront - must be last dynamic route */}
