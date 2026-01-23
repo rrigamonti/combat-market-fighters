@@ -112,9 +112,9 @@
     height: 100%;
     background-image: url('/textures/grain-texture.png');
     background-repeat: repeat;
-    opacity: 0.08;
+    opacity: 0.35;
     pointer-events: none;
-    z-index: 9999;
+    z-index: -1;
     mix-blend-mode: overlay;
   }
 
@@ -131,7 +131,6 @@
   .glow-primary {
     box-shadow: 0 0 40px hsl(var(--primary) / 0.3);
   }
-
 
   /* Mother-site precise hero typography (desktop reference: 1440px) */
   .cm-hero-h1 {
