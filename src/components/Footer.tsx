@@ -3,7 +3,7 @@ import logo from "@/assets/combat-market-logo.svg";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-card py-8 sm:py-12 content-layer">
+    <footer className="border-t border-border bg-card py-8 sm:py-12">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center gap-6 sm:gap-8 md:flex-row md:justify-between">
           <div className="flex items-center gap-2">

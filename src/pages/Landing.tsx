@@ -118,7 +118,7 @@ export default function Landing() {
         }))}
       />
 
-      <div className="min-h-screen bg-background content-layer">
+      <div className="min-h-screen bg-background">
         <Navbar variant="landing" />
 
         {/* Hero Section */}
