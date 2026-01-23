@@ -59,7 +59,7 @@ export function Navbar({ variant = "default" }: NavbarProps) {
   const linkClasses = "text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 content-layer">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo - Left */}
         <Link to="/" className="flex items-center gap-2">
