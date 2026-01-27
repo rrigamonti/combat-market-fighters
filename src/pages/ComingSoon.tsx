@@ -41,7 +41,7 @@ export default function ComingSoon() {
                 </Link>
               </Button>
               <Button asChild variant="outline-primary" size="lg">
-                <Link to="/marcus-rodriguez">
+                <Link to="/paul-weir">
                   View Demo Storefront
                 </Link>
               </Button>

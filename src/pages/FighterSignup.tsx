@@ -40,6 +40,7 @@ const signupSchema = z.object({
   socialTiktok: z.string().url("Invalid URL").optional().or(z.literal("")),
   socialFacebook: z.string().url("Invalid URL").optional().or(z.literal("")),
   socialSnapchat: z.string().url("Invalid URL").optional().or(z.literal("")),
+  socialTapology: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
 const sports = [
@@ -96,6 +97,7 @@ export default function FighterSignup() {
     socialTiktok: "",
     socialFacebook: "",
     socialSnapchat: "",
+    socialTapology: "",
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,6 +264,7 @@ export default function FighterSignup() {
         social_tiktok: formData.socialTiktok || null,
         social_facebook: formData.socialFacebook || null,
         social_snapchat: formData.socialSnapchat || null,
+        social_tapology: formData.socialTapology || null,
       });
 
     setLoading(false);
@@ -526,6 +529,15 @@ export default function FighterSignup() {
                         placeholder="https://snapchat.com/add/username"
                         value={formData.socialSnapchat}
                         onChange={(e) => setFormData({ ...formData, socialSnapchat: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="socialTapology" className="text-xs text-muted-foreground">Tapology</Label>
+                      <Input
+                        id="socialTapology"
+                        placeholder="https://tapology.com/fightcenter/fighters/..."
+                        value={formData.socialTapology}
+                        onChange={(e) => setFormData({ ...formData, socialTapology: e.target.value })}
                       />
                     </div>
                   </div>
