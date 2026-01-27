@@ -45,13 +45,13 @@ export function Navbar({ variant = "default" }: NavbarProps) {
     { label: "FIGHTER DIRECTORY", href: "/fighter-directory" },
   ];
 
-  // Default variant navigation items
+  // Default variant navigation items - matching landing style
   const defaultNavItems = [
-    { label: "Home", href: "/" },
-    { label: "Features", href: "/#features" },
-    { label: "Marketplace", href: "/marketplace" },
-    { label: "FAQs", href: "/#faq" },
-    { label: "For Fighters", href: "/#for-fighters" },
+    { label: "HOME", href: "/" },
+    { label: "FEATURES", href: "/#features" },
+    { label: "MARKETPLACE", href: "/marketplace" },
+    { label: "FAQS", href: "/#faq" },
+    { label: "FIGHTER DIRECTORY", href: "/fighter-directory" },
   ];
 
   const navItems = variant === "landing" ? landingNavItems : defaultNavItems;
