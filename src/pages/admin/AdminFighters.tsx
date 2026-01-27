@@ -55,6 +55,7 @@ interface Fighter {
   social_tiktok: string | null;
   social_facebook: string | null;
   social_snapchat: string | null;
+  social_tapology?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -153,6 +154,7 @@ export default function AdminFighters() {
     social_tiktok: "",
     social_facebook: "",
     social_snapchat: "",
+    social_tapology: "",
   });
   const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
   const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
@@ -178,6 +180,7 @@ export default function AdminFighters() {
     social_tiktok: "",
     social_facebook: "",
     social_snapchat: "",
+    social_tapology: "",
   });
   const [createProfileImageFile, setCreateProfileImageFile] = useState<File | null>(null);
   const [createProfileImagePreview, setCreateProfileImagePreview] = useState<string | null>(null);
@@ -275,6 +278,7 @@ export default function AdminFighters() {
       social_tiktok: fighter.social_tiktok || "",
       social_facebook: fighter.social_facebook || "",
       social_snapchat: fighter.social_snapchat || "",
+      social_tapology: fighter.social_tapology || "",
     });
     setHeroImageFile(null);
     setHeroImagePreview(fighter.hero_image_url || null);
@@ -367,6 +371,7 @@ export default function AdminFighters() {
       social_tiktok: "",
       social_facebook: "",
       social_snapchat: "",
+      social_tapology: "",
     });
     setCreateProfileImageFile(null);
     setCreateProfileImagePreview(null);
@@ -532,6 +537,7 @@ export default function AdminFighters() {
         social_tiktok: createData.social_tiktok.trim() || null,
         social_facebook: createData.social_facebook.trim() || null,
         social_snapchat: createData.social_snapchat.trim() || null,
+        social_tapology: createData.social_tapology.trim() || null,
         user_id: null,
       });
 
@@ -679,6 +685,7 @@ export default function AdminFighters() {
         social_tiktok: editData.social_tiktok || null,
         social_facebook: editData.social_facebook || null,
         social_snapchat: editData.social_snapchat || null,
+        social_tapology: editData.social_tapology || null,
       })
       .eq("id", editingFighter.id);
     
@@ -1246,6 +1253,15 @@ export default function AdminFighters() {
                     placeholder="https://snapchat.com/add/username"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tapology" className="text-xs text-muted-foreground">Tapology</Label>
+                  <Input
+                    id="edit-tapology"
+                    value={editData.social_tapology}
+                    onChange={(e) => setEditData({ ...editData, social_tapology: e.target.value })}
+                    placeholder="https://tapology.com/fightcenter/fighters/..."
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1583,6 +1599,15 @@ export default function AdminFighters() {
                     value={createData.social_snapchat}
                     onChange={(e) => setCreateData({ ...createData, social_snapchat: e.target.value })}
                     placeholder="https://snapchat.com/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="create-tapology" className="text-xs text-muted-foreground">Tapology</Label>
+                  <Input
+                    id="create-tapology"
+                    value={createData.social_tapology}
+                    onChange={(e) => setCreateData({ ...createData, social_tapology: e.target.value })}
+                    placeholder="https://tapology.com/..."
                   />
                 </div>
               </div>

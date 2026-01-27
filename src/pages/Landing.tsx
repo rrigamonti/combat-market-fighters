@@ -106,7 +106,7 @@ export default function Landing() {
   return (
     <>
       <PageMeta
-        title="Combat Market | Turn Your Fight Gear Into Income"
+        title="Combat Market | Turn Your Routine Into Revenue"
         description="Claim your personal Combat Market storefront and earn from the brands you already use. Built for fighters, not advertisers."
       />
       <OrganizationSchema />
@@ -128,7 +128,7 @@ export default function Landing() {
               {/* Left Column - Text */}
               <div className="text-center lg:text-left">
                 <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight leading-none text-white mb-6">
-                  Turn Your Fight Gear Into Income
+                  Turn Your Routine Into Revenue
                 </h1>
                 <p className="text-lg lg:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0">
                   Claim your personal Combat Market storefront and earn from the brands you already use.
@@ -141,7 +141,7 @@ export default function Landing() {
                     </Link>
                   </Button>
                   <Button asChild variant="outline-primary" size="lg" className="text-base px-8">
-                    <Link to="/marcus-rodriguez">
+                    <Link to="/paul-weir">
                       View Demo Storefront
                     </Link>
                   </Button>
