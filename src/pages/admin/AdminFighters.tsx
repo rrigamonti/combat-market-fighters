@@ -31,7 +31,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { sendNotification } from "@/lib/notifications";
 import { getStorefrontUrl } from "@/lib/config";
 import ImageCropper from "@/components/ImageCropper";
@@ -197,6 +207,11 @@ export default function AdminFighters() {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewingFighter, setReviewingFighter] = useState<Fighter | null>(null);
   const [processingReview, setProcessingReview] = useState(false);
+  
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingFighter, setDeletingFighter] = useState<Fighter | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function fetchFighters() {
     setLoading(true);
@@ -260,6 +275,48 @@ export default function AdminFighters() {
       
       fetchFighters();
     }
+  }
+
+  // Delete fighter
+  async function handleDeleteFighter() {
+    if (!deletingFighter) return;
+    
+    setDeleting(true);
+    
+    // Delete associated images from storage
+    if (deletingFighter.profile_image_url) {
+      const profilePath = deletingFighter.profile_image_url.split("/").pop();
+      if (profilePath) {
+        await supabase.storage.from("fighter-avatars").remove([profilePath]);
+      }
+    }
+    if (deletingFighter.hero_image_url) {
+      const heroPath = deletingFighter.hero_image_url.split("/").pop();
+      if (heroPath) {
+        await supabase.storage.from("fighter-heroes").remove([heroPath]);
+      }
+    }
+    
+    const { error } = await supabase
+      .from("fighters")
+      .delete()
+      .eq("id", deletingFighter.id);
+    
+    if (error) {
+      toast({ title: "Error deleting fighter", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Fighter deleted", description: `${deletingFighter.full_name || "Fighter"} has been removed.` });
+      fetchFighters();
+    }
+    
+    setDeleting(false);
+    setDeleteDialogOpen(false);
+    setDeletingFighter(null);
+  }
+
+  function openDeleteDialog(fighter: Fighter) {
+    setDeletingFighter(fighter);
+    setDeleteDialogOpen(true);
   }
 
   // Open edit dialog
@@ -968,6 +1025,14 @@ export default function AdminFighters() {
                               Reject
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => openDeleteDialog(fighter)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1622,6 +1687,32 @@ export default function AdminFighters() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Fighter</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete{" "}
+              <span className="font-semibold text-foreground">
+                {deletingFighter?.full_name || "this fighter"}
+              </span>
+              ? This will remove their profile, storefront, and all associated images. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteFighter}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete Fighter"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Image Cropper */}
       <ImageCropper
