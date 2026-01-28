@@ -92,6 +92,7 @@ export type Database = {
           social_facebook: string | null
           social_instagram: string | null
           social_snapchat: string | null
+          social_tapology: string | null
           social_tiktok: string | null
           social_twitter: string | null
           social_youtube: string | null
@@ -114,6 +115,7 @@ export type Database = {
           social_facebook?: string | null
           social_instagram?: string | null
           social_snapchat?: string | null
+          social_tapology?: string | null
           social_tiktok?: string | null
           social_twitter?: string | null
           social_youtube?: string | null
@@ -136,6 +138,7 @@ export type Database = {
           social_facebook?: string | null
           social_instagram?: string | null
           social_snapchat?: string | null
+          social_tapology?: string | null
           social_tiktok?: string | null
           social_twitter?: string | null
           social_youtube?: string | null
