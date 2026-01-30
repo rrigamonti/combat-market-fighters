@@ -31,7 +31,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search, ChevronLeft, ChevronRight, Trash2, Square, CheckSquare, Minus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -212,6 +213,11 @@ export default function AdminFighters() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingFighter, setDeletingFighter] = useState<Fighter | null>(null);
   const [deleting, setDeleting] = useState(false);
+  
+  // Bulk selection state
+  const [selectedFighters, setSelectedFighters] = useState<Set<string>>(new Set());
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   async function fetchFighters() {
     setLoading(true);
@@ -317,6 +323,72 @@ export default function AdminFighters() {
   function openDeleteDialog(fighter: Fighter) {
     setDeletingFighter(fighter);
     setDeleteDialogOpen(true);
+  }
+
+  // Bulk selection handlers
+  function toggleSelectFighter(fighterId: string) {
+    setSelectedFighters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fighterId)) {
+        newSet.delete(fighterId);
+      } else {
+        newSet.add(fighterId);
+      }
+      return newSet;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedFighters.size === paginatedFighters.length) {
+      setSelectedFighters(new Set());
+    } else {
+      setSelectedFighters(new Set(paginatedFighters.map(f => f.id)));
+    }
+  }
+
+  function clearSelection() {
+    setSelectedFighters(new Set());
+  }
+
+  // Bulk delete handler
+  async function handleBulkDelete() {
+    if (selectedFighters.size === 0) return;
+    
+    setBulkDeleting(true);
+    
+    const fightersToDelete = fighters.filter(f => selectedFighters.has(f.id));
+    
+    // Delete associated images from storage
+    for (const fighter of fightersToDelete) {
+      if (fighter.profile_image_url) {
+        const profilePath = fighter.profile_image_url.split("/").pop();
+        if (profilePath) {
+          await supabase.storage.from("fighter-avatars").remove([profilePath]);
+        }
+      }
+      if (fighter.hero_image_url) {
+        const heroPath = fighter.hero_image_url.split("/").pop();
+        if (heroPath) {
+          await supabase.storage.from("fighter-heroes").remove([heroPath]);
+        }
+      }
+    }
+    
+    const { error } = await supabase
+      .from("fighters")
+      .delete()
+      .in("id", Array.from(selectedFighters));
+    
+    if (error) {
+      toast({ title: "Error deleting fighters", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Fighters deleted", description: `${selectedFighters.size} fighter(s) have been removed.` });
+      setSelectedFighters(new Set());
+      fetchFighters();
+    }
+    
+    setBulkDeleting(false);
+    setBulkDeleteDialogOpen(false);
   }
 
   // Open edit dialog
@@ -896,10 +968,39 @@ export default function AdminFighters() {
           </div>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {selectedFighters.size > 0 && (
+          <div className="flex items-center gap-4 p-3 bg-muted rounded-lg">
+            <span className="text-sm font-medium">{selectedFighters.size} selected</span>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setBulkDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={clearSelection}
+            >
+              Clear Selection
+            </Button>
+          </div>
+        )}
+
         <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={paginatedFighters.length > 0 && selectedFighters.size === paginatedFighters.length}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead className="w-12"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Handle</TableHead>
@@ -914,7 +1015,7 @@ export default function AdminFighters() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8">
+                  <TableCell colSpan={10} className="text-center py-8">
                     <div className="flex items-center justify-center">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     </div>
@@ -922,7 +1023,7 @@ export default function AdminFighters() {
                 </TableRow>
               ) : filteredFighters.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     {searchQuery.trim() ? "No fighters match your search" : "No fighters found"}
                   </TableCell>
                 </TableRow>
@@ -933,7 +1034,14 @@ export default function AdminFighters() {
                   const pendingChanges = getPendingChanges(fighter);
                   
                   return (
-                    <TableRow key={fighter.id}>
+                    <TableRow key={fighter.id} className={selectedFighters.has(fighter.id) ? "bg-muted/50" : ""}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedFighters.has(fighter.id)}
+                          onCheckedChange={() => toggleSelectFighter(fighter.id)}
+                          aria-label={`Select ${fighter.full_name || "fighter"}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div className="h-10 w-10 overflow-hidden rounded-full bg-muted">
                           {fighter.profile_image_url ? (
@@ -1709,6 +1817,32 @@ export default function AdminFighters() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleting ? "Deleting..." : "Delete Fighter"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedFighters.size} Fighter{selectedFighters.size !== 1 ? "s" : ""}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete{" "}
+              <span className="font-semibold text-foreground">
+                {selectedFighters.size} fighter{selectedFighters.size !== 1 ? "s" : ""}
+              </span>
+              ? This will remove their profiles, storefronts, and all associated images. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? "Deleting..." : `Delete ${selectedFighters.size} Fighter${selectedFighters.size !== 1 ? "s" : ""}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
