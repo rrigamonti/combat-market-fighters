@@ -14,7 +14,7 @@ import {
 import { Zap, Package, Wallet, Users, Check, ChevronRight } from "lucide-react";
 
 // Assets
-import heroPhoneGloves from "@/assets/landing/hero-phone-gloves.png";
+import heroPhoneGloves from "@/assets/landing/hero-phone-gloves.jpg";
 import step1Storefront from "@/assets/landing/step-1-storefront.png";
 import step2Brands from "@/assets/landing/step-2-brands.png";
 import step3Earn from "@/assets/landing/step-3-earn.png";
