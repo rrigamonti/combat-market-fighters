@@ -12,6 +12,7 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getCanonicalUrl } from "@/lib/config";
 import defaultHeroImage from "@/assets/demo-hero-marcus.jpg";
+import tapologyIcon from "@/assets/social/tapology-icon.png";
 
 interface Fighter {
   id: string;
@@ -100,10 +101,8 @@ const SocialIcons = {
     </div>
   ),
   tapology: (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E54B2E]">
-      <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
-        <path d="M4 4h16v4H4V4zm6 6h4v10h-4V10z"/>
-      </svg>
+    <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden">
+      <img src={tapologyIcon} alt="Tapology" className="h-full w-full object-cover" />
     </div>
   ),
 };
