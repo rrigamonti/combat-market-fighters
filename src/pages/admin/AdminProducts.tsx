@@ -30,8 +30,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Percent } from "lucide-react";
+import { Plus, Pencil, Trash2, Percent, Upload, Link, ChevronDown } from "lucide-react";
+import { ProductImportDialog } from "@/components/admin/ProductImportDialog";
+import type { ScrapedProduct } from "@/lib/api/firecrawl";
 
 interface Brand {
   id: string;
@@ -53,6 +61,8 @@ interface Product {
   external_url: string;
   active: boolean;
   discount_percentage: number | null;
+  source_type?: string | null;
+  affiliate_network?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -95,6 +105,7 @@ export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<ProductForm & { id?: string }>(emptyProduct);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   async function fetchProducts() {
     setLoading(true);
@@ -242,6 +253,39 @@ export default function AdminProducts() {
     return brand?.logo_url || null;
   }
 
+  // Handle product scraped from URL
+  function handleProductScraped(product: ScrapedProduct) {
+    // Pre-fill the add product form with scraped data
+    setEditingProduct({
+      name: product.name || "",
+      brand: product.brand || "",
+      brand_id: null,
+      price: product.price || "",
+      slug: product.name ? product.name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-') : "",
+      category: "",
+      image_url: product.image_url || "",
+      short_description: product.description || "",
+      long_description: "",
+      external_url: product.external_url || "",
+      active: true,
+      discount_percentage: null,
+    });
+    setIsEditing(false);
+    setDialogOpen(true);
+  }
+
+  // Get source badge for product
+  function getSourceBadge(sourceType?: string | null) {
+    switch (sourceType) {
+      case 'feed':
+        return <Badge variant="outline" className="text-xs">Feed</Badge>;
+      case 'scraped':
+        return <Badge variant="outline" className="text-xs">Scraped</Badge>;
+      default:
+        return <Badge variant="secondary" className="text-xs">Manual</Badge>;
+    }
+  }
+
   return (
     <AdminLayout>
       <PageMeta title="Manage Products - Admin" description="Admin panel for managing affiliate products on Combat Market." noindex />
@@ -252,11 +296,33 @@ export default function AdminProducts() {
             <p className="text-muted-foreground">Manage affiliate products</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openNewDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
+          <div className="flex items-center gap-2">
+            {/* Import Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Feed (CSV/XML)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                  <Link className="mr-2 h-4 w-4" />
+                  Scrape from URL
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openNewDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Product
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
@@ -414,7 +480,16 @@ export default function AdminProducts() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
+
+        {/* Import Dialog */}
+        <ProductImportDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          onProductScraped={handleProductScraped}
+          onImportComplete={fetchProducts}
+        />
 
         <div className="rounded-lg border border-border">
           <Table>
@@ -422,6 +497,7 @@ export default function AdminProducts() {
               <TableRow>
                 <TableHead>Product</TableHead>
                 <TableHead>Brand</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Discount</TableHead>
@@ -432,7 +508,7 @@ export default function AdminProducts() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center">
+                  <TableCell colSpan={8} className="py-8 text-center">
                     <div className="flex items-center justify-center">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     </div>
@@ -440,7 +516,7 @@ export default function AdminProducts() {
                 </TableRow>
               ) : products.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     No products yet
                   </TableCell>
                 </TableRow>
@@ -471,11 +547,14 @@ export default function AdminProducts() {
                         {product.brand}
                       </div>
                     </TableCell>
+                    <TableCell>
+                      {getSourceBadge(product.source_type)}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{product.category || "—"}</TableCell>
                     <TableCell>{product.price}</TableCell>
                     <TableCell>
                       {product.discount_percentage ? (
-                        <Badge variant="secondary" className="bg-green-500/10 text-green-500">
+                        <Badge variant="secondary">
                           -{product.discount_percentage}%
                         </Badge>
                       ) : (
