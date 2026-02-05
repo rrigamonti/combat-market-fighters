@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { PageMeta } from "@/components/PageMeta";
@@ -13,22 +13,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Trash2, Users, Package } from "lucide-react";
+import { Plus, Trash2, Users, Package, Search, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -46,11 +53,40 @@ export default function AdminAssignments() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string>("");
 
+  // Fighter selector popover state
+  const [fighterPopoverOpen, setFighterPopoverOpen] = useState(false);
+
   // Bulk assignment state
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [selectedFighters, setSelectedFighters] = useState<Set<string>>(new Set());
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+
+  // Search state for bulk assignment dialog
+  const [bulkFighterSearch, setBulkFighterSearch] = useState("");
+  const [bulkProductSearch, setBulkProductSearch] = useState("");
+
+  // Filtered lists for bulk dialog
+  const filteredBulkFighters = useMemo(() => {
+    if (!bulkFighterSearch.trim()) return fighters;
+    const query = bulkFighterSearch.toLowerCase();
+    return fighters.filter(
+      (f) =>
+        f.full_name?.toLowerCase().includes(query) ||
+        f.handle?.toLowerCase().includes(query)
+    );
+  }, [fighters, bulkFighterSearch]);
+
+  const filteredBulkProducts = useMemo(() => {
+    if (!bulkProductSearch.trim()) return products;
+    const query = bulkProductSearch.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.brand.toLowerCase().includes(query) ||
+        p.category?.toLowerCase().includes(query)
+    );
+  }, [products, bulkProductSearch]);
 
   useEffect(() => {
     async function fetchData() {
@@ -83,6 +119,7 @@ export default function AdminAssignments() {
 
   function handleFighterChange(fighterId: string) {
     setSelectedFighter(fighterId);
+    setFighterPopoverOpen(false);
     fetchAssignments(fighterId);
   }
 
@@ -159,18 +196,46 @@ export default function AdminAssignments() {
   }
 
   function selectAllFighters() {
-    if (selectedFighters.size === fighters.length) {
-      setSelectedFighters(new Set());
+    // Select/deselect only the currently filtered fighters
+    const filteredIds = filteredBulkFighters.map((f) => f.id);
+    const allFilteredSelected = filteredIds.every((id) => selectedFighters.has(id));
+    
+    if (allFilteredSelected) {
+      // Deselect all filtered fighters
+      setSelectedFighters((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.delete(id));
+        return next;
+      });
     } else {
-      setSelectedFighters(new Set(fighters.map((f) => f.id)));
+      // Select all filtered fighters
+      setSelectedFighters((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.add(id));
+        return next;
+      });
     }
   }
 
   function selectAllProducts() {
-    if (selectedProducts.size === products.length) {
-      setSelectedProducts(new Set());
+    // Select/deselect only the currently filtered products
+    const filteredIds = filteredBulkProducts.map((p) => p.id);
+    const allFilteredSelected = filteredIds.every((id) => selectedProducts.has(id));
+    
+    if (allFilteredSelected) {
+      // Deselect all filtered products
+      setSelectedProducts((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.delete(id));
+        return next;
+      });
     } else {
-      setSelectedProducts(new Set(products.map((p) => p.id)));
+      // Select all filtered products
+      setSelectedProducts((prev) => {
+        const next = new Set(prev);
+        filteredIds.forEach((id) => next.add(id));
+        return next;
+      });
     }
   }
 
@@ -247,6 +312,8 @@ export default function AdminAssignments() {
       // Reset selections and close dialog
       setSelectedFighters(new Set());
       setSelectedProducts(new Set());
+      setBulkFighterSearch("");
+      setBulkProductSearch("");
       setBulkDialogOpen(false);
 
       // Refresh current fighter's assignments if viewing one
@@ -262,6 +329,13 @@ export default function AdminAssignments() {
 
   const assignedProductIds = new Set(assignments.map((a) => a.product_id));
   const availableProducts = products.filter((p) => !assignedProductIds.has(p.id));
+  const selectedFighterData = fighters.find((f) => f.id === selectedFighter);
+
+  // Check if all filtered items are selected (for button text)
+  const allFilteredFightersSelected = filteredBulkFighters.length > 0 && 
+    filteredBulkFighters.every((f) => selectedFighters.has(f.id));
+  const allFilteredProductsSelected = filteredBulkProducts.length > 0 && 
+    filteredBulkProducts.every((p) => selectedProducts.has(p.id));
 
   return (
     <AdminLayout>
@@ -273,7 +347,13 @@ export default function AdminAssignments() {
             <p className="text-muted-foreground">Assign products to fighter storefronts</p>
           </div>
 
-          <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+          <Dialog open={bulkDialogOpen} onOpenChange={(open) => {
+            setBulkDialogOpen(open);
+            if (!open) {
+              setBulkFighterSearch("");
+              setBulkProductSearch("");
+            }
+          }}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Users className="mr-2 h-4 w-4" />
@@ -294,11 +374,21 @@ export default function AdminAssignments() {
                         Fighters ({selectedFighters.size} selected)
                       </h3>
                       <Button variant="ghost" size="sm" onClick={selectAllFighters}>
-                        {selectedFighters.size === fighters.length ? "Deselect All" : "Select All"}
+                        {allFilteredFightersSelected ? "Deselect All" : "Select All"}
                       </Button>
                     </div>
+                    {/* Search input for fighters */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search fighters..."
+                        value={bulkFighterSearch}
+                        onChange={(e) => setBulkFighterSearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
                     <div className="max-h-64 overflow-y-auto space-y-2 rounded-md border border-border p-3">
-                      {fighters.map((fighter) => (
+                      {filteredBulkFighters.map((fighter) => (
                         <label
                           key={fighter.id}
                           className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded-md"
@@ -311,7 +401,7 @@ export default function AdminAssignments() {
                             {fighter.profile_image_url && (
                               <img
                                 src={fighter.profile_image_url}
-                                alt={fighter.full_name}
+                                alt={fighter.full_name || ""}
                                 className="h-8 w-8 rounded-full object-cover"
                               />
                             )}
@@ -322,8 +412,10 @@ export default function AdminAssignments() {
                           </div>
                         </label>
                       ))}
-                      {fighters.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">No approved fighters</p>
+                      {filteredBulkFighters.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          {bulkFighterSearch ? "No fighters match your search" : "No approved fighters"}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -336,11 +428,21 @@ export default function AdminAssignments() {
                         Products ({selectedProducts.size} selected)
                       </h3>
                       <Button variant="ghost" size="sm" onClick={selectAllProducts}>
-                        {selectedProducts.size === products.length ? "Deselect All" : "Select All"}
+                        {allFilteredProductsSelected ? "Deselect All" : "Select All"}
                       </Button>
                     </div>
+                    {/* Search input for products */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search products..."
+                        value={bulkProductSearch}
+                        onChange={(e) => setBulkProductSearch(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
                     <div className="max-h-64 overflow-y-auto space-y-2 rounded-md border border-border p-3">
-                      {products.map((product) => (
+                      {filteredBulkProducts.map((product) => (
                         <label
                           key={product.id}
                           className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 p-2 rounded-md"
@@ -364,8 +466,10 @@ export default function AdminAssignments() {
                           </div>
                         </label>
                       ))}
-                      {products.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">No active products</p>
+                      {filteredBulkProducts.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          {bulkProductSearch ? "No products match your search" : "No active products"}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -389,18 +493,56 @@ export default function AdminAssignments() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Select value={selectedFighter || ""} onValueChange={handleFighterChange}>
-            <SelectTrigger className="w-80">
-              <SelectValue placeholder="Select a fighter..." />
-            </SelectTrigger>
-            <SelectContent>
-              {fighters.map((fighter) => (
-                <SelectItem key={fighter.id} value={fighter.id}>
-                  {fighter.full_name} (@{fighter.handle})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Searchable Fighter Selector using Command */}
+          <Popover open={fighterPopoverOpen} onOpenChange={setFighterPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={fighterPopoverOpen}
+                className="w-80 justify-between"
+              >
+                {selectedFighterData
+                  ? `${selectedFighterData.full_name} (@${selectedFighterData.handle})`
+                  : "Select a fighter..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0">
+              <Command>
+                <CommandInput placeholder="Search fighters..." />
+                <CommandList>
+                  <CommandEmpty>No fighter found.</CommandEmpty>
+                  <CommandGroup>
+                    {fighters.map((fighter) => (
+                      <CommandItem
+                        key={fighter.id}
+                        value={`${fighter.full_name} ${fighter.handle}`}
+                        onSelect={() => handleFighterChange(fighter.id)}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedFighter === fighter.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <div className="flex items-center gap-2">
+                          {fighter.profile_image_url && (
+                            <img
+                              src={fighter.profile_image_url}
+                              alt={fighter.full_name || ""}
+                              className="h-6 w-6 rounded-full object-cover"
+                            />
+                          )}
+                          <span>{fighter.full_name} (@{fighter.handle})</span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
 
           {selectedFighter && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -415,18 +557,38 @@ export default function AdminAssignments() {
                   <DialogTitle>Add Product to Storefront</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a product..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableProducts.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} ({product.brand})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Command className="rounded-lg border border-input">
+                    <CommandInput placeholder="Search products..." />
+                    <CommandList>
+                      <CommandEmpty>No product found.</CommandEmpty>
+                      <CommandGroup>
+                        {availableProducts.map((product) => (
+                          <CommandItem
+                            key={product.id}
+                            value={`${product.name} ${product.brand}`}
+                            onSelect={() => setSelectedProduct(product.id)}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedProduct === product.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex items-center gap-2">
+                              {product.image_url && (
+                                <img
+                                  src={product.image_url}
+                                  alt={product.name}
+                                  className="h-6 w-6 rounded object-cover"
+                                />
+                              )}
+                              <span>{product.name} ({product.brand})</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
                   <Button onClick={addAssignment} disabled={!selectedProduct} className="w-full">
                     Add to Storefront
                   </Button>
