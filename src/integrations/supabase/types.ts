@@ -38,6 +38,48 @@ export type Database = {
         }
         Relationships: []
       }
+      commission_rates: {
+        Row: {
+          created_at: string
+          fighter_id: string | null
+          id: string
+          product_id: string | null
+          rate_percentage: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fighter_id?: string | null
+          id?: string
+          product_id?: string | null
+          rate_percentage: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fighter_id?: string | null
+          id?: string
+          product_id?: string | null
+          rate_percentage?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_rates_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_rates_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fighter_products: {
         Row: {
           created_at: string
@@ -188,56 +230,113 @@ export type Database = {
           },
         ]
       }
+      product_import_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          error_log: Json | null
+          failed_count: number
+          file_name: string | null
+          id: string
+          imported_count: number
+          source_type: string
+          status: string
+          total_products: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_log?: Json | null
+          failed_count?: number
+          file_name?: string | null
+          id?: string
+          imported_count?: number
+          source_type: string
+          status?: string
+          total_products?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_log?: Json | null
+          failed_count?: number
+          file_name?: string | null
+          id?: string
+          imported_count?: number
+          source_type?: string
+          status?: string
+          total_products?: number
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           active: boolean
+          affiliate_network: string | null
           brand: string
           brand_id: string | null
           category: string | null
           created_at: string
+          default_commission_rate: number | null
           discount_percentage: number | null
           external_url: string
           id: string
           image_url: string | null
+          last_synced_at: string | null
           long_description: string | null
           name: string
+          network_product_id: string | null
           price: string
           short_description: string | null
           slug: string
+          source_type: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          affiliate_network?: string | null
           brand: string
           brand_id?: string | null
           category?: string | null
           created_at?: string
+          default_commission_rate?: number | null
           discount_percentage?: number | null
           external_url: string
           id?: string
           image_url?: string | null
+          last_synced_at?: string | null
           long_description?: string | null
           name: string
+          network_product_id?: string | null
           price: string
           short_description?: string | null
           slug: string
+          source_type?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          affiliate_network?: string | null
           brand?: string
           brand_id?: string | null
           category?: string | null
           created_at?: string
+          default_commission_rate?: number | null
           discount_percentage?: number | null
           external_url?: string
           id?: string
           image_url?: string | null
+          last_synced_at?: string | null
           long_description?: string | null
           name?: string
+          network_product_id?: string | null
           price?: string
           short_description?: string | null
           slug?: string
+          source_type?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -270,6 +369,72 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sales: {
+        Row: {
+          affiliate_network: string | null
+          commission_rate_used: number
+          created_at: string
+          currency: string
+          external_order_id: string | null
+          fighter_commission: number
+          fighter_id: string
+          id: string
+          network_commission: number
+          product_id: string | null
+          raw_payload: Json | null
+          sale_amount: number
+          sale_date: string | null
+          status: string
+        }
+        Insert: {
+          affiliate_network?: string | null
+          commission_rate_used: number
+          created_at?: string
+          currency?: string
+          external_order_id?: string | null
+          fighter_commission: number
+          fighter_id: string
+          id?: string
+          network_commission: number
+          product_id?: string | null
+          raw_payload?: Json | null
+          sale_amount: number
+          sale_date?: string | null
+          status?: string
+        }
+        Update: {
+          affiliate_network?: string | null
+          commission_rate_used?: number
+          created_at?: string
+          currency?: string
+          external_order_id?: string | null
+          fighter_commission?: number
+          fighter_id?: string
+          id?: string
+          network_commission?: number
+          product_id?: string | null
+          raw_payload?: Json | null
+          sale_amount?: number
+          sale_date?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       storefront_views: {
         Row: {
