@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getCanonicalUrl } from "@/lib/config";
+import { StorefrontGate } from "@/components/StorefrontGate";
 import defaultHeroImage from "@/assets/demo-hero-marcus.jpg";
 import tapologyIcon from "@/assets/social/tapology-icon.png";
 
@@ -24,6 +25,7 @@ interface Fighter {
   profile_image_url: string | null;
   hero_image_url: string | null;
   status: string;
+  storefront_password?: string | null;
   social_instagram: string | null;
   social_twitter: string | null;
   social_youtube: string | null;
@@ -114,7 +116,33 @@ export default function FighterStorefront() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const { trackStorefrontView } = useAnalytics();
+
+  // Check if already unlocked from sessionStorage
+  useEffect(() => {
+    if (handle) {
+      const unlockedStorefronts = sessionStorage.getItem("unlocked_storefronts");
+      if (unlockedStorefronts) {
+        const unlocked = JSON.parse(unlockedStorefronts);
+        if (unlocked.includes(handle)) {
+          setIsUnlocked(true);
+        }
+      }
+    }
+  }, [handle]);
+
+  const handleUnlock = () => {
+    if (handle) {
+      const unlockedStorefronts = sessionStorage.getItem("unlocked_storefronts");
+      const unlocked = unlockedStorefronts ? JSON.parse(unlockedStorefronts) : [];
+      if (!unlocked.includes(handle)) {
+        unlocked.push(handle);
+        sessionStorage.setItem("unlocked_storefronts", JSON.stringify(unlocked));
+      }
+      setIsUnlocked(true);
+    }
+  };
 
   useEffect(() => {
     async function fetchStorefront() {
@@ -224,20 +252,35 @@ export default function FighterStorefront() {
     );
   }
 
+  // Show gate for non-approved fighters with password protection
   if (fighter && fighter.status !== "approved") {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex min-h-[60vh] flex-col items-center justify-center">
-          <h1 className="font-display text-4xl text-primary">Storefront Not Available</h1>
-          <p className="mt-4 text-muted-foreground">This fighter's storefront is not currently active.</p>
-          <Button asChild className="mt-8">
-            <Link to="/">Go Home</Link>
-          </Button>
+    // If fighter has a password and is not yet unlocked, show gate
+    if (fighter.storefront_password && !isUnlocked) {
+      return (
+        <StorefrontGate
+          fighterName={fighter.full_name || "Fighter"}
+          onUnlock={handleUnlock}
+          correctPassword={fighter.storefront_password}
+        />
+      );
+    }
+    
+    // If no password or already unlocked, show "not available" message
+    if (!fighter.storefront_password) {
+      return (
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <div className="flex min-h-[60vh] flex-col items-center justify-center">
+            <h1 className="font-display text-4xl text-primary">Storefront Not Available</h1>
+            <p className="mt-4 text-muted-foreground">This fighter's storefront is not currently active.</p>
+            <Button asChild className="mt-8">
+              <Link to="/">Go Home</Link>
+            </Button>
+          </div>
+          <Footer />
         </div>
-        <Footer />
-      </div>
-    );
+      );
+    }
   }
 
   // Build social links for Person schema
