@@ -1081,18 +1081,25 @@ export default function AdminFighters() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {fighter.handle && fighter.status === "approved" && (
+                          {fighter.handle && (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => {
                                 const url = getStorefrontUrl(fighter.handle!);
-                                navigator.clipboard.writeText(url);
-                                toast({ title: "URL copied!", description: url });
+                                const password = (fighter as unknown as { storefront_password?: string }).storefront_password;
+                                const text = fighter.status === "approved" 
+                                  ? url 
+                                  : `URL: ${url}\nPassword: ${password || "N/A"}`;
+                                navigator.clipboard.writeText(text);
+                                toast({ 
+                                  title: fighter.status === "approved" ? "URL copied!" : "Credentials copied!", 
+                                  description: fighter.status === "approved" ? url : `URL and password copied to clipboard`
+                                });
                               }}
                             >
                               <Copy className="h-3 w-3 mr-1" />
-                              Copy URL
+                              {fighter.status === "approved" ? "Copy URL" : "Copy Credentials"}
                             </Button>
                           )}
                           <Button
@@ -1240,6 +1247,30 @@ export default function AdminFighters() {
                   <p className="text-sm font-mono text-primary break-all">
                     {getStorefrontUrl(editData.handle)}
                   </p>
+                  {editingFighter?.status !== "approved" && (
+                    <>
+                      <p className="text-xs text-muted-foreground mt-2">Access Password:</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-mono text-foreground">
+                          {(editingFighter as unknown as { storefront_password?: string })?.storefront_password || "N/A"}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2"
+                          onClick={() => {
+                            const url = getStorefrontUrl(editData.handle);
+                            const password = (editingFighter as unknown as { storefront_password?: string })?.storefront_password;
+                            navigator.clipboard.writeText(`URL: ${url}\nPassword: ${password || "N/A"}`);
+                            toast({ title: "Credentials copied!", description: "URL and password copied to clipboard" });
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
