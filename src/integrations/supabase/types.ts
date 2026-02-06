@@ -140,6 +140,7 @@ export type Database = {
           social_youtube: string | null
           sport: string | null
           status: Database["public"]["Enums"]["fighter_status"]
+          storefront_password: string | null
           updated_at: string
           user_id: string | null
         }
@@ -163,6 +164,7 @@ export type Database = {
           social_youtube?: string | null
           sport?: string | null
           status?: Database["public"]["Enums"]["fighter_status"]
+          storefront_password?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -186,6 +188,7 @@ export type Database = {
           social_youtube?: string | null
           sport?: string | null
           status?: Database["public"]["Enums"]["fighter_status"]
+          storefront_password?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -557,6 +560,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_storefront_password: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
