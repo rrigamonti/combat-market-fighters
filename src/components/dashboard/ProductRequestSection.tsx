@@ -79,6 +79,15 @@ export function ProductRequestSection({ fighterId }: ProductRequestSectionProps)
       return;
     }
 
+    if (!formData.brand_name.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Brand required",
+        description: "Please enter the brand name for this product.",
+      });
+      return;
+    }
+
     // Validate URL if provided
     if (formData.product_url.trim()) {
       try {
@@ -209,7 +218,9 @@ export function ProductRequestSection({ fighterId }: ProductRequestSectionProps)
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="brand_name">Brand (optional)</Label>
+                <Label htmlFor="brand_name">
+                  Brand <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="brand_name"
                   placeholder="e.g., Hayabusa"
