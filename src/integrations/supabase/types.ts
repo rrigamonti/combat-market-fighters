@@ -272,6 +272,69 @@ export type Database = {
         }
         Relationships: []
       }
+      product_requests: {
+        Row: {
+          admin_notes: string | null
+          brand_name: string | null
+          created_at: string
+          fighter_id: string
+          id: string
+          linked_product_id: string | null
+          product_name: string
+          product_url: string | null
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          brand_name?: string | null
+          created_at?: string
+          fighter_id: string
+          id?: string
+          linked_product_id?: string | null
+          product_name: string
+          product_url?: string | null
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          brand_name?: string | null
+          created_at?: string
+          fighter_id?: string
+          id?: string
+          linked_product_id?: string | null
+          product_name?: string
+          product_url?: string | null
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_requests_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_requests_linked_product_id_fkey"
+            columns: ["linked_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean

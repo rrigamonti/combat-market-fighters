@@ -49,7 +49,6 @@ export function Navbar({ variant = "default" }: NavbarProps) {
   const defaultNavItems = [
     { label: "HOME", href: "/" },
     { label: "FEATURES", href: "/#features" },
-    { label: "MARKETPLACE", href: "/marketplace" },
     { label: "FAQS", href: "/#faq" },
     { label: "FIGHTER DIRECTORY", href: "/fighter-directory" },
   ];
