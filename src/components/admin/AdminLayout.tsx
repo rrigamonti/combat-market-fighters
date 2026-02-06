@@ -1,9 +1,10 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck, BarChart3, Tags, DollarSign, Percent } from "lucide-react";
+import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck, BarChart3, Tags, DollarSign, Percent, MessageSquarePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/combat-market-logo.svg";
 
 interface AdminLayoutProps {
@@ -16,6 +17,7 @@ const navItems = [
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/brands", label: "Brands", icon: Tags },
   { to: "/admin/assignments", label: "Assignments", icon: LinkIcon },
+  { to: "/admin/product-requests", label: "Product Requests", icon: MessageSquarePlus },
   { to: "/admin/sales", label: "Sales", icon: DollarSign },
   { to: "/admin/commissions", label: "Commissions", icon: Percent },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
@@ -25,6 +27,19 @@ const navItems = [
 export function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
   const { signOut } = useAuth();
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      // Cast needed until types regenerate
+      const { count } = await (supabase
+        .from("product_requests" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending") as any);
+      setPendingRequestsCount(count || 0);
+    };
+    fetchPendingCount();
+  }, [location.pathname]); // Refetch when navigating
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -49,6 +64,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <nav className="flex-1 space-y-1 px-3">
             {navItems.map((item) => {
               const isActive = location.pathname === item.to;
+              const showBadge = item.to === "/admin/product-requests" && pendingRequestsCount > 0;
               return (
                 <Link
                   key={item.to}
@@ -62,6 +78,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 >
                   <item.icon className="h-5 w-5" />
                   {item.label}
+                  {showBadge && (
+                    <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                      {pendingRequestsCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}

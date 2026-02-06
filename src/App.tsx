@@ -25,6 +25,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSales from "./pages/admin/AdminSales";
 import AdminCommissions from "./pages/admin/AdminCommissions";
+import AdminProductRequests from "./pages/admin/AdminProductRequests";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ComingSoon from "./pages/ComingSoon";
@@ -126,6 +127,14 @@ const App = () => (
               element={
                 <AdminRoute>
                   <AdminCommissions />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/product-requests"
+              element={
+                <AdminRoute>
+                  <AdminProductRequests />
                 </AdminRoute>
               }
             />

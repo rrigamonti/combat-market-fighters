@@ -13,6 +13,7 @@ import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
 import { CheckCircle, Clock, XCircle, ExternalLink, Pencil, FileText } from "lucide-react";
 import { getStorefrontUrl } from "@/lib/config";
+import { ProductRequestSection } from "@/components/dashboard/ProductRequestSection";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -434,6 +435,11 @@ export default function Dashboard() {
                 Your storefront will be accessible once your application is approved.
               </p>
             )}
+          </div>
+
+          {/* Product Request Section */}
+          <div className="mt-6">
+            <ProductRequestSection fighterId={fighter.id} />
           </div>
         </div>
       </main>
