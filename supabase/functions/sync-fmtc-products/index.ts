@@ -21,18 +21,26 @@ const COMBAT_SPORTS_KEYWORDS = [
   "elite sports", "rdx", "century",
 ];
 
+// Interface matching actual FMTC JSON response
 interface FMTCProduct {
-  id?: string;
-  label?: string;
-  description?: string;
-  price?: string;
-  sale_price?: string;
-  image_link?: string;
-  affiliate_url?: string;
+  id: number;
+  label: string;
+  price: number;
+  sale_price?: number;
+  currency_code?: string;
+  image_link: string;
+  affiliate_url: string;
   raw_brand_name?: string;
-  merchant_name?: string;
+  brand_object?: { id: number; name: string };
+  merchant_object?: { id: number; name: string };
   raw_categories?: string;
-  [key: string]: string | undefined;
+  description?: string;
+}
+
+interface FMTCResponse {
+  data: FMTCProduct[];
+  total_on_page?: number;
+  total?: number;
 }
 
 interface SyncOptions {
@@ -53,7 +61,8 @@ function isCombatSportsProduct(product: FMTCProduct): boolean {
     product.label,
     product.description,
     product.raw_brand_name,
-    product.merchant_name,
+    product.brand_object?.name,
+    product.merchant_object?.name,
     product.raw_categories,
   ]
     .filter(Boolean)
@@ -63,62 +72,10 @@ function isCombatSportsProduct(product: FMTCProduct): boolean {
   return COMBAT_SPORTS_KEYWORDS.some((keyword) => searchText.includes(keyword));
 }
 
-function formatPrice(price: string | undefined): string {
-  if (!price) return "$0.00";
-  const numPrice = parseFloat(price);
-  if (isNaN(numPrice)) return "$0.00";
-  return `$${numPrice.toFixed(2)}`;
-}
-
-function parseCSV(csvText: string): FMTCProduct[] {
-  const lines = csvText.trim().split("\n");
-  if (lines.length < 2) return [];
-
-  // Parse header row to get column names
-  const headers = parseCSVLine(lines[0]);
-  console.log(`CSV headers: ${headers.join(", ")}`);
-
-  const products: FMTCProduct[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
-    if (values.length !== headers.length) continue;
-
-    const product: FMTCProduct = {};
-    for (let j = 0; j < headers.length; j++) {
-      product[headers[j]] = values[j];
-    }
-    products.push(product);
-  }
-
-  return products;
-}
-
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const nextChar = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        current += '"';
-        i++; // Skip escaped quote
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-  result.push(current.trim());
-
-  return result;
+function formatPrice(price: number | undefined): string {
+  if (price === undefined || price === null) return "$0.00";
+  if (isNaN(price)) return "$0.00";
+  return `$${price.toFixed(2)}`;
 }
 
 Deno.serve(async (req) => {
@@ -152,16 +109,15 @@ Deno.serve(async (req) => {
     const limit = options.limit || 500;
     console.log(`Starting FMTC sync with limit: ${limit}`);
 
-    // FMTC API - use CSV format as per user's working example
-    const fmtcUrl = `https://s3.fmtc.co/api/1/products?api_token=${FMTC_API_KEY}&format=csv&limit=${Math.min(limit * 3, 10000)}`;
+    // FMTC API - use JSON format
+    const fmtcUrl = `https://s3.fmtc.co/api/1/products?api_token=${FMTC_API_KEY}&format=json&limit=${Math.min(limit * 3, 10000)}`;
     
-    console.log(`Fetching FMTC products (CSV format)...`);
+    console.log(`Fetching FMTC products (JSON format)...`);
     console.log(`Request URL: ${fmtcUrl.replace(FMTC_API_KEY, "***")}`);
     
     const response = await fetch(fmtcUrl);
     
     console.log(`Response status: ${response.status}`);
-    console.log(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -172,32 +128,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    const responseText = await response.text();
-    console.log(`Response length: ${responseText.length} chars`);
-    console.log(`First 1000 chars: ${responseText.substring(0, 1000)}`);
-
-    if (!responseText || responseText.trim().length < 10) {
-      console.log("Empty or minimal response from FMTC");
-      return new Response(
-        JSON.stringify({ success: true, imported_count: 0, failed_count: 0, errors: ["Empty response from FMTC"] }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Parse CSV
-    const allProducts = parseCSV(responseText);
-    console.log(`Parsed ${allProducts.length} products from CSV`);
+    const responseData: FMTCResponse = await response.json();
+    const allProducts = responseData.data || [];
+    
+    console.log(`Received ${allProducts.length} products from FMTC`);
 
     if (allProducts.length > 0) {
       console.log(`Sample product: ${JSON.stringify(allProducts[0])}`);
     }
 
     // Deduplicate by product ID
-    const uniqueProducts = new Map<string, FMTCProduct>();
+    const uniqueProducts = new Map<number, FMTCProduct>();
     for (const product of allProducts) {
-      const key = product.id || product.affiliate_url || "";
-      if (key && !uniqueProducts.has(key)) {
-        uniqueProducts.set(key, product);
+      if (product.id && !uniqueProducts.has(product.id)) {
+        uniqueProducts.set(product.id, product);
       }
     }
 
@@ -223,12 +167,11 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const productId = product.id || externalUrl;
         const productName = product.label || "Unknown Product";
-        const brandName = product.raw_brand_name || "Unknown";
-        const network = product.merchant_name || "FMTC";
+        const brandName = product.brand_object?.name || product.raw_brand_name || "Unknown";
+        const network = product.merchant_object?.name || "FMTC";
         const imageUrl = product.image_link || null;
-        const category = product.raw_categories?.split(">")[0]?.trim() || "Combat Sports";
+        const category = product.raw_categories?.split(",")[0]?.trim() || "Combat Sports";
 
         const productData = {
           name: productName,
@@ -242,7 +185,7 @@ Deno.serve(async (req) => {
           active: true,
           source_type: "fmtc",
           affiliate_network: network,
-          network_product_id: productId,
+          network_product_id: String(product.id),
           last_synced_at: now,
         };
 
