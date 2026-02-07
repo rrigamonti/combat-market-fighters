@@ -169,24 +169,22 @@ Deno.serve(async (req) => {
 
     console.log(`Starting FMTC sync with limit: ${limit}, keywords: ${keywords.join(", ")}`);
 
-    // FMTC API endpoints - adjust based on your subscription type
-    // Common endpoints: /products, /deals, /coupons, /merchants
-    // The exact endpoint depends on your FMTC plan
-    const fmtcBaseUrl = "https://api.fmtc.co/v2";
+    // FMTC API endpoint - using v1 products endpoint
+    // Documentation: https://docs.fmtc.co/kb/products-1-1-0
+    const fmtcBaseUrl = "https://api.fmtc.co/api/1";
     
     let allProducts: FMTCProduct[] = [];
     let fetchErrors: string[] = [];
 
-    // Fetch products for each keyword (FMTC typically requires search terms)
+    // Fetch products for each keyword (FMTC uses keyword/search parameter)
     for (const keyword of keywords) {
       try {
-        // Build FMTC API URL with search parameters
+        // Build FMTC API URL with correct parameters per docs
         const searchParams = new URLSearchParams({
-          key: FMTC_API_KEY,
-          type: "products",
-          keyword: keyword,
-          limit: String(Math.ceil(limit / keywords.length)),
+          api_token: FMTC_API_KEY,
           format: "json",
+          search: keyword,
+          per_page: String(Math.ceil(limit / keywords.length)),
         });
 
         console.log(`Fetching FMTC products for keyword: ${keyword}`);
@@ -196,14 +194,29 @@ Deno.serve(async (req) => {
         if (!response.ok) {
           const errorText = await response.text();
           console.error(`FMTC API error for ${keyword}: ${response.status} - ${errorText}`);
-          fetchErrors.push(`Keyword "${keyword}": ${response.status}`);
+          fetchErrors.push(`Keyword "${keyword}": ${response.status} - ${errorText.substring(0, 100)}`);
           continue;
         }
 
-        const data = await response.json();
+        const responseText = await response.text();
         
-        // FMTC responses vary - handle different response structures
-        const products = data.products || data.results || data.data || [];
+        // Handle empty responses
+        if (!responseText || responseText.trim() === "") {
+          console.log(`Empty response for keyword "${keyword}"`);
+          continue;
+        }
+
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error(`JSON parse error for ${keyword}:`, responseText.substring(0, 200));
+          fetchErrors.push(`Keyword "${keyword}": Invalid JSON response`);
+          continue;
+        }
+        
+        // FMTC v1 response structure: { data: [...products], meta: {...} }
+        const products = data.data || data.products || data.results || [];
         
         if (Array.isArray(products)) {
           allProducts.push(...products);
@@ -211,7 +224,7 @@ Deno.serve(async (req) => {
         }
 
         // Rate limiting - be respectful to FMTC API
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       } catch (error) {
         console.error(`Error fetching keyword ${keyword}:`, error);
         fetchErrors.push(`Keyword "${keyword}": ${error instanceof Error ? error.message : "Unknown error"}`);
