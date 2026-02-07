@@ -1,226 +1,120 @@
 
-# Plan: Product Request Functionality for Fighters Dashboard
+# Plan: FMTC Affiliate Product Feed Integration
 
 ## Overview
-Add a feature that allows fighters to request products they'd like to promote on their storefront. Admins can then review, approve (by adding the product), or reject these requests. This follows the existing approval pattern used for profile changes.
+Integrate with FMTC's aggregated product feed API to automatically import combat sports products. The system will pull products, filter for relevant categories, store them with proper affiliate tracking, and ensure fighter attribution is preserved when generating affiliate links.
 
----
-
-## Architecture Overview
+## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                     FIGHTER DASHBOARD                                │
-│  New section: "Request a Product"                                   │
-│  - Product name/description                                          │
-│  - Product URL (optional)                                           │
-│  - Why they want to promote it                                      │
-│  - View pending/past requests                                       │
-└─────────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                   PRODUCT_REQUESTS TABLE                             │
-│  fighter_id, product_name, product_url, reason, status, notes       │
-└─────────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                   ADMIN: PRODUCT REQUESTS PAGE                       │
-│  Review pending requests → Approve/Reject                           │
-│  Optional: Link to existing product or add new                      │
-└─────────────────────────────────────────────────────────────────────┘
++------------------+       +----------------------+       +------------------+
+|   FMTC API       | <---> | Edge Function        | <---> | Products Table   |
+| (Product Feeds)  |       | (sync-fmtc-products) |       | (Database)       |
++------------------+       +----------------------+       +------------------+
+                                    ^
+                                    |
++------------------+                |
+|   Admin UI       |----------------+
+| (Trigger Sync)   |
++------------------+
 ```
 
----
+## Components to Build
 
-## Database Changes
+### 1. FMTC API Secret Configuration
+Store the FMTC API key securely as a secret that edge functions can access.
 
-### New Table: `product_requests`
+### 2. Edge Function: `sync-fmtc-products`
+A new backend function that:
+- Connects to FMTC API to fetch product data
+- Filters products by combat sports categories (boxing, MMA, martial arts, wrestling, etc.)
+- Upserts products into the database with:
+  - `source_type`: 'fmtc'
+  - `affiliate_network`: extracted from FMTC data (original network name)
+  - `network_product_id`: FMTC's unique identifier for deduplication
+  - `external_url`: The base affiliate URL from FMTC
+  - `last_synced_at`: Current timestamp
 
-| Column | Type | Nullable | Default | Purpose |
-|--------|------|----------|---------|---------|
-| id | uuid | No | gen_random_uuid() | Primary key |
-| fighter_id | uuid | No | - | FK to fighters |
-| product_name | text | No | - | Name of requested product |
-| product_url | text | Yes | NULL | URL where product can be found |
-| brand_name | text | Yes | NULL | Brand if known |
-| reason | text | Yes | NULL | Why they want to promote it |
-| status | text | No | 'pending' | pending/approved/rejected |
-| admin_notes | text | Yes | NULL | Notes from admin |
-| linked_product_id | uuid | Yes | NULL | FK to products (if approved and linked) |
-| created_at | timestamptz | No | now() | When submitted |
-| updated_at | timestamptz | No | now() | Last updated |
-| reviewed_at | timestamptz | Yes | NULL | When reviewed by admin |
-| reviewed_by | uuid | Yes | NULL | Admin who reviewed |
+### 3. Affiliate Link Attribution (Already Working)
+The existing `getAffiliateUrl()` helper in `FighterProductDetail.tsx` and `FighterStorefront.tsx` appends `?sub_id={fighter_handle}` to all external URLs. FMTC-provided links typically support this via query parameter passthrough. The existing `receive-sale-webhook` endpoint already:
+- Extracts `sub_id` from incoming webhook payloads
+- Looks up the fighter by handle
+- Calculates commission based on configured rates
+- Records the sale with full attribution
 
-### RLS Policies
+### 4. Admin UI Enhancement
+Add to the Admin Products page:
+- "Sync from FMTC" button in the Import dropdown
+- Progress indicator during sync
+- Summary of imported/updated products
+- Category filter configuration (optional)
 
-| Policy | Command | Expression |
-|--------|---------|------------|
-| Fighters can insert own requests | INSERT | auth.uid() = (SELECT user_id FROM fighters WHERE id = fighter_id) |
-| Fighters can view own requests | SELECT | fighter_id IN (SELECT id FROM fighters WHERE user_id = auth.uid()) |
-| Admins can manage all requests | ALL | has_role(auth.uid(), 'admin') |
+### 5. Product Category Filtering
+Define combat sports categories to filter:
+- Boxing
+- MMA / Mixed Martial Arts
+- Muay Thai / Kickboxing
+- Wrestling
+- Jiu-Jitsu / BJJ
+- Martial Arts (general)
+- Combat Sports Equipment
+- Fight Gear
 
----
+## Technical Details
 
-## Component Changes
+### FMTC API Integration
+FMTC provides several endpoints depending on your subscription:
+- Product feeds by merchant
+- Category-based searches
+- Coupon/deal feeds
 
-### 1. Fighter Dashboard (Dashboard.tsx)
+The edge function will:
+1. Accept optional parameters (categories, limit, merchants)
+2. Call FMTC API with authentication
+3. Parse and transform the response
+4. Batch upsert into `products` table
+5. Return import statistics
 
-Add a new section below the storefront URL card:
+### Database Changes
+No schema changes required - the existing `products` table already has all necessary columns:
+- `network_product_id` for FMTC product ID
+- `affiliate_network` for original network name
+- `source_type` will be set to 'fmtc'
+- `external_url` for the affiliate tracking link
+- `last_synced_at` for sync tracking
 
+### Commission Attribution Flow
 ```text
-┌─────────────────────────────────────────────────────────────────────┐
-│ Request a Product                                           [+ New] │
-├─────────────────────────────────────────────────────────────────────┤
-│ Want to promote a product that's not in our catalog?               │
-│ Submit a request and we'll look into adding it for you.            │
-├─────────────────────────────────────────────────────────────────────┤
-│ Your Recent Requests:                                               │
-│ ┌─────────────────────────────────────────────────────────────────┐ │
-│ │ Hayabusa T3 Boxing Gloves                      [Pending] 2d ago │ │
-│ │ Venum Challenger MMA Gloves                    [Approved] 1w ago│ │
-│ └─────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────┘
+1. Fighter storefront displays product with base URL from FMTC
+2. getAffiliateUrl() appends ?sub_id={fighter_handle}
+3. User clicks, is redirected to merchant via FMTC tracking
+4. Purchase occurs
+5. Affiliate network sends postback to FMTC
+6. FMTC (or network) sends webhook to our receive-sale-webhook endpoint
+7. Webhook extracts sub_id, attributes sale to fighter
+8. Commission calculated based on configured rates
 ```
-
-**Features:**
-- Button to open request dialog
-- List of recent requests with status badges
-- Dialog form with fields: product name, URL (optional), brand (optional), reason
-
-### 2. New Admin Page: AdminProductRequests.tsx
-
-A new page at `/admin/product-requests` to manage incoming requests:
-
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│ Product Requests                                                     │
-│ Review and manage product requests from fighters                    │
-├─────────────────────────────────────────────────────────────────────┤
-│ [Filter: All ▼] [Search: _________________]                         │
-├─────────────────────────────────────────────────────────────────────┤
-│ Fighter    | Product         | Brand    | Status  | Date    | Action│
-├─────────────────────────────────────────────────────────────────────┤
-│ @marcus    | Hayabusa T3     | Hayabusa | Pending | 2d ago  | [···] │
-│ @sarah     | RDX Speed Bag   | RDX      | Pending | 3d ago  | [···] │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-**Actions:**
-- **View details**: See full request with fighter info
-- **Approve**: Optionally link to existing product or note that it will be added
-- **Reject**: Add rejection reason
-
-### 3. Admin Navigation Update
-
-Add "Product Requests" link to the admin sidebar with a badge showing pending count.
-
----
-
-## Implementation Details
-
-### Fighter Dashboard Request Form
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│ Request a Product                                    [X] │
-├─────────────────────────────────────────────────────────┤
-│ Product Name *                                          │
-│ [_________________________________________________]     │
-│                                                         │
-│ Product URL (optional)                                  │
-│ [_________________________________________________]     │
-│                                                         │
-│ Brand (optional)                                        │
-│ [_________________________________________________]     │
-│                                                         │
-│ Why do you want to promote this? (optional)            │
-│ [                                                  ]    │
-│ [                                                  ]    │
-│                                                         │
-│                              [Cancel] [Submit Request]  │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Validation Rules
-- Product name: Required, max 200 characters
-- Product URL: Optional, must be valid URL if provided
-- Brand: Optional, max 100 characters
-- Reason: Optional, max 500 characters
-
-### Status Flow
-1. Fighter submits request → **pending**
-2. Admin reviews:
-   - Approves → **approved** (product added/linked, fighter notified)
-   - Rejects → **rejected** (reason provided, fighter can see)
-
----
 
 ## Files to Create/Modify
 
-| File | Action | Purpose |
-|------|--------|---------|
-| Database migration | Create | Add `product_requests` table with RLS |
-| src/pages/Dashboard.tsx | Modify | Add product request section and dialog |
-| src/pages/admin/AdminProductRequests.tsx | Create | New admin page for managing requests |
-| src/components/admin/AdminLayout.tsx | Modify | Add sidebar link with pending count |
-| src/App.tsx | Modify | Add route for /admin/product-requests |
-| src/lib/notifications.ts | Modify | Add product request notification types |
-| supabase/functions/send-notification/index.ts | Modify | Add email templates for request status |
+| Action | File | Purpose |
+|--------|------|---------|
+| Create | `supabase/functions/sync-fmtc-products/index.ts` | Edge function for FMTC API integration |
+| Modify | `supabase/config.toml` | Register new edge function |
+| Modify | `src/lib/api/firecrawl.ts` | Add FMTC sync function to API layer |
+| Modify | `src/pages/admin/AdminProducts.tsx` | Add sync button and UI |
+| Modify | `src/components/admin/ProductImportDialog.tsx` | Add FMTC sync tab |
 
----
+## Implementation Steps
 
-## Notification Integration
+1. **Configure FMTC API Key** - Add the secret via the secrets management tool
+2. **Create Edge Function** - Build `sync-fmtc-products` with FMTC API calls
+3. **Add Frontend API Method** - Extend the API layer to call the new function
+4. **Update Admin UI** - Add sync button and progress feedback
+5. **Test End-to-End** - Verify products import and attribution works
+6. **Optional: Add Scheduled Sync** - Set up periodic auto-sync via cron
 
-### New Email Types
-1. **product_request_received**: Sent to admin (optional) when new request comes in
-2. **product_request_approved**: Sent to fighter when request is approved
-3. **product_request_rejected**: Sent to fighter when request is rejected
-
----
-
-## Backward Compatibility
-
-This feature is entirely additive:
-- New database table (no changes to existing tables)
-- New UI components in existing pages
-- New admin page
-- Existing functionality remains unchanged
-
----
-
-## Implementation Order
-
-1. **Database migration**: Create `product_requests` table with RLS policies
-2. **Dashboard.tsx**: Add request section and form dialog
-3. **AdminProductRequests.tsx**: Create admin management page
-4. **AdminLayout.tsx**: Add sidebar navigation link
-5. **App.tsx**: Add admin route
-6. **Notifications**: Add email templates for request status updates
-
----
-
-## Testing Checklist
-
-**Fighter functionality:**
-- [ ] Can submit a product request with name only
-- [ ] Can submit a product request with all fields
-- [ ] Can view list of their requests
-- [ ] Can see status badges (pending/approved/rejected)
-- [ ] Cannot edit or delete submitted requests
-
-**Admin functionality:**
-- [ ] Can view all product requests
-- [ ] Can filter by status
-- [ ] Can search by product name or fighter
-- [ ] Can approve request with optional notes
-- [ ] Can reject request with reason
-- [ ] Pending count shows in sidebar
-
-**Existing functionality:**
-- [ ] Dashboard profile editing still works
-- [ ] Dashboard storefront URL still displays
-- [ ] Admin products page still works
-- [ ] Fighter storefronts still display correctly
+## Notes
+- The existing VigLink integration in `index.html` may provide additional monetization on top of FMTC links
+- Products will be marked with a "FMTC" badge in the admin table (similar to existing "Feed" badge)
+- Duplicate handling uses `network_product_id` + `affiliate_network` as composite key
