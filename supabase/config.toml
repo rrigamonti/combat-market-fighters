@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.import-product-feed]
 verify_jwt = false
+
+[functions.sync-fmtc-products]
+verify_jwt = false
