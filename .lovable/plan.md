@@ -1,120 +1,128 @@
 
-# Plan: FMTC Affiliate Product Feed Integration
+# Fix: FMTC Product Sync Edge Function
 
-## Overview
-Integrate with FMTC's aggregated product feed API to automatically import combat sports products. The system will pull products, filter for relevant categories, store them with proper affiliate tracking, and ensure fighter attribution is preserved when generating affiliate links.
+## Problem Identified
 
-## Architecture
+The current `sync-fmtc-products` edge function is failing because it uses incorrect API endpoints and parameters:
+
+| Issue | Current (Wrong) | Correct per FMTC Docs |
+|-------|-----------------|----------------------|
+| Base URL | `https://api.fmtc.co/api/1` | `https://s3.fmtc.co/api/1` |
+| Pagination | `per_page` | `page_size` (max 2000) |
+| Filtering | `search` keyword | `category_ids` or `merchant_ids` |
+| No keyword search | API doesn't support full-text keyword search | Filter by categories, then filter locally |
+
+## Updated API Integration Strategy
+
+FMTC's Products API does not support keyword-based searches. Instead, it provides:
+- **`category_ids`** - Filter by FMTC category IDs (need to lookup "Sports" or similar)
+- **`merchant_ids`** - Filter by specific merchants (combat sports brands)
+- **`page_size`** - Up to 2000 products per page
+- **`subid`** - Append a sub_id to all affiliate URLs automatically
+
+### Key Discovery: `subid` Parameter
+FMTC can append the fighter's tracking ID directly to affiliate URLs at the API level! This means:
+1. We can pass a base `subid` placeholder or handle it client-side
+2. The `affiliate_url` field comes pre-monetized with your network IDs
+
+## Implementation Plan
+
+### Step 1: Fetch FMTC Categories
+First, call the Categories endpoint to find sports/fitness category IDs:
+```
+GET https://s3.fmtc.co/api/v3/categories?api_token=KEY&format=json
+```
+Look for categories like "Sports & Outdoors", "Fitness", "Sporting Goods"
+
+### Step 2: Update Edge Function
+Modify `supabase/functions/sync-fmtc-products/index.ts`:
 
 ```text
-+------------------+       +----------------------+       +------------------+
-|   FMTC API       | <---> | Edge Function        | <---> | Products Table   |
-| (Product Feeds)  |       | (sync-fmtc-products) |       | (Database)       |
-+------------------+       +----------------------+       +------------------+
-                                    ^
-                                    |
-+------------------+                |
-|   Admin UI       |----------------+
-| (Trigger Sync)   |
-+------------------+
+Changes:
+1. Fix base URL: https://s3.fmtc.co/api/1/products
+2. Fix parameters: page_size (not per_page), remove search
+3. Use category_ids for sports categories OR fetch all and filter locally
+4. Map response fields correctly:
+   - label -> name
+   - affiliate_url -> external_url
+   - image_link -> image_url
+   - merchant_object.name -> affiliate_network
+   - id -> network_product_id
+   - description -> short_description
+   - raw_brand_name or brand_object.name -> brand
+5. Add only_has_image_link=1 for quality products
+6. Add latest_days=7 to get recent products
 ```
 
-## Components to Build
+### Step 3: Combat Sports Filtering
+Since FMTC doesn't have a "combat sports" category, we will:
+1. Fetch products from broad sports/fitness categories
+2. Apply local keyword filtering (current `isCombatSportsProduct` function)
+3. This is already in place and working
 
-### 1. FMTC API Secret Configuration
-Store the FMTC API key securely as a secret that edge functions can access.
+### Step 4: Pagination Support
+FMTC uses cursor-based pagination with `links.next` in responses. Add logic to:
+1. Follow pagination until limit is reached
+2. Respect `page_size` max of 2000
 
-### 2. Edge Function: `sync-fmtc-products`
-A new backend function that:
-- Connects to FMTC API to fetch product data
-- Filters products by combat sports categories (boxing, MMA, martial arts, wrestling, etc.)
-- Upserts products into the database with:
-  - `source_type`: 'fmtc'
-  - `affiliate_network`: extracted from FMTC data (original network name)
-  - `network_product_id`: FMTC's unique identifier for deduplication
-  - `external_url`: The base affiliate URL from FMTC
-  - `last_synced_at`: Current timestamp
+## Files to Modify
 
-### 3. Affiliate Link Attribution (Already Working)
-The existing `getAffiliateUrl()` helper in `FighterProductDetail.tsx` and `FighterStorefront.tsx` appends `?sub_id={fighter_handle}` to all external URLs. FMTC-provided links typically support this via query parameter passthrough. The existing `receive-sale-webhook` endpoint already:
-- Extracts `sub_id` from incoming webhook payloads
-- Looks up the fighter by handle
-- Calculates commission based on configured rates
-- Records the sale with full attribution
-
-### 4. Admin UI Enhancement
-Add to the Admin Products page:
-- "Sync from FMTC" button in the Import dropdown
-- Progress indicator during sync
-- Summary of imported/updated products
-- Category filter configuration (optional)
-
-### 5. Product Category Filtering
-Define combat sports categories to filter:
-- Boxing
-- MMA / Mixed Martial Arts
-- Muay Thai / Kickboxing
-- Wrestling
-- Jiu-Jitsu / BJJ
-- Martial Arts (general)
-- Combat Sports Equipment
-- Fight Gear
+| File | Changes |
+|------|---------|
+| `supabase/functions/sync-fmtc-products/index.ts` | Fix API URL, parameters, field mapping |
 
 ## Technical Details
 
-### FMTC API Integration
-FMTC provides several endpoints depending on your subscription:
-- Product feeds by merchant
-- Category-based searches
-- Coupon/deal feeds
+### Corrected API Call
+```typescript
+const fmtcBaseUrl = "https://s3.fmtc.co/api/1";
+const searchParams = new URLSearchParams({
+  api_token: FMTC_API_KEY,
+  format: "json",
+  page_size: "2000",
+  latest: "0",              // Get all products, not just recent
+  only_has_image_link: "1", // Quality filter
+});
 
-The edge function will:
-1. Accept optional parameters (categories, limit, merchants)
-2. Call FMTC API with authentication
-3. Parse and transform the response
-4. Batch upsert into `products` table
-5. Return import statistics
-
-### Database Changes
-No schema changes required - the existing `products` table already has all necessary columns:
-- `network_product_id` for FMTC product ID
-- `affiliate_network` for original network name
-- `source_type` will be set to 'fmtc'
-- `external_url` for the affiliate tracking link
-- `last_synced_at` for sync tracking
-
-### Commission Attribution Flow
-```text
-1. Fighter storefront displays product with base URL from FMTC
-2. getAffiliateUrl() appends ?sub_id={fighter_handle}
-3. User clicks, is redirected to merchant via FMTC tracking
-4. Purchase occurs
-5. Affiliate network sends postback to FMTC
-6. FMTC (or network) sends webhook to our receive-sale-webhook endpoint
-7. Webhook extracts sub_id, attributes sale to fighter
-8. Commission calculated based on configured rates
+const response = await fetch(`${fmtcBaseUrl}/products?${searchParams}`);
 ```
 
-## Files to Create/Modify
+### Field Mapping (FMTC -> Database)
+```text
+FMTC Field              -> Database Column
+-----------------------------------------
+id                      -> network_product_id
+label                   -> name
+description             -> short_description
+price                   -> price (format to "$X.XX")
+sale_price              -> price (if available)
+affiliate_url           -> external_url
+image_link              -> image_url
+raw_brand_name          -> brand
+merchant_object.name    -> affiliate_network
+raw_categories          -> category
+```
 
-| Action | File | Purpose |
-|--------|------|---------|
-| Create | `supabase/functions/sync-fmtc-products/index.ts` | Edge function for FMTC API integration |
-| Modify | `supabase/config.toml` | Register new edge function |
-| Modify | `src/lib/api/firecrawl.ts` | Add FMTC sync function to API layer |
-| Modify | `src/pages/admin/AdminProducts.tsx` | Add sync button and UI |
-| Modify | `src/components/admin/ProductImportDialog.tsx` | Add FMTC sync tab |
-
-## Implementation Steps
-
-1. **Configure FMTC API Key** - Add the secret via the secrets management tool
-2. **Create Edge Function** - Build `sync-fmtc-products` with FMTC API calls
-3. **Add Frontend API Method** - Extend the API layer to call the new function
-4. **Update Admin UI** - Add sync button and progress feedback
-5. **Test End-to-End** - Verify products import and attribution works
-6. **Optional: Add Scheduled Sync** - Set up periodic auto-sync via cron
-
-## Notes
-- The existing VigLink integration in `index.html` may provide additional monetization on top of FMTC links
-- Products will be marked with a "FMTC" badge in the admin table (similar to existing "Feed" badge)
-- Duplicate handling uses `network_product_id` + `affiliate_network` as composite key
+### Response Structure
+```json
+{
+  "data": [
+    {
+      "id": "123456",
+      "label": "Everlast Pro Boxing Gloves",
+      "description": "Professional boxing gloves...",
+      "price": "79.99",
+      "sale_price": "59.99",
+      "affiliate_url": "https://go.redirectingat.com/...",
+      "image_link": "https://cdn.example.com/gloves.jpg",
+      "raw_brand_name": "Everlast",
+      "merchant_object": { "id": 1234, "name": "Amazon" },
+      "raw_categories": "Sports > Boxing > Gloves"
+    }
+  ],
+  "links": {
+    "next": "https://s3.fmtc.co/api/1/products?page=2&..."
+  },
+  "meta": { "total": 50000 }
+}
+```
