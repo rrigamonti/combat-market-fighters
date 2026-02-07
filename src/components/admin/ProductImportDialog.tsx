@@ -7,15 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { firecrawlApi, ScrapedProduct, ImportFeedOptions } from '@/lib/api/firecrawl';
-import { Upload, Link, Loader2, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { firecrawlApi, ScrapedProduct, ImportFeedOptions, FmtcSyncResult } from '@/lib/api/firecrawl';
+import { Upload, Link, Loader2, FileText, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { ProductFeedMapper, ColumnMapping } from './ProductFeedMapper';
+import { Progress } from '@/components/ui/progress';
 
 interface ProductImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onProductScraped?: (product: ScrapedProduct) => void;
   onImportComplete?: () => void;
+  defaultTab?: 'feed' | 'scrape' | 'fmtc';
 }
 
 const AFFILIATE_NETWORKS = [
@@ -35,8 +37,9 @@ export function ProductImportDialog({
   onOpenChange,
   onProductScraped,
   onImportComplete,
+  defaultTab = 'feed',
 }: ProductImportDialogProps) {
-  const [activeTab, setActiveTab] = useState<'feed' | 'scrape'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'scrape' | 'fmtc'>(defaultTab);
   
   // Feed import state
   const [feedContent, setFeedContent] = useState('');
@@ -55,6 +58,11 @@ export function ProductImportDialog({
   const [scrapeUrl, setScrapeUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
   const [scrapedProduct, setScrapedProduct] = useState<ScrapedProduct | null>(null);
+
+  // FMTC sync state
+  const [fmtcLimit, setFmtcLimit] = useState('100');
+  const [isSyncingFmtc, setIsSyncingFmtc] = useState(false);
+  const [fmtcResult, setFmtcResult] = useState<FmtcSyncResult | null>(null);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -177,12 +185,51 @@ export function ProductImportDialog({
     }
   };
 
+  // FMTC sync handler
+  const handleFmtcSync = async () => {
+    setIsSyncingFmtc(true);
+    setFmtcResult(null);
+
+    try {
+      const result = await firecrawlApi.syncFmtcProducts({
+        limit: parseInt(fmtcLimit) || 100,
+      });
+
+      setFmtcResult(result);
+
+      if (result.success && result.imported_count > 0) {
+        toast({ 
+          title: 'FMTC Sync Complete', 
+          description: `Imported ${result.imported_count} combat sports products` 
+        });
+        onImportComplete?.();
+      } else if (result.error) {
+        toast({ title: 'Sync failed', description: result.error, variant: 'destructive' });
+      } else if (result.imported_count === 0) {
+        toast({ 
+          title: 'No products imported', 
+          description: 'No new combat sports products found in FMTC feed',
+          variant: 'default' 
+        });
+      }
+    } catch (error) {
+      toast({ 
+        title: 'Sync failed', 
+        description: error instanceof Error ? error.message : 'Unknown error', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setIsSyncingFmtc(false);
+    }
+  };
+
   const resetState = () => {
     setFeedContent('');
     setColumnMapping(null);
     setImportResult(null);
     setScrapeUrl('');
     setScrapedProduct(null);
+    setFmtcResult(null);
   };
 
   return (
@@ -195,15 +242,19 @@ export function ProductImportDialog({
           <DialogTitle>Import Products</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'feed' | 'scrape')}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'feed' | 'scrape' | 'fmtc')}>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="feed" className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
-              Upload Feed
+              Feed
             </TabsTrigger>
             <TabsTrigger value="scrape" className="flex items-center gap-2">
               <Link className="h-4 w-4" />
-              Scrape URL
+              Scrape
+            </TabsTrigger>
+            <TabsTrigger value="fmtc" className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              FMTC
             </TabsTrigger>
           </TabsList>
 
@@ -396,6 +447,112 @@ export function ProductImportDialog({
                 </Button>
               </div>
             )}
+          </TabsContent>
+
+          {/* FMTC Sync Tab */}
+          <TabsContent value="fmtc" className="space-y-4 mt-4">
+            <div className="p-4 rounded-lg border bg-muted/50">
+              <h4 className="font-medium mb-2">FMTC Product Sync</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Automatically import combat sports products from FMTC's aggregated affiliate network feeds. 
+                Products from Boxing, MMA, Martial Arts, and related categories will be imported.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Maximum Products to Import</Label>
+              <Select value={fmtcLimit} onValueChange={setFmtcLimit}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="50">50 products</SelectItem>
+                  <SelectItem value="100">100 products</SelectItem>
+                  <SelectItem value="250">250 products</SelectItem>
+                  <SelectItem value="500">500 products</SelectItem>
+                  <SelectItem value="1000">1000 products</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Products are filtered for combat sports relevance before import
+              </p>
+            </div>
+
+            {/* Sync in progress */}
+            {isSyncingFmtc && (
+              <div className="p-4 rounded-lg border bg-muted/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="font-medium">Syncing products from FMTC...</span>
+                </div>
+                <Progress value={undefined} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-2">
+                  This may take a minute. Fetching and filtering combat sports products...
+                </p>
+              </div>
+            )}
+
+            {/* FMTC Sync Result */}
+            {fmtcResult && !isSyncingFmtc && (
+              <div className={`p-4 rounded-lg border ${fmtcResult.success ? 'bg-primary/10 border-primary/20' : 'bg-destructive/10 border-destructive/20'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {fmtcResult.success ? (
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-destructive" />
+                  )}
+                  <span className="font-medium">
+                    {fmtcResult.success ? 'Sync Complete' : 'Sync Failed'}
+                  </span>
+                </div>
+                
+                {fmtcResult.success && (
+                  <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-2">
+                    {fmtcResult.total_fetched !== undefined && (
+                      <p>Total fetched: {fmtcResult.total_fetched}</p>
+                    )}
+                    {fmtcResult.combat_sports_count !== undefined && (
+                      <p>Combat sports: {fmtcResult.combat_sports_count}</p>
+                    )}
+                    <p>Imported: {fmtcResult.imported_count}</p>
+                    <p>Failed: {fmtcResult.failed_count}</p>
+                  </div>
+                )}
+
+                {fmtcResult.error && (
+                  <p className="text-sm text-destructive">{fmtcResult.error}</p>
+                )}
+                
+                {fmtcResult.errors && fmtcResult.errors.length > 0 && (
+                  <div className="mt-2 text-xs text-muted-foreground max-h-32 overflow-y-auto">
+                    {fmtcResult.errors.slice(0, 5).map((err, i) => (
+                      <p key={i}>• {err}</p>
+                    ))}
+                    {fmtcResult.errors.length > 5 && (
+                      <p>... and {fmtcResult.errors.length - 5} more</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Button 
+              onClick={handleFmtcSync} 
+              disabled={isSyncingFmtc}
+              className="w-full"
+            >
+              {isSyncingFmtc ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Sync from FMTC
+                </>
+              )}
+            </Button>
           </TabsContent>
         </Tabs>
       </DialogContent>

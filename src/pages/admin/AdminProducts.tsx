@@ -37,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Percent, Upload, Link, ChevronDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Percent, Upload, Link, ChevronDown, RefreshCw } from "lucide-react";
 import { ProductImportDialog } from "@/components/admin/ProductImportDialog";
 import type { ScrapedProduct } from "@/lib/api/firecrawl";
 
@@ -106,6 +106,7 @@ export default function AdminProducts() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importDialogTab, setImportDialogTab] = useState<'feed' | 'scrape' | 'fmtc'>('feed');
 
   async function fetchProducts() {
     setLoading(true);
@@ -281,9 +282,16 @@ export default function AdminProducts() {
         return <Badge variant="outline" className="text-xs">Feed</Badge>;
       case 'scraped':
         return <Badge variant="outline" className="text-xs">Scraped</Badge>;
+      case 'fmtc':
+        return <Badge variant="outline" className="text-xs bg-primary/10">FMTC</Badge>;
       default:
         return <Badge variant="secondary" className="text-xs">Manual</Badge>;
     }
+  }
+
+  function openImportDialog(tab: 'feed' | 'scrape' | 'fmtc') {
+    setImportDialogTab(tab);
+    setImportDialogOpen(true);
   }
 
   return (
@@ -307,11 +315,15 @@ export default function AdminProducts() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                <DropdownMenuItem onClick={() => openImportDialog('fmtc')}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Sync from FMTC
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openImportDialog('feed')}>
                   <Upload className="mr-2 h-4 w-4" />
                   Upload Feed (CSV/XML)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                <DropdownMenuItem onClick={() => openImportDialog('scrape')}>
                   <Link className="mr-2 h-4 w-4" />
                   Scrape from URL
                 </DropdownMenuItem>
@@ -489,6 +501,7 @@ export default function AdminProducts() {
           onOpenChange={setImportDialogOpen}
           onProductScraped={handleProductScraped}
           onImportComplete={fetchProducts}
+          defaultTab={importDialogTab}
         />
 
         <div className="rounded-lg border border-border">

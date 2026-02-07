@@ -52,6 +52,24 @@ export interface ImportFeedResult {
   error?: string;
 }
 
+export interface FmtcSyncOptions {
+  limit?: number;
+  keywords?: string[];
+  categories?: string[];
+  merchants?: string[];
+}
+
+export interface FmtcSyncResult {
+  success: boolean;
+  total_fetched?: number;
+  unique_count?: number;
+  combat_sports_count?: number;
+  imported_count: number;
+  failed_count: number;
+  errors: string[];
+  error?: string;
+}
+
 export const firecrawlApi = {
   /**
    * Scrape a product page and extract structured product data
@@ -80,6 +98,26 @@ export const firecrawlApi = {
         success: false, 
         error: error.message,
         total_products: 0,
+        imported_count: 0,
+        failed_count: 0,
+        errors: [],
+      };
+    }
+    return data;
+  },
+
+  /**
+   * Sync products from FMTC affiliate network aggregator
+   */
+  async syncFmtcProducts(options?: FmtcSyncOptions): Promise<FmtcSyncResult> {
+    const { data, error } = await supabase.functions.invoke('sync-fmtc-products', {
+      body: options || {},
+    });
+
+    if (error) {
+      return { 
+        success: false, 
+        error: error.message,
         imported_count: 0,
         failed_count: 0,
         errors: [],
