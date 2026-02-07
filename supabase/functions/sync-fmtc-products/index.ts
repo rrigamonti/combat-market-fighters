@@ -8,96 +8,35 @@ const corsHeaders = {
 
 // Combat sports related keywords for filtering
 const COMBAT_SPORTS_KEYWORDS = [
-  "boxing",
-  "mma",
-  "mixed martial arts",
-  "muay thai",
-  "kickboxing",
-  "wrestling",
-  "jiu-jitsu",
-  "jiu jitsu",
-  "bjj",
-  "brazilian jiu",
-  "martial arts",
-  "combat sports",
-  "fight gear",
-  "fighter",
-  "gloves",
-  "punch",
-  "sparring",
-  "grappling",
-  "submission",
-  "gi",
-  "rash guard",
-  "rashguard",
-  "mouthguard",
-  "headgear",
-  "shin guard",
-  "hand wrap",
-  "heavy bag",
-  "speed bag",
-  "punching bag",
-  "focus mitt",
-  "thai pad",
-  "kick pad",
-  "karate",
-  "taekwondo",
-  "judo",
-  "kendo",
-  "sambo",
-  "ufc",
-  "bellator",
-  "venum",
-  "hayabusa",
-  "everlast",
-  "fairtex",
-  "twins special",
-  "yokkao",
-  "title boxing",
-  "ringside",
-  "rival boxing",
-  "cleto reyes",
-  "winning",
-  "sanabul",
-  "elite sports",
-  "rdx",
-  "century",
-];
-
-// FMTC category IDs for sports/fitness (will be used in API calls)
-const FMTC_SPORTS_CATEGORIES = [
-  "sports",
-  "fitness",
-  "sporting goods",
-  "athletics",
+  "boxing", "mma", "mixed martial arts", "muay thai", "kickboxing",
+  "wrestling", "jiu-jitsu", "jiu jitsu", "bjj", "brazilian jiu",
+  "martial arts", "combat sports", "fight gear", "fighter",
+  "gloves", "punch", "sparring", "grappling", "submission",
+  "gi", "rash guard", "rashguard", "mouthguard", "headgear",
+  "shin guard", "hand wrap", "heavy bag", "speed bag", "punching bag",
+  "focus mitt", "thai pad", "kick pad", "karate", "taekwondo",
+  "judo", "kendo", "sambo", "ufc", "bellator", "venum", "hayabusa",
+  "everlast", "fairtex", "twins special", "yokkao", "title boxing",
+  "ringside", "rival boxing", "cleto reyes", "winning", "sanabul",
+  "elite sports", "rdx", "century",
 ];
 
 interface FMTCProduct {
   id?: string;
-  sku?: string;
-  name: string;
+  label?: string;
   description?: string;
-  price?: string | number;
-  sale_price?: string | number;
-  image_url?: string;
-  image?: string;
-  brand?: string;
-  manufacturer?: string;
-  category?: string;
-  categories?: string[];
-  url: string;
-  link?: string;
-  merchant?: string;
+  price?: string;
+  sale_price?: string;
+  image_link?: string;
+  affiliate_url?: string;
+  raw_brand_name?: string;
   merchant_name?: string;
-  network?: string;
-  affiliate_network?: string;
+  raw_categories?: string;
+  [key: string]: string | undefined;
 }
 
 interface SyncOptions {
   limit?: number;
-  categories?: string[];
-  keywords?: string[];
-  merchants?: string[];
 }
 
 function generateSlug(name: string): string {
@@ -111,12 +50,11 @@ function generateSlug(name: string): string {
 
 function isCombatSportsProduct(product: FMTCProduct): boolean {
   const searchText = [
-    product.name,
+    product.label,
     product.description,
-    product.brand,
-    product.manufacturer,
-    product.category,
-    ...(product.categories || []),
+    product.raw_brand_name,
+    product.merchant_name,
+    product.raw_categories,
   ]
     .filter(Boolean)
     .join(" ")
@@ -125,21 +63,70 @@ function isCombatSportsProduct(product: FMTCProduct): boolean {
   return COMBAT_SPORTS_KEYWORDS.some((keyword) => searchText.includes(keyword));
 }
 
-function formatPrice(price: string | number | undefined): string {
+function formatPrice(price: string | undefined): string {
   if (!price) return "$0.00";
-  const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  const numPrice = parseFloat(price);
   if (isNaN(numPrice)) return "$0.00";
   return `$${numPrice.toFixed(2)}`;
 }
 
+function parseCSV(csvText: string): FMTCProduct[] {
+  const lines = csvText.trim().split("\n");
+  if (lines.length < 2) return [];
+
+  // Parse header row to get column names
+  const headers = parseCSVLine(lines[0]);
+  console.log(`CSV headers: ${headers.join(", ")}`);
+
+  const products: FMTCProduct[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length !== headers.length) continue;
+
+    const product: FMTCProduct = {};
+    for (let j = 0; j < headers.length; j++) {
+      product[headers[j]] = values[j];
+    }
+    products.push(product);
+  }
+
+  return products;
+}
+
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        current += '"';
+        i++; // Skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+
+  return result;
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Get FMTC API key
     const FMTC_API_KEY = Deno.env.get("FMTC_API_KEY");
     if (!FMTC_API_KEY) {
       console.error("FMTC_API_KEY not configured");
@@ -149,12 +136,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Parse request options
     let options: SyncOptions = {};
     if (req.method === "POST") {
       try {
@@ -165,78 +150,52 @@ Deno.serve(async (req) => {
     }
 
     const limit = options.limit || 500;
-    const keywords = options.keywords || COMBAT_SPORTS_KEYWORDS.slice(0, 10);
+    console.log(`Starting FMTC sync with limit: ${limit}`);
 
-    console.log(`Starting FMTC sync with limit: ${limit}, keywords: ${keywords.join(", ")}`);
-
-    // FMTC API endpoint - using v1 products endpoint
-    // Documentation: https://docs.fmtc.co/kb/products-1-1-0
-    const fmtcBaseUrl = "https://api.fmtc.co/api/1";
+    // FMTC API - use CSV format as per user's working example
+    const fmtcUrl = `https://s3.fmtc.co/api/1/products?api_token=${FMTC_API_KEY}&format=csv&limit=${Math.min(limit * 3, 10000)}`;
     
-    let allProducts: FMTCProduct[] = [];
-    let fetchErrors: string[] = [];
-
-    // Fetch products for each keyword (FMTC uses keyword/search parameter)
-    for (const keyword of keywords) {
-      try {
-        // Build FMTC API URL with correct parameters per docs
-        const searchParams = new URLSearchParams({
-          api_token: FMTC_API_KEY,
-          format: "json",
-          search: keyword,
-          per_page: String(Math.ceil(limit / keywords.length)),
-        });
-
-        console.log(`Fetching FMTC products for keyword: ${keyword}`);
-        
-        const response = await fetch(`${fmtcBaseUrl}/products?${searchParams.toString()}`);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`FMTC API error for ${keyword}: ${response.status} - ${errorText}`);
-          fetchErrors.push(`Keyword "${keyword}": ${response.status} - ${errorText.substring(0, 100)}`);
-          continue;
-        }
-
-        const responseText = await response.text();
-        
-        // Handle empty responses
-        if (!responseText || responseText.trim() === "") {
-          console.log(`Empty response for keyword "${keyword}"`);
-          continue;
-        }
-
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error(`JSON parse error for ${keyword}:`, responseText.substring(0, 200));
-          fetchErrors.push(`Keyword "${keyword}": Invalid JSON response`);
-          continue;
-        }
-        
-        // FMTC v1 response structure: { data: [...products], meta: {...} }
-        const products = data.data || data.products || data.results || [];
-        
-        if (Array.isArray(products)) {
-          allProducts.push(...products);
-          console.log(`Found ${products.length} products for "${keyword}"`);
-        }
-
-        // Rate limiting - be respectful to FMTC API
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      } catch (error) {
-        console.error(`Error fetching keyword ${keyword}:`, error);
-        fetchErrors.push(`Keyword "${keyword}": ${error instanceof Error ? error.message : "Unknown error"}`);
-      }
+    console.log(`Fetching FMTC products (CSV format)...`);
+    console.log(`Request URL: ${fmtcUrl.replace(FMTC_API_KEY, "***")}`);
+    
+    const response = await fetch(fmtcUrl);
+    
+    console.log(`Response status: ${response.status}`);
+    console.log(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`FMTC API error: ${response.status} - ${errorText.substring(0, 500)}`);
+      return new Response(
+        JSON.stringify({ success: false, error: `FMTC API error: ${response.status}`, details: errorText.substring(0, 200) }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    console.log(`Total raw products fetched: ${allProducts.length}`);
+    const responseText = await response.text();
+    console.log(`Response length: ${responseText.length} chars`);
+    console.log(`First 1000 chars: ${responseText.substring(0, 1000)}`);
 
-    // Deduplicate by product ID or URL
+    if (!responseText || responseText.trim().length < 10) {
+      console.log("Empty or minimal response from FMTC");
+      return new Response(
+        JSON.stringify({ success: true, imported_count: 0, failed_count: 0, errors: ["Empty response from FMTC"] }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Parse CSV
+    const allProducts = parseCSV(responseText);
+    console.log(`Parsed ${allProducts.length} products from CSV`);
+
+    if (allProducts.length > 0) {
+      console.log(`Sample product: ${JSON.stringify(allProducts[0])}`);
+    }
+
+    // Deduplicate by product ID
     const uniqueProducts = new Map<string, FMTCProduct>();
     for (const product of allProducts) {
-      const key = product.id || product.sku || product.url || product.link || "";
+      const key = product.id || product.affiliate_url || "";
       if (key && !uniqueProducts.has(key)) {
         uniqueProducts.set(key, product);
       }
@@ -244,17 +203,13 @@ Deno.serve(async (req) => {
 
     console.log(`Unique products after dedup: ${uniqueProducts.size}`);
 
-    // Filter for combat sports relevance
-    const combatSportsProducts = Array.from(uniqueProducts.values()).filter(
-      isCombatSportsProduct
-    );
-
+    // Filter for combat sports
+    const combatSportsProducts = Array.from(uniqueProducts.values()).filter(isCombatSportsProduct);
     console.log(`Combat sports products after filter: ${combatSportsProducts.length}`);
 
     // Limit final count
     const productsToImport = combatSportsProducts.slice(0, limit);
 
-    // Prepare products for upsert
     const now = new Date().toISOString();
     let importedCount = 0;
     let failedCount = 0;
@@ -262,24 +217,26 @@ Deno.serve(async (req) => {
 
     for (const product of productsToImport) {
       try {
-        const externalUrl = product.url || product.link || "";
+        const externalUrl = product.affiliate_url || "";
         if (!externalUrl) {
           failedCount++;
-          importErrors.push(`Product "${product.name}" has no URL`);
           continue;
         }
 
-        const productId = product.id || product.sku || externalUrl;
-        const network = product.network || product.affiliate_network || product.merchant_name || product.merchant || "FMTC";
-        const brandName = product.brand || product.manufacturer || "Unknown";
+        const productId = product.id || externalUrl;
+        const productName = product.label || "Unknown Product";
+        const brandName = product.raw_brand_name || "Unknown";
+        const network = product.merchant_name || "FMTC";
+        const imageUrl = product.image_link || null;
+        const category = product.raw_categories?.split(">")[0]?.trim() || "Combat Sports";
 
         const productData = {
-          name: product.name,
+          name: productName,
           brand: brandName,
           price: formatPrice(product.sale_price || product.price),
-          slug: generateSlug(product.name),
-          category: product.category || (product.categories?.[0]) || "Combat Sports",
-          image_url: product.image_url || product.image || null,
+          slug: generateSlug(productName),
+          category: category,
+          image_url: imageUrl,
           short_description: product.description?.substring(0, 500) || null,
           external_url: externalUrl,
           active: true,
@@ -289,7 +246,6 @@ Deno.serve(async (req) => {
           last_synced_at: now,
         };
 
-        // Upsert using network_product_id + affiliate_network as composite key
         const { error } = await supabase
           .from("products")
           .upsert(productData, {
@@ -298,16 +254,16 @@ Deno.serve(async (req) => {
           });
 
         if (error) {
-          // If conflict on network_product_id fails, try insert (might be new product with duplicate slug)
+          // Try with unique slug
           const { error: insertError } = await supabase.from("products").insert({
             ...productData,
             slug: `${productData.slug}-${Date.now()}`,
           });
 
           if (insertError) {
-            console.error(`Failed to import product ${product.name}:`, insertError);
+            console.error(`Failed to import ${productName}:`, insertError);
             failedCount++;
-            importErrors.push(`${product.name}: ${insertError.message}`);
+            importErrors.push(`${productName}: ${insertError.message}`);
           } else {
             importedCount++;
           }
@@ -315,11 +271,8 @@ Deno.serve(async (req) => {
           importedCount++;
         }
       } catch (error) {
-        console.error(`Error processing product:`, error);
         failedCount++;
-        importErrors.push(
-          `${product.name}: ${error instanceof Error ? error.message : "Unknown error"}`
-        );
+        importErrors.push(`Error: ${error instanceof Error ? error.message : "Unknown"}`);
       }
     }
 
@@ -333,7 +286,7 @@ Deno.serve(async (req) => {
         combat_sports_count: combatSportsProducts.length,
         imported_count: importedCount,
         failed_count: failedCount,
-        errors: [...fetchErrors, ...importErrors.slice(0, 10)],
+        errors: importErrors.slice(0, 10),
       }),
       {
         status: 200,
