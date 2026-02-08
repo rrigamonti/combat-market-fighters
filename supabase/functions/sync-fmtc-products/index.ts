@@ -78,6 +78,52 @@ function formatPrice(price: number | undefined): string {
   return `$${price.toFixed(2)}`;
 }
 
+// Cache for brand lookups to avoid repeated queries
+const brandCache = new Map<string, string>();
+
+async function getBrandId(
+  supabase: ReturnType<typeof createClient>,
+  brandName: string
+): Promise<string | null> {
+  if (!brandName || brandName === "Unknown") return null;
+
+  const normalizedName = brandName.trim();
+  
+  // Check cache first
+  if (brandCache.has(normalizedName.toLowerCase())) {
+    return brandCache.get(normalizedName.toLowerCase())!;
+  }
+
+  // Look up existing brand (case-insensitive)
+  const { data: existingBrand } = await supabase
+    .from("brands")
+    .select("id")
+    .ilike("name", normalizedName)
+    .limit(1)
+    .single();
+
+  if (existingBrand) {
+    brandCache.set(normalizedName.toLowerCase(), existingBrand.id);
+    return existingBrand.id;
+  }
+
+  // Create new brand
+  const { data: newBrand, error } = await supabase
+    .from("brands")
+    .insert({ name: normalizedName })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error(`Failed to create brand "${normalizedName}":`, error.message);
+    return null;
+  }
+
+  console.log(`Created new brand: ${normalizedName}`);
+  brandCache.set(normalizedName.toLowerCase(), newBrand.id);
+  return newBrand.id;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -173,9 +219,13 @@ Deno.serve(async (req) => {
         const imageUrl = product.image_link || null;
         const category = product.raw_categories?.split(",")[0]?.trim() || "Combat Sports";
 
+        // Look up or create brand and get the brand_id
+        const brandId = await getBrandId(supabase, brandName);
+
         const productData = {
           name: productName,
           brand: brandName,
+          brand_id: brandId,
           price: formatPrice(product.sale_price || product.price),
           slug: generateSlug(productName),
           category: category,
