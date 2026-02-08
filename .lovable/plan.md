@@ -1,61 +1,41 @@
 
-# Automatic Brand Matching for FMTC Product Import
+# Display Brand Logos in Products Table
 
 ## Problem
 
-When the FMTC sync function imports products, it stores the brand name as text in the `products.brand` column but leaves the `brand_id` foreign key as `null`. This causes:
-- Brand logos not displaying on product pages
-- Brand-based filtering to fail
-- Manual work required to link existing brands to imported products
-- New imported products unable to leverage existing brand identity
+The brand logo is not appearing in the admin products table because the FMTC products were imported **before** the automatic brand matching was added. 
+
+Current state:
+- The Nike brand exists in the database with logo: `https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Logo_NIKE.svg/1200px-Logo_NIKE.svg.png`
+- The 4 Nike products have `brand_id = null` (not linked to the brand)
+- The UI code already supports showing logos when `brand_id` is set (lines 551-561)
 
 ## Solution
 
-Add automatic brand lookup and creation logic to the FMTC sync edge function that:
-1. Extracts the brand name from each FMTC product
-2. Looks up if that brand already exists in the database
-3. If found, uses the existing `brand_id` (with its logo)
-4. If not found, creates a new brand entry (without logo for now)
-5. Sets the `brand_id` when upserting the product
+Run a one-time database update to link existing products to their brands based on matching brand names.
 
-## Implementation Details
+### Database Migration
 
-### Changes to `supabase/functions/sync-fmtc-products/index.ts`
-
-**New function: `getBrandId`**
-```
-Purpose: Look up or create a brand, returns the UUID
-
-Logic:
-1. Check if brand name exists in the brands table (case-insensitive)
-2. If found, return the brand UUID
-3. If not found, insert a new brand with the name and no logo
-4. Return the newly created brand UUID
+```sql
+UPDATE products p
+SET brand_id = b.id
+FROM brands b
+WHERE LOWER(p.brand) = LOWER(b.name)
+  AND p.brand_id IS NULL;
 ```
 
-**Updated product import loop:**
-- Before creating `productData`, call `getBrandId(brandName)` to get the brand UUID
-- Add `brand_id: brandId` to the product data object
-- This ensures each imported product links to a brand (existing or newly created)
+This will:
+1. Find all products where `brand_id` is null
+2. Match them to brands with the same name (case-insensitive)
+3. Set the `brand_id` foreign key
 
-**Benefits:**
-- Automatically links imported products to existing brands with logos
-- Creates missing brands on first import (can be updated with logos later)
-- Prevents duplicate brand creation through intelligent lookup
-- No changes needed to the database schema (brand_id column already exists)
-- One-time setup per unique brand discovered
+### Expected Result
 
-### Edge Cases Handled
-- Brand names with different casing (normalized via database UNIQUE constraint)
-- Multiple products with same brand (reuses existing brand_id)
-- New brands discovered from FMTC (creates them automatically)
-- Existing brands in database (preserves their logos)
+After the migration:
+- All 4 Nike products will have `brand_id` pointing to the Nike brand
+- The Nike logo will appear in the Brand column of the products table
+- Future FMTC imports will automatically match brands (using the code we already added)
 
-## Testing Approach
-1. Run the updated sync function against your FMTC data
-2. Verify Nike and any other brands are linked with `brand_id` values
-3. Check that brand logos display on product detail pages
-4. Confirm brand-based filtering works in the marketplace
-
-## Files to Modify
-- `supabase/functions/sync-fmtc-products/index.ts` - Add `getBrandId` function and update product upsert logic
+### Files Changed
+- No code changes needed - the UI already supports brand logos
+- Database migration to link existing products to brands
