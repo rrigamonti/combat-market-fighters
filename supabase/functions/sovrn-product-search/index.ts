@@ -50,21 +50,19 @@ Deno.serve(async (req) => {
       requestBody.category = category;
     }
 
-    const response = await fetch(
-      "https://shopping-gallery.prd-commerce.sovrnservices.com/ai-orchestration/products",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `secret ${SOVRN_SECRET_KEY}`,
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({
-          apiKey: SOVRN_API_KEY,
-          ...requestBody,
-        }),
-      }
-    );
+    const apiUrl = new URL("https://shopping-gallery.prd-commerce.sovrnservices.com/ai-orchestration/products");
+    apiUrl.searchParams.set("apiKey", SOVRN_API_KEY);
+    apiUrl.searchParams.set("pageUrl", "https://combatmarket.com");
+
+    const response = await fetch(apiUrl.toString(), {
+      method: "POST",
+      headers: {
+        "Authorization": `secret ${SOVRN_SECRET_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
 
     if (!response.ok) {
       const errText = await response.text();
@@ -91,11 +89,13 @@ Deno.serve(async (req) => {
     // Normalize each product into a consistent shape
     const normalizedProducts = products.map((p: any) => ({
       name: p.name || p.title || p.productName || "Unknown Product",
-      brand: p.brand || p.merchantName || p.merchant || null,
+      brand: typeof p.brand === 'object' ? p.brand?.name : (p.brand || null),
       price: p.price || p.salePrice || p.retailPrice || null,
       image_url: p.imageUrl || p.image || p.thumbnailUrl || null,
       url: p.url || p.productUrl || p.link || p.purchaseUrl || null,
-      merchant: p.merchantName || p.merchant || p.brand || null,
+      merchant: typeof p.merchant === 'object' ? p.merchant?.name : (p.merchantName || p.merchant || null),
+      merchant_logo: typeof p.merchant === 'object' ? p.merchant?.logoUrl : null,
+      merchant_url: typeof p.merchant === 'object' ? p.merchant?.url : null,
       category: p.category || null,
       description: p.description || null,
       upc: p.upc || p.sku || null,
