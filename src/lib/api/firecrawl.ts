@@ -188,6 +188,71 @@ export const firecrawlApi = {
   },
 
   /**
+   * Search Sovrn's product catalog using the Product Recommendation API
+   */
+  async searchSovrnProducts(options: {
+    query: string;
+    category?: string;
+    priceMin?: number;
+    priceMax?: number;
+    limit?: number;
+  }): Promise<{
+    success: boolean;
+    products?: Array<{
+      name: string;
+      brand: string | null;
+      price: number | string | null;
+      image_url: string | null;
+      url: string | null;
+      merchant: string | null;
+      category: string | null;
+      description: string | null;
+      upc: string | null;
+    }>;
+    total?: number;
+    error?: string;
+  }> {
+    const { data, error } = await supabase.functions.invoke('sovrn-product-search', {
+      body: options,
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
+
+  /**
+   * Import pre-fetched products directly (from Product Recommendation API results)
+   */
+  async importSovrnProducts(products: Array<{
+    name: string;
+    brand?: string;
+    price?: number | string;
+    image_url?: string;
+    url: string;
+    category?: string;
+    description?: string;
+    upc?: string;
+  }>): Promise<{
+    success: boolean;
+    imported_count: number;
+    failed_count: number;
+    results?: Array<{ url: string; status: string; name?: string; error?: string }>;
+    errors: string[];
+    error?: string;
+  }> {
+    const { data, error } = await supabase.functions.invoke('sync-sovrn-products', {
+      body: { products },
+    });
+
+    if (error) {
+      return { success: false, error: error.message, imported_count: 0, failed_count: 0, errors: [] };
+    }
+    return data;
+  },
+
+  /**
    * Fetch Sovrn Commerce reporting (transactions or merchants)
    */
   async fetchSovrnReport(options?: {
