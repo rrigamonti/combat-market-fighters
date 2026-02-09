@@ -111,6 +111,39 @@ async function getBrandId(
   return newBrand.id;
 }
 
+function normalizeProduct(item: Record<string, unknown>): SovrnProduct {
+  // Handle various Sovrn API response formats
+  if (item.merchants && Array.isArray(item.merchants)) {
+    const merchant = item.merchants[0] || {};
+    return {
+      name: (item.name || item.title || item.productName) as string,
+      price: (merchant.price || merchant.salePrice || item.price) as number,
+      salePrice: (merchant.salePrice || item.salePrice) as number,
+      imageUrl: (item.imageUrl || item.image || item.thumbnailUrl) as string,
+      merchantName: (merchant.merchantName || merchant.name || item.merchantName) as string,
+      merchantId: merchant.merchantId as number,
+      url: (merchant.url || merchant.affiliateUrl || item.url || item.affiliateUrl) as string,
+      category: item.category as string,
+      description: item.description as string,
+      upc: item.upc as string,
+      brand: item.brand as string,
+    };
+  }
+  return {
+    name: (item.name || item.title || item.productName) as string,
+    price: (item.price || item.retailPrice) as number,
+    salePrice: item.salePrice as number,
+    imageUrl: (item.imageUrl || item.image || item.thumbnailUrl) as string,
+    merchantName: item.merchantName as string,
+    merchantId: item.merchantId as number,
+    url: (item.url || item.affiliateUrl || item.purchaseUrl) as string,
+    category: item.category as string,
+    description: item.description as string,
+    upc: item.upc as string,
+    brand: item.brand as string,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -154,88 +187,71 @@ Deno.serve(async (req) => {
 
     const allProducts: SovrnProduct[] = [];
 
-    // Use Price Comparison API to search for combat sports products by keyword
+    // Use Sovrn Product Recommendation API for keyword-based product discovery
     for (const keyword of searchKeywords) {
       try {
-        const encodedKeyword = encodeURIComponent(keyword);
-        // Sovrn Price Comparison (Affiliated) API
-        const apiUrl = `https://comparisons.sovrn.com/api/affiliate/v3.5/sites/${SOVRN_API_KEY}/compare/prices/us/by/accuracy?q=${encodedKeyword}&limit=50`;
-
         console.log(`Searching Sovrn for: "${keyword}"`);
 
-        const response = await fetch(apiUrl, {
-          headers: {
-            "Authorization": `secret ${SOVRN_SECRET_KEY}`,
-            "Accept": "application/json",
-          },
-        });
+        const response = await fetch(
+          `https://shopping-gallery.prd-commerce.sovrnservices.com/ai-orchestration/products?apiKey=${SOVRN_API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `secret ${SOVRN_SECRET_KEY}`,
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: JSON.stringify({
+              content: keyword,
+              maxProducts: 50,
+            }),
+          }
+        );
 
         if (!response.ok) {
           const errText = await response.text();
-          console.error(`Sovrn API error for "${keyword}": ${response.status} - ${errText.substring(0, 200)}`);
+          console.error(`Sovrn API error for "${keyword}": ${response.status} - ${errText.substring(0, 300)}`);
+
+          // Fallback: try Price Comparison non-affiliated API
+          const fallbackResponse = await fetch(
+            "https://comparisons.sovrn.com/api/data/v1.0/",
+            {
+              method: "POST",
+              headers: {
+                "Authorization": `secret ${SOVRN_SECRET_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                q: keyword,
+                siteApiKey: SOVRN_API_KEY,
+              }),
+            }
+          );
+
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            const items = Array.isArray(fallbackData) ? fallbackData : (fallbackData.products || []);
+            for (const item of items) {
+              allProducts.push(normalizeProduct(item));
+            }
+            console.log(`Fallback found ${items.length} products for "${keyword}"`);
+          } else {
+            const fbErr = await fallbackResponse.text();
+            console.error(`Fallback API also failed for "${keyword}": ${fallbackResponse.status} - ${fbErr.substring(0, 200)}`);
+          }
           continue;
         }
 
         const data = await response.json();
-
-        // Sovrn returns products in various formats; normalize
-        const products: SovrnProduct[] = [];
-        if (Array.isArray(data)) {
-          for (const item of data) {
-            // Each item may have merchants array
-            if (item.merchants && Array.isArray(item.merchants)) {
-              for (const merchant of item.merchants) {
-                products.push({
-                  name: item.name || item.title,
-                  price: merchant.price || merchant.salePrice,
-                  salePrice: merchant.salePrice,
-                  imageUrl: item.imageUrl || item.image,
-                  merchantName: merchant.merchantName || merchant.name,
-                  merchantId: merchant.merchantId,
-                  url: merchant.url || merchant.affiliateUrl,
-                  category: item.category,
-                  description: item.description,
-                  upc: item.upc,
-                  brand: item.brand,
-                });
-              }
-            } else {
-              products.push({
-                name: item.name || item.title,
-                price: item.price || item.salePrice,
-                salePrice: item.salePrice,
-                imageUrl: item.imageUrl || item.image,
-                merchantName: item.merchantName,
-                merchantId: item.merchantId,
-                url: item.url || item.affiliateUrl,
-                category: item.category,
-                description: item.description,
-                upc: item.upc,
-                brand: item.brand,
-              });
-            }
-          }
-        } else if (data.products && Array.isArray(data.products)) {
-          for (const item of data.products) {
-            products.push({
-              name: item.name || item.title,
-              price: item.price,
-              salePrice: item.salePrice,
-              imageUrl: item.imageUrl || item.image,
-              merchantName: item.merchantName,
-              url: item.url || item.affiliateUrl,
-              category: item.category,
-              description: item.description,
-              upc: item.upc,
-              brand: item.brand,
-            });
-          }
+        const items = Array.isArray(data) ? data : (data.products || data.recommendations || []);
+        
+        for (const item of items) {
+          allProducts.push(normalizeProduct(item));
         }
 
-        console.log(`Found ${products.length} products for "${keyword}"`);
-        allProducts.push(...products);
+        console.log(`Found ${items.length} products for "${keyword}"`);
 
-        // Rate limit: 100 requests/second, but let's be safe
+        // Rate limit
         await new Promise((r) => setTimeout(r, 200));
       } catch (err) {
         console.error(`Error fetching keyword "${keyword}":`, err);
