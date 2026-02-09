@@ -1,41 +1,75 @@
 
-# Add Filters to Admin Products Page
+
+# Product Discovery via Firecrawl Site Mapping
 
 ## Overview
-Add a filter bar to the Admin Products page with dropdowns for **Category**, **Brand**, and **Source** (manual, fmtc, sovrn), plus a text search. Currently the page has no filtering at all.
+Add a **"Discover Products"** tab to the Sovrn page that uses Firecrawl to crawl enabled merchant websites and find product URLs automatically. This eliminates the need to manually hunt for URLs before importing.
+
+## How It Works
+
+1. Admin selects an enabled merchant (or multiple) from a dropdown
+2. Clicks "Discover Products" -- Firecrawl's **Map** endpoint crawls the merchant's domain and returns all product-like URLs
+3. Results are displayed in a selectable list with checkboxes
+4. Admin reviews, selects the URLs they want, and clicks "Import Selected" which feeds them into the existing Sovrn import flow
 
 ## What Changes
 
-### Filter bar (above the products table)
-A row of controls between the header and the table:
-- **Search input** -- filters by product name (with search icon)
-- **Category dropdown** -- populated from distinct categories in the loaded products (e.g. Boxing, MMA, Gloves, Apparel, etc.)
-- **Brand dropdown** -- populated from distinct brands in the loaded products
-- **Source dropdown** -- filters by source_type (Manual, FMTC, Sovrn)
-- **Status dropdown** -- Active / Inactive / All
-- A count label showing "Showing X of Y products"
+### File: `src/pages/admin/AdminSovrn.tsx`
 
-All filters work client-side on the already-loaded products array, so no extra database queries are needed.
+**Add a 4th tab: "Discover"**
 
-## Technical Details
+- New tab trigger between "Import Products" and "Performance"
+- State variables:
+  - `selectedMerchantId` -- which merchant to crawl
+  - `discoveredUrls` -- array of URLs returned by Firecrawl Map
+  - `selectedUrls` -- set of URLs the admin has checked
+  - `isDiscovering` -- loading state
+  - `urlSearchFilter` -- text filter on discovered URLs
 
-### File: `src/pages/admin/AdminProducts.tsx`
+**Discovery flow:**
+1. Dropdown shows only **enabled** merchants (those with a domain)
+2. On click, calls `firecrawlApi.scrape` using Firecrawl's `/map` endpoint via a new edge function
+3. Filters results to only product-like URLs (containing `/product`, `/shop/`, `/p/`, `/item/`, or ending in common product path patterns)
+4. Shows results in a scrollable list with checkboxes and a "Select All" toggle
+5. "Import Selected" button feeds checked URLs into the existing `syncSovrnProducts` function
 
-1. Add state variables for each filter:
-   - `searchQuery`, `categoryFilter`, `brandFilter`, `sourceFilter`, `statusFilter` (all strings, default `"all"` or `""`)
+### New Edge Function: `supabase/functions/firecrawl-map-site/index.ts`
 
-2. Derive unique categories and brands from the `products` array (same pattern used in AdminSovrn.tsx):
-   ```text
-   const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean)))
-   const brandNames = Array.from(new Set(products.map(p => p.brand).filter(Boolean)))
-   ```
+A simple edge function that:
+- Accepts `{ url, search?, limit? }`
+- Calls Firecrawl's `POST /v1/map` endpoint with the merchant domain
+- Optionally passes a `search` term (e.g., "boxing gloves") to filter relevant URLs
+- Returns the list of discovered URLs
 
-3. Add a `filteredProducts` computed value that chains all filters
+### File: `src/lib/api/firecrawl.ts`
 
-4. Insert a filter bar row between the header and the table, using the same component pattern as AdminSovrn (Search input + Select dropdowns)
+Add a new method:
+```
+async mapSite(url: string, options?: { search?: string; limit?: number })
+```
+That invokes the new `firecrawl-map-site` edge function.
 
-5. Render `filteredProducts` instead of `products` in the table body
+### File: `supabase/config.toml`
 
-6. Update the "No products" empty state to distinguish between "no products at all" vs "no products match filters"
+Add entry for the new edge function with `verify_jwt = false`.
 
-### No other files need changes
+## UI Design for the Discover Tab
+
+- **Merchant selector** dropdown (enabled merchants only)
+- **Optional search keyword** input (e.g., "boxing gloves", "mma shorts")
+- **"Discover" button** with loading spinner
+- **Results area:**
+  - Count badge: "Found X product URLs"
+  - Select All / Deselect All toggle
+  - Scrollable list of URLs with checkboxes, each URL as a clickable external link
+  - Text filter to narrow results
+- **"Import Selected (N)" button** at the bottom, which reuses the existing import logic
+
+## Why This Approach
+
+- **Firecrawl Map is fast** -- it returns up to 5,000 URLs in seconds without scraping page content
+- **No new database tables needed** -- discovery is ephemeral; only imported products get saved
+- **Reuses existing import pipeline** -- selected URLs feed directly into `syncSovrnProducts`
+- **Firecrawl is already connected** -- the API key is configured and ready
+- **Search parameter** lets admins narrow results to specific product types (e.g., "gloves", "shorts")
+
