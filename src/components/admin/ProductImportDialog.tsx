@@ -17,7 +17,7 @@ interface ProductImportDialogProps {
   onOpenChange: (open: boolean) => void;
   onProductScraped?: (product: ScrapedProduct) => void;
   onImportComplete?: () => void;
-  defaultTab?: 'feed' | 'scrape' | 'fmtc';
+  defaultTab?: 'feed' | 'scrape' | 'fmtc' | 'sovrn';
 }
 
 const AFFILIATE_NETWORKS = [
@@ -39,7 +39,7 @@ export function ProductImportDialog({
   onImportComplete,
   defaultTab = 'feed',
 }: ProductImportDialogProps) {
-  const [activeTab, setActiveTab] = useState<'feed' | 'scrape' | 'fmtc'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'feed' | 'scrape' | 'fmtc' | 'sovrn'>(defaultTab);
   
   // Feed import state
   const [feedContent, setFeedContent] = useState('');
@@ -63,6 +63,11 @@ export function ProductImportDialog({
   const [fmtcLimit, setFmtcLimit] = useState('100');
   const [isSyncingFmtc, setIsSyncingFmtc] = useState(false);
   const [fmtcResult, setFmtcResult] = useState<FmtcSyncResult | null>(null);
+
+  // Sovrn sync state
+  const [sovrnLimit, setSovrnLimit] = useState('100');
+  const [isSyncingSovrn, setIsSyncingSovrn] = useState(false);
+  const [sovrnResult, setSovrnResult] = useState<FmtcSyncResult | null>(null);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -255,6 +260,10 @@ export function ProductImportDialog({
             <TabsTrigger value="fmtc" className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
               FMTC
+            </TabsTrigger>
+            <TabsTrigger value="sovrn" className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Sovrn
             </TabsTrigger>
           </TabsList>
 
@@ -550,6 +559,127 @@ export function ProductImportDialog({
                 <>
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Sync from FMTC
+                </>
+              )}
+            </Button>
+          </TabsContent>
+
+          {/* Sovrn Sync Tab */}
+          <TabsContent value="sovrn" className="space-y-4 mt-4">
+            <div className="p-4 rounded-lg border bg-muted/50">
+              <h4 className="font-medium mb-2">Sovrn Commerce Product Sync</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Import combat sports products from Sovrn Commerce's Price Comparison API.
+                Products are searched by combat sports keywords and filtered for relevance.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Maximum Products to Import</Label>
+              <Select value={sovrnLimit} onValueChange={setSovrnLimit}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="50">50 products</SelectItem>
+                  <SelectItem value="100">100 products</SelectItem>
+                  <SelectItem value="250">250 products</SelectItem>
+                  <SelectItem value="500">500 products</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isSyncingSovrn && (
+              <div className="p-4 rounded-lg border bg-muted/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="font-medium">Syncing products from Sovrn...</span>
+                </div>
+                <Progress value={undefined} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Searching Sovrn's product catalog for combat sports items...
+                </p>
+              </div>
+            )}
+
+            {sovrnResult && !isSyncingSovrn && (
+              <div className={`p-4 rounded-lg border ${sovrnResult.success ? 'bg-primary/10 border-primary/20' : 'bg-destructive/10 border-destructive/20'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {sovrnResult.success ? (
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-destructive" />
+                  )}
+                  <span className="font-medium">
+                    {sovrnResult.success ? 'Sync Complete' : 'Sync Failed'}
+                  </span>
+                </div>
+                
+                {sovrnResult.success && (
+                  <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-2">
+                    {sovrnResult.total_fetched !== undefined && (
+                      <p>Total fetched: {sovrnResult.total_fetched}</p>
+                    )}
+                    {sovrnResult.combat_sports_count !== undefined && (
+                      <p>Combat sports: {sovrnResult.combat_sports_count}</p>
+                    )}
+                    <p>Imported: {sovrnResult.imported_count}</p>
+                    <p>Failed: {sovrnResult.failed_count}</p>
+                  </div>
+                )}
+
+                {sovrnResult.error && (
+                  <p className="text-sm text-destructive">{sovrnResult.error}</p>
+                )}
+                
+                {sovrnResult.errors && sovrnResult.errors.length > 0 && (
+                  <div className="mt-2 text-xs text-muted-foreground max-h-32 overflow-y-auto">
+                    {sovrnResult.errors.slice(0, 5).map((err, i) => (
+                      <p key={i}>• {err}</p>
+                    ))}
+                    {sovrnResult.errors.length > 5 && (
+                      <p>... and {sovrnResult.errors.length - 5} more</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Button 
+              onClick={async () => {
+                setIsSyncingSovrn(true);
+                setSovrnResult(null);
+                try {
+                  const result = await firecrawlApi.syncSovrnProducts({
+                    limit: parseInt(sovrnLimit) || 100,
+                  });
+                  setSovrnResult(result);
+                  if (result.success && result.imported_count > 0) {
+                    toast({ title: 'Sovrn sync complete', description: `Imported ${result.imported_count} products` });
+                    onImportComplete?.();
+                  } else if (result.success) {
+                    toast({ title: 'No new products', description: 'No combat sports products found to import' });
+                  } else {
+                    toast({ title: 'Sync failed', description: result.error || 'Unknown error', variant: 'destructive' });
+                  }
+                } catch (err) {
+                  toast({ title: 'Sync error', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
+                } finally {
+                  setIsSyncingSovrn(false);
+                }
+              }} 
+              disabled={isSyncingSovrn}
+              className="w-full"
+            >
+              {isSyncingSovrn ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Sync from Sovrn
                 </>
               )}
             </Button>

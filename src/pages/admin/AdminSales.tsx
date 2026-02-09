@@ -65,6 +65,7 @@ const statusConfig: Record<SaleStatus, { label: string; variant: "default" | "se
 export default function AdminSales() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [networkFilter, setNetworkFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
@@ -126,6 +127,7 @@ export default function AdminSales() {
 
   // Filter sales by search term
   const filteredSales = sales?.filter((sale) => {
+    if (networkFilter !== "all" && sale.affiliate_network !== networkFilter) return false;
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
     return (
@@ -223,6 +225,16 @@ export default function AdminSales() {
               <SelectItem value="confirmed">Confirmed</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={networkFilter} onValueChange={setNetworkFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by network" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Networks</SelectItem>
+              <SelectItem value="Sovrn">Sovrn</SelectItem>
+              <SelectItem value="FMTC">FMTC</SelectItem>
             </SelectContent>
           </Select>
         </div>
