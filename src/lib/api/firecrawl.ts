@@ -170,6 +170,24 @@ export const firecrawlApi = {
   },
 
   /**
+   * Map a merchant site to discover product URLs using Firecrawl
+   */
+  async mapSite(url: string, options?: { search?: string; limit?: number }): Promise<{
+    success: boolean;
+    links?: string[];
+    error?: string;
+  }> {
+    const { data, error } = await supabase.functions.invoke('firecrawl-map-site', {
+      body: { url, search: options?.search, limit: options?.limit },
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
+
+  /**
    * Fetch Sovrn Commerce reporting (transactions or merchants)
    */
   async fetchSovrnReport(options?: {
