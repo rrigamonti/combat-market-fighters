@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.sovrn-reporting]
 verify_jwt = false
+
+[functions.sync-sovrn-merchants]
+verify_jwt = false

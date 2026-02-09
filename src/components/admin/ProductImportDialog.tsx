@@ -65,9 +65,9 @@ export function ProductImportDialog({
   const [fmtcResult, setFmtcResult] = useState<FmtcSyncResult | null>(null);
 
   // Sovrn sync state
-  const [sovrnLimit, setSovrnLimit] = useState('100');
+  const [sovrnUrls, setSovrnUrls] = useState('');
   const [isSyncingSovrn, setIsSyncingSovrn] = useState(false);
-  const [sovrnResult, setSovrnResult] = useState<FmtcSyncResult | null>(null);
+  const [sovrnResult, setSovrnResult] = useState<any>(null);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -567,38 +567,30 @@ export function ProductImportDialog({
           {/* Sovrn Sync Tab */}
           <TabsContent value="sovrn" className="space-y-4 mt-4">
             <div className="p-4 rounded-lg border bg-muted/50">
-              <h4 className="font-medium mb-2">Sovrn Commerce Product Sync</h4>
+              <h4 className="font-medium mb-2">Sovrn URL Import</h4>
               <p className="text-sm text-muted-foreground mb-4">
-                Import combat sports products from Sovrn Commerce's Price Comparison API.
-                Products are searched by combat sports keywords and filtered for relevance.
+                Paste product URLs (one per line) to import via Sovrn's Price Comparison API.
+                Only products from enabled merchants will be imported. Manage merchants at Admin → Sovrn.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Maximum Products to Import</Label>
-              <Select value={sovrnLimit} onValueChange={setSovrnLimit}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="50">50 products</SelectItem>
-                  <SelectItem value="100">100 products</SelectItem>
-                  <SelectItem value="250">250 products</SelectItem>
-                  <SelectItem value="500">500 products</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Product URLs (one per line)</Label>
+              <Textarea
+                value={sovrnUrls}
+                onChange={(e) => setSovrnUrls(e.target.value)}
+                placeholder={"https://www.amazon.com/product-1\nhttps://www.everlast.com/product-2"}
+                rows={6}
+              />
             </div>
 
             {isSyncingSovrn && (
               <div className="p-4 rounded-lg border bg-muted/30">
                 <div className="flex items-center gap-3 mb-3">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span className="font-medium">Syncing products from Sovrn...</span>
+                  <span className="font-medium">Importing products from URLs...</span>
                 </div>
                 <Progress value={undefined} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Searching Sovrn's product catalog for combat sports items...
-                </p>
               </div>
             )}
 
@@ -611,19 +603,14 @@ export function ProductImportDialog({
                     <XCircle className="h-5 w-5 text-destructive" />
                   )}
                   <span className="font-medium">
-                    {sovrnResult.success ? 'Sync Complete' : 'Sync Failed'}
+                    {sovrnResult.success ? 'Import Complete' : 'Import Failed'}
                   </span>
                 </div>
                 
                 {sovrnResult.success && (
-                  <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-2">
-                    {sovrnResult.total_fetched !== undefined && (
-                      <p>Total fetched: {sovrnResult.total_fetched}</p>
-                    )}
-                    {sovrnResult.combat_sports_count !== undefined && (
-                      <p>Combat sports: {sovrnResult.combat_sports_count}</p>
-                    )}
+                  <div className="grid grid-cols-3 gap-2 text-sm text-muted-foreground mb-2">
                     <p>Imported: {sovrnResult.imported_count}</p>
+                    <p>Skipped: {sovrnResult.skipped_count || 0}</p>
                     <p>Failed: {sovrnResult.failed_count}</p>
                   </div>
                 )}
@@ -631,15 +618,14 @@ export function ProductImportDialog({
                 {sovrnResult.error && (
                   <p className="text-sm text-destructive">{sovrnResult.error}</p>
                 )}
-                
-                {sovrnResult.errors && sovrnResult.errors.length > 0 && (
-                  <div className="mt-2 text-xs text-muted-foreground max-h-32 overflow-y-auto">
-                    {sovrnResult.errors.slice(0, 5).map((err, i) => (
-                      <p key={i}>• {err}</p>
+
+                {sovrnResult.results && sovrnResult.results.length > 0 && (
+                  <div className="mt-2 text-xs text-muted-foreground max-h-32 overflow-y-auto space-y-1">
+                    {sovrnResult.results.map((r: any, i: number) => (
+                      <p key={i} className={r.status === 'imported' ? 'text-primary' : r.status === 'skipped' ? 'text-muted-foreground' : 'text-destructive'}>
+                        • {r.status}: {r.name || r.url}{r.error ? ` (${r.error})` : ''}
+                      </p>
                     ))}
-                    {sovrnResult.errors.length > 5 && (
-                      <p>... and {sovrnResult.errors.length - 5} more</p>
-                    )}
                   </div>
                 )}
               </div>
@@ -647,39 +633,42 @@ export function ProductImportDialog({
 
             <Button 
               onClick={async () => {
+                const urls = sovrnUrls.split('\n').map(u => u.trim()).filter(Boolean);
+                if (urls.length === 0) {
+                  toast({ title: 'No URLs', description: 'Paste at least one product URL', variant: 'destructive' });
+                  return;
+                }
                 setIsSyncingSovrn(true);
                 setSovrnResult(null);
                 try {
-                  const result = await firecrawlApi.syncSovrnProducts({
-                    limit: parseInt(sovrnLimit) || 100,
-                  });
+                  const result = await firecrawlApi.syncSovrnProducts({ urls });
                   setSovrnResult(result);
                   if (result.success && result.imported_count > 0) {
-                    toast({ title: 'Sovrn sync complete', description: `Imported ${result.imported_count} products` });
+                    toast({ title: 'Import complete', description: `Imported ${result.imported_count} products` });
                     onImportComplete?.();
                   } else if (result.success) {
-                    toast({ title: 'No new products', description: 'No combat sports products found to import' });
+                    toast({ title: 'No products imported', description: 'Check if merchants are enabled' });
                   } else {
-                    toast({ title: 'Sync failed', description: result.error || 'Unknown error', variant: 'destructive' });
+                    toast({ title: 'Import failed', description: result.error || 'Unknown error', variant: 'destructive' });
                   }
                 } catch (err) {
-                  toast({ title: 'Sync error', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
+                  toast({ title: 'Import error', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
                 } finally {
                   setIsSyncingSovrn(false);
                 }
               }} 
-              disabled={isSyncingSovrn}
+              disabled={isSyncingSovrn || !sovrnUrls.trim()}
               className="w-full"
             >
               {isSyncingSovrn ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Syncing...
+                  Importing...
                 </>
               ) : (
                 <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Sync from Sovrn
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import from URLs
                 </>
               )}
             </Button>

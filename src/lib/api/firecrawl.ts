@@ -127,33 +127,64 @@ export const firecrawlApi = {
   },
 
   /**
-   * Sync products from Sovrn Commerce affiliate network
+   * Sync products from Sovrn Commerce by URL
    */
-  async syncSovrnProducts(options?: { limit?: number; keywords?: string[] }): Promise<FmtcSyncResult> {
+  async syncSovrnProducts(options: { urls: string[] }): Promise<{
+    success: boolean;
+    imported_count: number;
+    skipped_count?: number;
+    failed_count: number;
+    results?: Array<{ url: string; status: string; name?: string; error?: string }>;
+    errors: string[];
+    error?: string;
+  }> {
     const { data, error } = await supabase.functions.invoke('sync-sovrn-products', {
-      body: options || {},
+      body: options,
     });
 
     if (error) {
-      return { 
-        success: false, 
-        error: error.message,
-        imported_count: 0,
-        failed_count: 0,
-        errors: [],
-      };
+      return { success: false, error: error.message, imported_count: 0, failed_count: 0, errors: [] };
     }
     return data;
   },
 
   /**
-   * Fetch Sovrn Commerce reporting/transactions
+   * Sync approved merchants from Sovrn
    */
-  async fetchSovrnReport(options?: { startDate?: string; endDate?: string; syncStatuses?: boolean }): Promise<{
+  async syncSovrnMerchants(): Promise<{
     success: boolean;
+    total_fetched?: number;
+    upserted_count?: number;
+    failed_count?: number;
+    errors?: string[];
+    error?: string;
+  }> {
+    const { data, error } = await supabase.functions.invoke('sync-sovrn-merchants', {
+      body: {},
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
+
+  /**
+   * Fetch Sovrn Commerce reporting (transactions or merchants)
+   */
+  async fetchSovrnReport(options?: {
+    mode?: 'transactions' | 'merchants';
+    startDate?: string;
+    endDate?: string;
+    syncStatuses?: boolean;
+  }): Promise<{
+    success: boolean;
+    mode?: string;
     total_transactions?: number;
+    total_merchants?: number;
     synced_count?: number;
     transactions?: unknown[];
+    merchants?: unknown[];
     error?: string;
   }> {
     const { data, error } = await supabase.functions.invoke('sovrn-reporting', {
