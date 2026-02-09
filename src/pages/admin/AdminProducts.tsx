@@ -106,7 +106,7 @@ export default function AdminProducts() {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importDialogTab, setImportDialogTab] = useState<'feed' | 'scrape' | 'fmtc'>('feed');
+  const [importDialogTab, setImportDialogTab] = useState<'feed' | 'scrape' | 'fmtc' | 'sovrn'>('feed');
 
   async function fetchProducts() {
     setLoading(true);
@@ -284,12 +284,14 @@ export default function AdminProducts() {
         return <Badge variant="outline" className="text-xs">Scraped</Badge>;
       case 'fmtc':
         return <Badge variant="outline" className="text-xs bg-primary/10">FMTC</Badge>;
+      case 'sovrn':
+        return <Badge variant="outline" className="text-xs bg-accent/20">Sovrn</Badge>;
       default:
         return <Badge variant="secondary" className="text-xs">Manual</Badge>;
     }
   }
 
-  function openImportDialog(tab: 'feed' | 'scrape' | 'fmtc') {
+  function openImportDialog(tab: 'feed' | 'scrape' | 'fmtc' | 'sovrn') {
     setImportDialogTab(tab);
     setImportDialogOpen(true);
   }
@@ -318,6 +320,10 @@ export default function AdminProducts() {
                 <DropdownMenuItem onClick={() => openImportDialog('fmtc')}>
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Sync from FMTC
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openImportDialog('sovrn')}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Sync from Sovrn
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => openImportDialog('feed')}>
                   <Upload className="mr-2 h-4 w-4" />

@@ -19,6 +19,31 @@ interface WebhookPayload {
   [key: string]: unknown; // Allow additional fields
 }
 
+// Normalize Sovrn postback payloads to our standard format
+function normalizeSovrnPayload(raw: Record<string, unknown>): WebhookPayload {
+  // Detect Sovrn by checking for Sovrn-specific fields
+  const isSovrn = raw.transactionId !== undefined || 
+                  raw.merchantName !== undefined || 
+                  (raw.affiliate_network === "Sovrn" || raw.affiliate_network === "sovrn");
+
+  if (isSovrn) {
+    console.log("Detected Sovrn payload, normalizing...");
+    return {
+      order_id: (raw.orderId || raw.transactionId || raw.order_id) as string | undefined,
+      sub_id: (raw.subId || raw.subid || raw.sub_id) as string | undefined,
+      product_sku: (raw.product_sku || raw.sku) as string | undefined,
+      sale_amount: Number(raw.saleAmount || raw.sale_amount || 0),
+      commission: Number(raw.commission || raw.publisherCommission || 0),
+      currency: (raw.currency || "USD") as string,
+      timestamp: (raw.transactionDate || raw.timestamp) as string | undefined,
+      affiliate_network: "Sovrn",
+    };
+  }
+
+  // Return as-is for non-Sovrn payloads
+  return raw as WebhookPayload;
+}
+
 serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -39,8 +64,11 @@ serve(async (req: Request) => {
     }
 
     // Parse the incoming payload
-    const payload: WebhookPayload = await req.json();
-    console.log("Received sale webhook:", JSON.stringify(payload));
+    const rawPayload = await req.json();
+    console.log("Received sale webhook:", JSON.stringify(rawPayload));
+
+    // Detect Sovrn payloads and normalize to our WebhookPayload format
+    const payload: WebhookPayload = normalizeSovrnPayload(rawPayload);
 
     // Validate required fields
     if (!payload.sub_id || payload.sale_amount === undefined || payload.commission === undefined) {

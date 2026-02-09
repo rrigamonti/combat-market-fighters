@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.sync-fmtc-products]
 verify_jwt = false
+
+[functions.sync-sovrn-products]
+verify_jwt = false
+
+[functions.sovrn-reporting]
+verify_jwt = false

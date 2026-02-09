@@ -125,4 +125,44 @@ export const firecrawlApi = {
     }
     return data;
   },
+
+  /**
+   * Sync products from Sovrn Commerce affiliate network
+   */
+  async syncSovrnProducts(options?: { limit?: number; keywords?: string[] }): Promise<FmtcSyncResult> {
+    const { data, error } = await supabase.functions.invoke('sync-sovrn-products', {
+      body: options || {},
+    });
+
+    if (error) {
+      return { 
+        success: false, 
+        error: error.message,
+        imported_count: 0,
+        failed_count: 0,
+        errors: [],
+      };
+    }
+    return data;
+  },
+
+  /**
+   * Fetch Sovrn Commerce reporting/transactions
+   */
+  async fetchSovrnReport(options?: { startDate?: string; endDate?: string; syncStatuses?: boolean }): Promise<{
+    success: boolean;
+    total_transactions?: number;
+    synced_count?: number;
+    transactions?: unknown[];
+    error?: string;
+  }> {
+    const { data, error } = await supabase.functions.invoke('sovrn-reporting', {
+      body: options || {},
+    });
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return data;
+  },
 };
