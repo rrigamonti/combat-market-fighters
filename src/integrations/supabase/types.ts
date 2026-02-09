@@ -502,6 +502,54 @@ export type Database = {
           },
         ]
       }
+      sovrn_merchants: {
+        Row: {
+          avg_order_value: number | null
+          category: string | null
+          commission_rate: number | null
+          conversion_rate: number | null
+          created_at: string
+          domain: string | null
+          enabled: boolean
+          id: string
+          last_synced_at: string | null
+          merchant_id: number
+          metadata: Json | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avg_order_value?: number | null
+          category?: string | null
+          commission_rate?: number | null
+          conversion_rate?: number | null
+          created_at?: string
+          domain?: string | null
+          enabled?: boolean
+          id?: string
+          last_synced_at?: string | null
+          merchant_id: number
+          metadata?: Json | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avg_order_value?: number | null
+          category?: string | null
+          commission_rate?: number | null
+          conversion_rate?: number | null
+          created_at?: string
+          domain?: string | null
+          enabled?: boolean
+          id?: string
+          last_synced_at?: string | null
+          merchant_id?: number
+          metadata?: Json | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       storefront_views: {
         Row: {
           fighter_id: string
