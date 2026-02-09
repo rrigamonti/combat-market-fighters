@@ -8,6 +8,7 @@ import { ProductSchema } from "@/components/StructuredData";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getCanonicalUrl } from "@/lib/config";
+import { getSovrnAffiliateUrl } from "@/lib/affiliate";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -18,6 +19,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [affiliateUrl, setAffiliateUrl] = useState<string>("");
 
   useEffect(() => {
     async function fetchProduct() {
@@ -44,6 +46,13 @@ export default function ProductDetail() {
 
     fetchProduct();
   }, [slug]);
+
+  // Fetch Sovrn affiliate URL when product is loaded
+  useEffect(() => {
+    if (product?.external_url) {
+      getSovrnAffiliateUrl(product.external_url).then(setAffiliateUrl);
+    }
+  }, [product?.external_url]);
 
   if (loading) {
     return (
@@ -138,7 +147,7 @@ export default function ProductDetail() {
               className="w-full gap-2 text-lg"
             >
               <a
-                href={product.external_url}
+                href={affiliateUrl || product.external_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
