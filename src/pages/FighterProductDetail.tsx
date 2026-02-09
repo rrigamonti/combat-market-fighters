@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { getCanonicalUrl } from "@/lib/config";
+import { getSovrnAffiliateUrl } from "@/lib/affiliate";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -23,6 +24,7 @@ export default function FighterProductDetail() {
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [affiliateUrl, setAffiliateUrl] = useState<string>("");
   const { trackProductClick } = useAnalytics();
 
   useEffect(() => {
@@ -83,20 +85,14 @@ export default function FighterProductDetail() {
     fetchData();
   }, [handle, productSlug]);
 
-  // Build affiliate URL with sub_id tracking parameter for commission attribution
-  const getAffiliateUrl = (baseUrl: string): string => {
-    if (!fighter?.handle) return baseUrl;
-    
-    try {
-      const url = new URL(baseUrl);
-      url.searchParams.set('sub_id', fighter.handle);
-      return url.toString();
-    } catch {
-      // If URL parsing fails, append as query param
-      const separator = baseUrl.includes('?') ? '&' : '?';
-      return `${baseUrl}${separator}sub_id=${encodeURIComponent(fighter.handle)}`;
+  // Fetch Sovrn affiliate URL when product and fighter are loaded
+  useEffect(() => {
+    if (product?.external_url && fighter?.handle) {
+      getSovrnAffiliateUrl(product.external_url, fighter.handle).then(setAffiliateUrl);
+    } else if (product?.external_url) {
+      setAffiliateUrl(product.external_url);
     }
-  };
+  }, [product?.external_url, fighter?.handle]);
 
   const handleBuyClick = () => {
     if (fighter && product) {
@@ -215,7 +211,7 @@ export default function FighterProductDetail() {
               onClick={handleBuyClick}
             >
               <a
-                href={getAffiliateUrl(product.external_url)}
+                href={affiliateUrl || product.external_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
