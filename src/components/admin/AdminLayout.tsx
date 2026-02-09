@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck, BarChart3, Tags, DollarSign, Percent, MessageSquarePlus } from "lucide-react";
+import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck, BarChart3, Tags, DollarSign, Percent, MessageSquarePlus, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ const navItems = [
   { to: "/admin/brands", label: "Brands", icon: Tags },
   { to: "/admin/assignments", label: "Assignments", icon: LinkIcon },
   { to: "/admin/product-requests", label: "Product Requests", icon: MessageSquarePlus },
+  { to: "/admin/sovrn", label: "Sovrn", icon: Store },
   { to: "/admin/sales", label: "Sales", icon: DollarSign },
   { to: "/admin/commissions", label: "Commissions", icon: Percent },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
