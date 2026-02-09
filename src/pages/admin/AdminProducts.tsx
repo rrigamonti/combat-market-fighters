@@ -37,7 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Percent, Upload, Link, ChevronDown, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Percent, Upload, Link, ChevronDown, RefreshCw, Search } from "lucide-react";
 import { ProductImportDialog } from "@/components/admin/ProductImportDialog";
 import type { ScrapedProduct } from "@/lib/api/firecrawl";
 
@@ -107,6 +107,29 @@ export default function AdminProducts() {
   const [saving, setSaving] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importDialogTab, setImportDialogTab] = useState<'feed' | 'scrape' | 'fmtc' | 'sovrn'>('feed');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort() as string[];
+  const brandNames = Array.from(new Set(products.map(p => p.brand).filter(Boolean))).sort() as string[];
+
+  const filteredProducts = products.filter(p => {
+    if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
+    if (brandFilter !== "all" && p.brand !== brandFilter) return false;
+    if (sourceFilter !== "all") {
+      const src = p.source_type || "manual";
+      if (src !== sourceFilter) return false;
+    }
+    if (statusFilter !== "all") {
+      if (statusFilter === "active" && !p.active) return false;
+      if (statusFilter === "inactive" && p.active) return false;
+    }
+    return true;
+  });
 
   async function fetchProducts() {
     setLoading(true);
@@ -510,6 +533,67 @@ export default function AdminProducts() {
           defaultTab={importDialogTab}
         />
 
+        {/* Filter Bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(c => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={brandFilter} onValueChange={setBrandFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Brand" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Brands</SelectItem>
+              {brandNames.map(b => (
+                <SelectItem key={b} value={b}>{b}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sources</SelectItem>
+              <SelectItem value="manual">Manual</SelectItem>
+              <SelectItem value="feed">Feed</SelectItem>
+              <SelectItem value="scraped">Scraped</SelectItem>
+              <SelectItem value="fmtc">FMTC</SelectItem>
+              <SelectItem value="sovrn">Sovrn</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            Showing {filteredProducts.length} of {products.length}
+          </span>
+        </div>
+
         <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
@@ -533,14 +617,14 @@ export default function AdminProducts() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : products.length === 0 ? (
+              ) : filteredProducts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                    No products yet
+                    {products.length === 0 ? "No products yet" : "No products match your filters"}
                   </TableCell>
                 </TableRow>
               ) : (
-                products.map((product) => (
+                filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
