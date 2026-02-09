@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.sync-sovrn-merchants]
 verify_jwt = false
+
+[functions.firecrawl-map-site]
+verify_jwt = false
