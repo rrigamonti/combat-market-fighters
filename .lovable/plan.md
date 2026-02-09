@@ -1,82 +1,65 @@
 
 
-# Sovrn Commerce Integration
+# Sovrn Commerce Integration -- Implementation Plan
 
-## Overview
+## Step 1: API Keys (Need from You)
 
-Integrate Sovrn Commerce as a second affiliate network alongside FMTC, covering all four areas: product imports, link monetization, sales tracking, and reporting.
+Before I can build anything, I need two secrets stored securely in your backend:
 
-## What We'll Build
+1. **SOVRN_API_KEY** -- Your main Sovrn Commerce API key (found in Sovrn Commerce Dashboard > Account Settings or Developer Center)
+2. **SOVRN_SITE_API_KEY** -- Your site-specific API key for product/price comparison APIs
 
-### 1. Sovrn Product Sync (Edge Function)
+Once you approve this plan, I'll prompt you to enter these keys securely.
 
-Create a new `sync-sovrn-products` edge function that:
-- Calls the Sovrn Merchant API to discover approved combat sports merchants
-- Uses the Sovrn Product/Price Comparisons API to pull product catalogs
-- Filters for combat sports products using the same keyword list as FMTC
-- Upserts products with `source_type: 'sovrn'` and `affiliate_network: 'Sovrn'`
-- Automatically matches/creates brands using the existing `getBrandId` logic
+## Step 2: Build Product Sync Edge Function
 
-### 2. Sovrn Link Monetization
+Create `supabase/functions/sync-sovrn-products/index.ts`:
+- Call Sovrn Merchant API to find approved combat sports merchants
+- Pull product catalogs via Product/Price Comparisons API
+- Filter for combat sports keywords (reuse FMTC keyword list)
+- Upsert products with `affiliate_network: 'Sovrn'`
+- Auto-match brands using the existing `getBrandId` logic
 
-Update the affiliate URL builder to support Sovrn links:
-- Use Sovrn's Link API (`api.viglink.com/api/link/`) to check if URLs can be monetized
-- For Sovrn-sourced products, ensure affiliate URLs include the fighter's `sub_id` for attribution
-- The existing `getAffiliateUrl` helper already appends `sub_id` -- we just need to ensure Sovrn URLs are formatted correctly
+## Step 3: Update Sales Webhook for Sovrn Postbacks
 
-### 3. Sales Webhook for Sovrn
+Modify `supabase/functions/receive-sale-webhook/index.ts`:
+- Detect Sovrn payloads (via header or field inspection)
+- Map Sovrn field names to the existing `WebhookPayload` interface
+- Extract fighter `sub_id` from Sovrn's `subid` parameter
+- Existing commission calculation logic handles the rest
 
-Update the existing `receive-sale-webhook` edge function to handle Sovrn's postback format:
-- Sovrn sends transaction data with their own field names
-- Add a Sovrn-specific payload parser that maps their fields to the existing `WebhookPayload` interface
-- Extract the `sub_id` (fighter handle) from Sovrn's `subid` parameter
-- The existing commission calculation logic applies automatically
+## Step 4: Build Reporting Edge Function
 
-### 4. Sovrn Reporting (Transactions API)
+Create `supabase/functions/sovrn-reporting/index.ts`:
+- Pull earnings/transaction data from Sovrn Transactions API
+- Sync transaction statuses (pending, confirmed, paid) back to the `sales` table
+- Callable from admin UI
 
-Create a `sovrn-reporting` edge function that:
-- Calls Sovrn's Transactions API to pull real-time earnings data
-- Syncs transaction statuses (pending, confirmed, paid) back to the `sales` table
-- Can be triggered manually from admin or on a schedule
+## Step 5: Add Frontend API Methods
 
-### 5. Admin UI Updates
+Update `src/lib/api/firecrawl.ts`:
+- Add `syncSovrnProducts()` method
+- Add `fetchSovrnReport()` method
 
-- Add a "Sync Sovrn" button alongside the existing FMTC sync in the admin products page
-- Add Sovrn as a filter option in the products table (source badge)
-- Show Sovrn-specific metrics in the admin reporting/analytics pages
+## Step 6: Update Admin UI
 
-## Prerequisites
+Modify `src/pages/admin/AdminProducts.tsx`:
+- Add "Sync Sovrn" button next to existing FMTC sync
+- Add Sovrn source filter/badge
 
-Before implementation, you'll need to provide:
-- **Sovrn API Key** -- from your Sovrn Commerce account (Developer Center)
-- **Sovrn Site API Key** -- used for the Price Comparisons API
+Modify `src/pages/admin/AdminSales.tsx`:
+- Add Sovrn as a network filter option
 
-These will be stored securely as backend secrets.
+## Files Summary
 
-## Technical Details
+| Action | File |
+|--------|------|
+| Create | `supabase/functions/sync-sovrn-products/index.ts` |
+| Create | `supabase/functions/sovrn-reporting/index.ts` |
+| Modify | `supabase/functions/receive-sale-webhook/index.ts` |
+| Modify | `src/lib/api/firecrawl.ts` |
+| Modify | `src/pages/admin/AdminProducts.tsx` |
+| Modify | `src/pages/admin/AdminSales.tsx` |
 
-### New Files
-- `supabase/functions/sync-sovrn-products/index.ts` -- Product sync edge function
-- `supabase/functions/sovrn-reporting/index.ts` -- Transaction reporting edge function
-
-### Modified Files
-- `supabase/functions/receive-sale-webhook/index.ts` -- Add Sovrn payload parsing
-- `src/lib/api/firecrawl.ts` -- Add `syncSovrnProducts()` and `fetchSovrnReport()` API methods
-- `src/pages/admin/AdminProducts.tsx` -- Add Sovrn sync button and source filter
-- `src/pages/admin/AdminSales.tsx` -- Add Sovrn network filter
-- `supabase/config.toml` -- Register new edge functions with `verify_jwt = false`
-
-### Database Changes
-- No schema changes needed -- existing `products`, `sales`, and `brands` tables already support multiple affiliate networks via the `affiliate_network` and `source_type` columns
-
-### Secrets Required
-- `SOVRN_API_KEY` -- Main API authentication key
-- `SOVRN_SITE_API_KEY` -- Site-specific key for product/price APIs
-
-## Implementation Order
-1. Store Sovrn API keys as secrets
-2. Build the product sync edge function
-3. Update the webhook to handle Sovrn postbacks
-4. Build the reporting edge function
-5. Update admin UI with Sovrn controls
+No database schema changes needed -- existing tables already support multiple affiliate networks.
 
