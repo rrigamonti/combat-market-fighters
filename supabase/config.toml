@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.firecrawl-map-site]
 verify_jwt = false
+
+[functions.sovrn-product-search]
+verify_jwt = false

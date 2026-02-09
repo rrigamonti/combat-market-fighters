@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { firecrawlApi } from "@/lib/api/firecrawl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RefreshCw, Loader2, Upload, CheckCircle, XCircle, Search, ExternalLink, Radar } from "lucide-react";
+import { RefreshCw, Loader2, Upload, CheckCircle, XCircle, Search, ExternalLink, Radar, ShoppingBag, Globe } from "lucide-react";
 
 interface SovrnMerchant {
   id: string;
@@ -57,7 +57,20 @@ export default function AdminSovrn() {
   const [perfData, setPerfData] = useState<any>(null);
   const [loadingPerf, setLoadingPerf] = useState(false);
 
-  // Discover state
+  // Discover state - Product Recommendation (primary)
+  const [discoverQuery, setDiscoverQuery] = useState("");
+  const [discoverCategory, setDiscoverCategory] = useState("");
+  const [discoveredProducts, setDiscoveredProducts] = useState<Array<{
+    name: string; brand: string | null; price: number | string | null;
+    image_url: string | null; url: string | null; merchant: string | null;
+    category: string | null; description: string | null; upc: string | null;
+  }>>([]);
+  const [selectedProductIndexes, setSelectedProductIndexes] = useState<Set<number>>(new Set());
+  const [isSearching, setIsSearching] = useState(false);
+  const [isProductImporting, setIsProductImporting] = useState(false);
+
+  // Discover state - Firecrawl site crawl (secondary)
+  const [discoverMode, setDiscoverMode] = useState<"search" | "crawl">("search");
   const [discoverMerchantId, setDiscoverMerchantId] = useState("");
   const [discoverSearch, setDiscoverSearch] = useState("");
   const [discoveredUrls, setDiscoveredUrls] = useState<string[]>([]);
@@ -185,6 +198,64 @@ export default function AdminSovrn() {
   function isProductUrl(url: string): boolean {
     const lower = url.toLowerCase();
     return productPatterns.some((p) => lower.includes(p));
+  }
+
+  // Product Recommendation API search
+  async function handleProductSearch() {
+    if (!discoverQuery.trim()) {
+      toast({ title: "Enter a search", description: "Type a product search query", variant: "destructive" });
+      return;
+    }
+    setIsSearching(true);
+    setDiscoveredProducts([]);
+    setSelectedProductIndexes(new Set());
+    try {
+      const result = await firecrawlApi.searchSovrnProducts({
+        query: discoverQuery,
+        category: discoverCategory || undefined,
+        limit: 30,
+      });
+      if (result.success && result.products) {
+        setDiscoveredProducts(result.products);
+        toast({ title: "Search complete", description: `Found ${result.products.length} products` });
+      } else {
+        toast({ title: "Search failed", description: result.error || "No products returned", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Search error", description: err instanceof Error ? err.message : "Unknown", variant: "destructive" });
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  async function handleProductImport() {
+    const selected = Array.from(selectedProductIndexes).map((i) => discoveredProducts[i]).filter((p) => p.url);
+    if (selected.length === 0) return;
+    setIsProductImporting(true);
+    try {
+      const result = await firecrawlApi.importSovrnProducts(
+        selected.map((p) => ({
+          name: p.name,
+          brand: p.brand || undefined,
+          price: p.price || undefined,
+          image_url: p.image_url || undefined,
+          url: p.url!,
+          category: p.category || undefined,
+          description: p.description || undefined,
+          upc: p.upc || undefined,
+        }))
+      );
+      if (result.success) {
+        toast({ title: "Import complete", description: `Imported ${result.imported_count} products` });
+        setSelectedProductIndexes(new Set());
+      } else {
+        toast({ title: "Import failed", description: result.error || "Unknown error", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "Import error", description: err instanceof Error ? err.message : "Unknown", variant: "destructive" });
+    } finally {
+      setIsProductImporting(false);
+    }
   }
 
   async function handleDiscover() {
@@ -475,140 +546,309 @@ export default function AdminSovrn() {
 
           {/* ── Discover Tab ── */}
           <TabsContent value="discover" className="space-y-4 mt-4">
-            <div className="p-4 rounded-lg border bg-muted/50">
-              <h4 className="font-medium mb-2">Discover Product URLs</h4>
-              <p className="text-sm text-muted-foreground">
-                Select an enabled merchant and crawl their website to find product URLs automatically.
-                Optionally add a search keyword to narrow results.
-              </p>
+            <div className="flex gap-2 mb-4">
+              <Button
+                variant={discoverMode === "search" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDiscoverMode("search")}
+              >
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Product Search
+              </Button>
+              <Button
+                variant={discoverMode === "crawl" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDiscoverMode("crawl")}
+              >
+                <Globe className="mr-2 h-4 w-4" />
+                Site Crawl
+              </Button>
             </div>
 
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <Label className="text-xs mb-1 block">Merchant</Label>
-                <Select value={discoverMerchantId} onValueChange={setDiscoverMerchantId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a merchant..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {enabledMerchantsWithDomain.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name} ({m.domain})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-[220px]">
-                <Label className="text-xs mb-1 block">Search keyword (optional)</Label>
-                <Input
-                  placeholder="e.g. boxing gloves"
-                  value={discoverSearch}
-                  onChange={(e) => setDiscoverSearch(e.target.value)}
-                />
-              </div>
-              <div className="pt-5">
-                <Button onClick={handleDiscover} disabled={isDiscovering || !discoverMerchantId}>
-                  {isDiscovering ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Radar className="mr-2 h-4 w-4" />
-                  )}
-                  {isDiscovering ? "Discovering..." : "Discover Products"}
-                </Button>
-              </div>
-            </div>
+            {/* ── Product Recommendation Search (Primary) ── */}
+            {discoverMode === "search" && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg border bg-muted/50">
+                  <h4 className="font-medium mb-2">Search Sovrn Product Catalog</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Search Sovrn's 200M+ product catalog using AI-powered recommendations.
+                    Products are pre-affiliated and ready to import.
+                  </p>
+                </div>
 
-            {discoveredUrls.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline">Found {discoveredUrls.length} product URLs</Badge>
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-[220px]">
+                <div className="flex items-end gap-4 flex-wrap">
+                  <div className="flex-1 min-w-[250px]">
+                    <Label className="text-xs mb-1 block">Search products</Label>
+                    <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Filter URLs..."
-                        value={discoverFilter}
-                        onChange={(e) => setDiscoverFilter(e.target.value)}
+                        placeholder="e.g. boxing gloves, MMA shorts, heavy bag..."
+                        value={discoverQuery}
+                        onChange={(e) => setDiscoverQuery(e.target.value)}
                         className="pl-10"
+                        onKeyDown={(e) => e.key === "Enter" && handleProductSearch()}
                       />
                     </div>
+                  </div>
+                  <div className="w-[180px]">
+                    <Label className="text-xs mb-1 block">Category (optional)</Label>
+                    <Input
+                      placeholder="e.g. Boxing, MMA"
+                      value={discoverCategory}
+                      onChange={(e) => setDiscoverCategory(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={handleProductSearch} disabled={isSearching || !discoverQuery.trim()}>
+                    {isSearching ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="mr-2 h-4 w-4" />
+                    )}
+                    {isSearching ? "Searching..." : "Search"}
+                  </Button>
+                </div>
+
+                {discoveredProducts.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline">Found {discoveredProducts.length} products</Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (selectedProductIndexes.size === discoveredProducts.length) {
+                            setSelectedProductIndexes(new Set());
+                          } else {
+                            setSelectedProductIndexes(new Set(discoveredProducts.map((_, i) => i)));
+                          }
+                        }}
+                      >
+                        {selectedProductIndexes.size === discoveredProducts.length && discoveredProducts.length > 0
+                          ? "Deselect All"
+                          : "Select All"}
+                      </Button>
+                    </div>
+
+                    <ScrollArea className="h-[450px] border rounded-lg">
+                      <div className="space-y-2 p-2">
+                        {discoveredProducts.map((product, idx) => (
+                          <label
+                            key={idx}
+                            className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer border border-transparent hover:border-border"
+                          >
+                            <Checkbox
+                              checked={selectedProductIndexes.has(idx)}
+                              onCheckedChange={(checked) => {
+                                const next = new Set(selectedProductIndexes);
+                                if (checked) next.add(idx);
+                                else next.delete(idx);
+                                setSelectedProductIndexes(next);
+                              }}
+                              className="mt-1"
+                            />
+                            {product.image_url && (
+                              <img
+                                src={product.image_url}
+                                alt={product.name}
+                                className="w-16 h-16 object-contain rounded border bg-white shrink-0"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{product.name}</p>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                {product.brand && <Badge variant="secondary" className="text-xs">{product.brand}</Badge>}
+                                {product.merchant && product.merchant !== product.brand && (
+                                  <span>via {product.merchant}</span>
+                                )}
+                                {product.price && (
+                                  <span className="font-medium text-foreground">
+                                    {typeof product.price === "number" ? `$${product.price.toFixed(2)}` : product.price}
+                                  </span>
+                                )}
+                              </div>
+                              {product.url && (
+                                <a
+                                  href={product.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-primary hover:underline truncate block mt-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {product.url}
+                                </a>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </ScrollArea>
+
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (selectedUrls.size === filteredDiscoveredUrls.length) {
-                          setSelectedUrls(new Set());
-                        } else {
-                          setSelectedUrls(new Set(filteredDiscoveredUrls));
-                        }
-                      }}
+                      onClick={handleProductImport}
+                      disabled={selectedProductIndexes.size === 0 || isProductImporting}
+                      className="w-full"
                     >
-                      {selectedUrls.size === filteredDiscoveredUrls.length && filteredDiscoveredUrls.length > 0
-                        ? "Deselect All"
-                        : "Select All"}
+                      {isProductImporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Import Selected ({selectedProductIndexes.size})
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+                {discoveredProducts.length === 0 && !isSearching && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <ShoppingBag className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                    <p>Search for products to discover items from Sovrn's catalog.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Site Crawl (Secondary / Fallback) ── */}
+            {discoverMode === "crawl" && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg border bg-muted/50">
+                  <h4 className="font-medium mb-2">Crawl Merchant Website</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Crawl an enabled merchant's website to find product URLs. Use this when you want to discover products
+                    directly from a specific store.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex-1 min-w-[200px]">
+                    <Label className="text-xs mb-1 block">Merchant</Label>
+                    <Select value={discoverMerchantId} onValueChange={setDiscoverMerchantId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a merchant..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {enabledMerchantsWithDomain.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.name} ({m.domain})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-[220px]">
+                    <Label className="text-xs mb-1 block">Search keyword (optional)</Label>
+                    <Input
+                      placeholder="e.g. boxing gloves"
+                      value={discoverSearch}
+                      onChange={(e) => setDiscoverSearch(e.target.value)}
+                    />
+                  </div>
+                  <div className="pt-5">
+                    <Button onClick={handleDiscover} disabled={isDiscovering || !discoverMerchantId}>
+                      {isDiscovering ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Radar className="mr-2 h-4 w-4" />
+                      )}
+                      {isDiscovering ? "Crawling..." : "Crawl Site"}
                     </Button>
                   </div>
                 </div>
 
-                <ScrollArea className="h-[400px] border rounded-lg p-2">
-                  <div className="space-y-1">
-                    {filteredDiscoveredUrls.map((url) => (
-                      <label
-                        key={url}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm"
-                      >
-                        <Checkbox
-                          checked={selectedUrls.has(url)}
-                          onCheckedChange={(checked) => {
-                            const next = new Set(selectedUrls);
-                            if (checked) {
-                              next.add(url);
+                {discoveredUrls.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline">Found {discoveredUrls.length} product URLs</Badge>
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-[220px]">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Filter URLs..."
+                            value={discoverFilter}
+                            onChange={(e) => setDiscoverFilter(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (selectedUrls.size === filteredDiscoveredUrls.length) {
+                              setSelectedUrls(new Set());
                             } else {
-                              next.delete(url);
+                              setSelectedUrls(new Set(filteredDiscoveredUrls));
                             }
-                            setSelectedUrls(next);
                           }}
-                        />
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline truncate flex-1"
-                          onClick={(e) => e.stopPropagation()}
                         >
-                          {url}
-                        </a>
-                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                      </label>
-                    ))}
+                          {selectedUrls.size === filteredDiscoveredUrls.length && filteredDiscoveredUrls.length > 0
+                            ? "Deselect All"
+                            : "Select All"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <ScrollArea className="h-[400px] border rounded-lg p-2">
+                      <div className="space-y-1">
+                        {filteredDiscoveredUrls.map((url) => (
+                          <label
+                            key={url}
+                            className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 cursor-pointer text-sm"
+                          >
+                            <Checkbox
+                              checked={selectedUrls.has(url)}
+                              onCheckedChange={(checked) => {
+                                const next = new Set(selectedUrls);
+                                if (checked) next.add(url);
+                                else next.delete(url);
+                                setSelectedUrls(next);
+                              }}
+                            />
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline truncate flex-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {url}
+                            </a>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                          </label>
+                        ))}
+                      </div>
+                    </ScrollArea>
+
+                    <Button
+                      onClick={handleDiscoverImport}
+                      disabled={selectedUrls.size === 0 || isDiscoverImporting}
+                      className="w-full"
+                    >
+                      {isDiscoverImporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Import Selected ({selectedUrls.size})
+                        </>
+                      )}
+                    </Button>
                   </div>
-                </ScrollArea>
+                )}
 
-                <Button
-                  onClick={handleDiscoverImport}
-                  disabled={selectedUrls.size === 0 || isDiscoverImporting}
-                  className="w-full"
-                >
-                  {isDiscoverImporting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Importing...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Import Selected ({selectedUrls.size})
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-
-            {discoveredUrls.length === 0 && !isDiscovering && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Radar className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p>Select a merchant and click "Discover Products" to find product URLs.</p>
+                {discoveredUrls.length === 0 && !isDiscovering && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Radar className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                    <p>Select a merchant and click "Crawl Site" to find product URLs.</p>
+                  </div>
+                )}
               </div>
             )}
           </TabsContent>
