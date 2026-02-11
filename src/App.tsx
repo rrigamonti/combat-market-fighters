@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import FighterSignup from "./pages/FighterSignup";
 import Dashboard from "./pages/Dashboard";
 import FighterStorefront from "./pages/FighterStorefront";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/fighter-signup" element={<FighterSignup />} />
             <Route
               path="/dashboard"
