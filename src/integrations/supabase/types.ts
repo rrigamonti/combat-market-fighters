@@ -124,6 +124,7 @@ export type Database = {
           app_username: string | null
           country: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           handle: string | null
           hero_image_url: string | null
@@ -148,6 +149,7 @@ export type Database = {
           app_username?: string | null
           country?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           handle?: string | null
           hero_image_url?: string | null
@@ -172,6 +174,7 @@ export type Database = {
           app_username?: string | null
           country?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           handle?: string | null
           hero_image_url?: string | null
