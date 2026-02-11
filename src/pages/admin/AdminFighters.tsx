@@ -52,6 +52,7 @@ interface Fighter {
   user_id: string | null;
   handle: string | null;
   full_name: string | null;
+  email?: string | null;
   sport: string | null;
   country: string | null;
   short_bio: string | null;
@@ -155,6 +156,7 @@ export default function AdminFighters() {
   const [editData, setEditData] = useState({
     full_name: "",
     handle: "",
+    email: "",
     sport: "",
     country: "",
     short_bio: "",
@@ -180,6 +182,7 @@ export default function AdminFighters() {
   const [createData, setCreateData] = useState({
     full_name: "",
     handle: "",
+    email: "",
     sport: "",
     country: "",
     short_bio: "",
@@ -255,25 +258,29 @@ export default function AdminFighters() {
     } else {
       toast({ title: "Status updated", description: `Fighter status changed to ${newStatus}` });
       
-      // Get fighter's email from profiles table
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("id", fighter.user_id)
-        .maybeSingle();
+      // Get fighter's email - use fighter.email directly, or fall back to profiles table
+      let fighterEmail: string | null = fighter.email;
+      if (!fighterEmail && fighter.user_id) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", fighter.user_id)
+          .maybeSingle();
+        fighterEmail = profile?.email || null;
+      }
       
-      if (profile?.email) {
+      if (fighterEmail) {
         if (newStatus === "approved") {
           sendNotification({
             type: "application_approved",
-            fighterEmail: profile.email,
+            fighterEmail,
             fighterName: fighter.full_name,
             storefrontUrl: getStorefrontUrl(fighter.handle),
           });
         } else if (newStatus === "rejected") {
           sendNotification({
             type: "application_rejected",
-            fighterEmail: profile.email,
+            fighterEmail,
             fighterName: fighter.full_name,
           });
         }
@@ -397,6 +404,7 @@ export default function AdminFighters() {
     setEditData({
       full_name: fighter.full_name,
       handle: fighter.handle,
+      email: fighter.email || "",
       sport: fighter.sport || "",
       country: fighter.country || "",
       short_bio: fighter.short_bio || "",
@@ -489,6 +497,7 @@ export default function AdminFighters() {
     setCreateData({
       full_name: "",
       handle: "",
+      email: "",
       sport: "",
       country: "",
       short_bio: "",
@@ -653,6 +662,7 @@ export default function AdminFighters() {
       .insert({
         full_name: createData.full_name.trim() || null,
         handle: handle || null,
+        email: createData.email.trim() || null,
         sport: createData.sport || null,
         country: createData.country || null,
         short_bio: createData.short_bio.trim() || null,
@@ -802,6 +812,7 @@ export default function AdminFighters() {
       .update({
         full_name: editData.full_name,
         handle: editData.handle,
+        email: editData.email || null,
         sport: editData.sport,
         country: editData.country,
         short_bio: editData.short_bio || null,
@@ -1004,6 +1015,7 @@ export default function AdminFighters() {
                 <TableHead className="w-12"></TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Handle</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Sport</TableHead>
                 <TableHead>Country</TableHead>
                 <TableHead>App Username</TableHead>
@@ -1015,7 +1027,7 @@ export default function AdminFighters() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8">
+                  <TableCell colSpan={11} className="text-center py-8">
                     <div className="flex items-center justify-center">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     </div>
@@ -1023,7 +1035,7 @@ export default function AdminFighters() {
                 </TableRow>
               ) : filteredFighters.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                     {searchQuery.trim() ? "No fighters match your search" : "No fighters found"}
                   </TableCell>
                 </TableRow>
@@ -1059,6 +1071,7 @@ export default function AdminFighters() {
                       </TableCell>
                       <TableCell className="font-medium">{fighter.full_name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{fighter.handle ? `@${fighter.handle}` : "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{fighter.email || "—"}</TableCell>
                       <TableCell>{fighter.sport || "—"}</TableCell>
                       <TableCell>{fighter.country || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{fighter.app_username || "—"}</TableCell>
@@ -1230,6 +1243,17 @@ export default function AdminFighters() {
                 id="edit-name"
                 value={editData.full_name}
                 onChange={(e) => setEditData({ ...editData, full_name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editData.email}
+                onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                placeholder="fighter@example.com"
               />
             </div>
             
@@ -1587,6 +1611,17 @@ export default function AdminFighters() {
                   });
                 }}
                 placeholder="Fighter's full name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="create-email">Email</Label>
+              <Input
+                id="create-email"
+                type="email"
+                value={createData.email}
+                onChange={(e) => setCreateData({ ...createData, email: e.target.value })}
+                placeholder="fighter@example.com"
               />
             </div>
             
