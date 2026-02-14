@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { getCanonicalUrl } from "@/lib/config";
-import { getSovrnAffiliateUrl } from "@/lib/affiliate";
+import { getAffiliateUrl } from "@/lib/affiliate";
 import type { Database } from "@/integrations/supabase/types";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
@@ -85,14 +85,18 @@ export default function FighterProductDetail() {
     fetchData();
   }, [handle, productSlug]);
 
-  // Fetch Sovrn affiliate URL when product and fighter are loaded
+  // Fetch affiliate URL when product and fighter are loaded
   useEffect(() => {
     if (product?.external_url && fighter?.handle) {
-      getSovrnAffiliateUrl(product.external_url, fighter.handle).then(setAffiliateUrl);
+      getAffiliateUrl(product.external_url, fighter.handle, {
+        productId: product.id,
+        affiliateNetwork: product.affiliate_network || undefined,
+        networkProductId: product.network_product_id || undefined,
+      }).then(setAffiliateUrl);
     } else if (product?.external_url) {
       setAffiliateUrl(product.external_url);
     }
-  }, [product?.external_url, fighter?.handle]);
+  }, [product?.external_url, fighter?.handle, product?.id]);
 
   const handleBuyClick = () => {
     if (fighter && product) {

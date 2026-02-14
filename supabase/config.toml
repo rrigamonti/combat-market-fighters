@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.sovrn-affiliate-link]
 verify_jwt = false
+
+[functions.get-affiliate-link]
+verify_jwt = false
