@@ -6,55 +6,104 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
 };
 
-// Interface for incoming webhook payload
-interface WebhookPayload {
+interface NormalizedSale {
   order_id?: string;
-  sub_id?: string;        // Fighter handle or ID passed in affiliate link
-  product_sku?: string;   // Product slug or external identifier
+  sub_id?: string;
+  product_sku?: string;
   sale_amount: number;
-  commission: number;     // Network commission (what Combat Market earns)
+  commission: number;
   currency?: string;
   timestamp?: string;
-  affiliate_network?: string;
-  [key: string]: unknown; // Allow additional fields
+  affiliate_network: string;
 }
 
-// Normalize Sovrn postback payloads to our standard format
-function normalizeSovrnPayload(raw: Record<string, unknown>): WebhookPayload {
-  // Detect Sovrn by checking for Sovrn-specific fields
-  const isSovrn = raw.transactionId !== undefined || 
-                  raw.merchantName !== undefined || 
-                  (raw.affiliate_network === "Sovrn" || raw.affiliate_network === "sovrn");
+// --- Network-specific normalizers ---
 
-  if (isSovrn) {
-    console.log("Detected Sovrn payload, normalizing...");
-    return {
-      order_id: (raw.orderId || raw.transactionId || raw.order_id) as string | undefined,
-      sub_id: (raw.subId || raw.subid || raw.sub_id) as string | undefined,
-      product_sku: (raw.product_sku || raw.sku) as string | undefined,
-      sale_amount: Number(raw.saleAmount || raw.sale_amount || 0),
-      commission: Number(raw.commission || raw.publisherCommission || 0),
-      currency: (raw.currency || "USD") as string,
-      timestamp: (raw.transactionDate || raw.timestamp) as string | undefined,
-      affiliate_network: "Sovrn",
-    };
+function normalizeSovrn(raw: Record<string, unknown>): NormalizedSale {
+  return {
+    order_id: (raw.orderId || raw.transactionId || raw.order_id) as string | undefined,
+    sub_id: (raw.subId || raw.subid || raw.sub_id) as string | undefined,
+    product_sku: (raw.product_sku || raw.sku) as string | undefined,
+    sale_amount: Number(raw.saleAmount || raw.sale_amount || 0),
+    commission: Number(raw.commission || raw.publisherCommission || 0),
+    currency: (raw.currency || "USD") as string,
+    timestamp: (raw.transactionDate || raw.timestamp) as string | undefined,
+    affiliate_network: "sovrn",
+  };
+}
+
+function normalizeAwin(raw: Record<string, unknown>): NormalizedSale {
+  return {
+    order_id: (raw.transactionId || raw.order_id) as string | undefined,
+    sub_id: (raw.clickRef || raw.clickref || raw.sub_id) as string | undefined,
+    product_sku: (raw.productId || raw.product_sku) as string | undefined,
+    sale_amount: Number(raw.saleAmount || raw.orderValue || raw.sale_amount || 0),
+    commission: Number(raw.commissionAmount || raw.commission || 0),
+    currency: (raw.currency || "USD") as string,
+    timestamp: (raw.transactionDate || raw.clickDate || raw.timestamp) as string | undefined,
+    affiliate_network: "awin",
+  };
+}
+
+function normalizeRakuten(raw: Record<string, unknown>): NormalizedSale {
+  return {
+    order_id: (raw.etransaction_id || raw.order_id) as string | undefined,
+    sub_id: (raw.u1 || raw.sub_id) as string | undefined,
+    product_sku: (raw.product_id || raw.sku_number) as string | undefined,
+    sale_amount: Number(raw.sale_amount || raw.sales || 0),
+    commission: Number(raw.commissions || raw.commission || 0),
+    currency: (raw.currency || "USD") as string,
+    timestamp: (raw.transaction_date || raw.process_date || raw.timestamp) as string | undefined,
+    affiliate_network: "rakuten",
+  };
+}
+
+function detectAndNormalize(raw: Record<string, unknown>, networkHint?: string): NormalizedSale {
+  const hint = (networkHint || "").toLowerCase();
+
+  // Explicit network hint from query param
+  if (hint === "awin") return normalizeAwin(raw);
+  if (hint === "rakuten") return normalizeRakuten(raw);
+  if (hint === "sovrn") return normalizeSovrn(raw);
+
+  // Auto-detect by payload shape
+  if (raw.clickRef !== undefined || raw.clickref !== undefined || raw.commissionAmount !== undefined) {
+    console.log("Auto-detected AWIN payload");
+    return normalizeAwin(raw);
+  }
+  if (raw.u1 !== undefined || raw.etransaction_id !== undefined || raw.commissions !== undefined) {
+    console.log("Auto-detected Rakuten payload");
+    return normalizeRakuten(raw);
+  }
+  if (raw.subId !== undefined || raw.subid !== undefined || raw.publisherCommission !== undefined || raw.merchantName !== undefined) {
+    console.log("Auto-detected Sovrn payload");
+    return normalizeSovrn(raw);
   }
 
-  // Return as-is for non-Sovrn payloads
-  return raw as WebhookPayload;
+  // Fallback: treat as generic
+  console.log("Unknown network, using generic normalization");
+  return {
+    order_id: (raw.order_id) as string | undefined,
+    sub_id: (raw.sub_id) as string | undefined,
+    product_sku: (raw.product_sku) as string | undefined,
+    sale_amount: Number(raw.sale_amount || 0),
+    commission: Number(raw.commission || 0),
+    currency: (raw.currency || "USD") as string,
+    timestamp: (raw.timestamp) as string | undefined,
+    affiliate_network: (raw.affiliate_network as string) || "unknown",
+  };
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate webhook secret (basic security)
+    // Validate webhook secret
     const webhookSecret = req.headers.get("x-webhook-secret");
     const expectedSecret = Deno.env.get("WEBHOOK_SECRET");
-    
+
     if (expectedSecret && webhookSecret !== expectedSecret) {
       console.error("Invalid webhook secret");
       return new Response(
@@ -63,19 +112,22 @@ serve(async (req: Request) => {
       );
     }
 
-    // Parse the incoming payload
     const rawPayload = await req.json();
     console.log("Received sale webhook:", JSON.stringify(rawPayload));
 
-    // Detect Sovrn payloads and normalize to our WebhookPayload format
-    const payload: WebhookPayload = normalizeSovrnPayload(rawPayload);
+    // Check for network hint in query params (e.g. ?network=awin)
+    const url = new URL(req.url);
+    const networkHint = url.searchParams.get("network") || undefined;
+
+    const payload = detectAndNormalize(rawPayload, networkHint);
+    console.log("Normalized payload:", JSON.stringify(payload));
 
     // Validate required fields
     if (!payload.sub_id || payload.sale_amount === undefined || payload.commission === undefined) {
-      console.error("Missing required fields:", { 
-        has_sub_id: !!payload.sub_id, 
+      console.error("Missing required fields:", {
+        has_sub_id: !!payload.sub_id,
         has_sale_amount: payload.sale_amount !== undefined,
-        has_commission: payload.commission !== undefined 
+        has_commission: payload.commission !== undefined,
       });
       return new Response(
         JSON.stringify({ error: "Missing required fields: sub_id, sale_amount, commission" }),
@@ -83,12 +135,11 @@ serve(async (req: Request) => {
       );
     }
 
-    // Create Supabase client with service role for admin operations
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find fighter by handle (sub_id)
+    // Find fighter by handle
     const { data: fighter, error: fighterError } = await supabase
       .from("fighters")
       .select("id, handle, full_name")
@@ -114,18 +165,12 @@ serve(async (req: Request) => {
         .select("id")
         .eq("slug", payload.product_sku)
         .single();
-      
       if (product) {
         productId = product.id;
-        console.log("Found product:", productId);
       }
     }
 
-    // Get applicable commission rate with priority:
-    // 1. Fighter + Product specific
-    // 2. Fighter default (product NULL)
-    // 3. Product default (fighter NULL)
-    // 4. Global default (both NULL)
+    // Get applicable commission rate (priority: fighter+product > fighter > product > global)
     const { data: rates, error: ratesError } = await supabase
       .from("commission_rates")
       .select("rate_percentage, fighter_id, product_id")
@@ -133,38 +178,23 @@ serve(async (req: Request) => {
       .order("fighter_id", { ascending: false, nullsFirst: false })
       .order("product_id", { ascending: false, nullsFirst: false });
 
-    if (ratesError) {
-      console.error("Error fetching commission rates:", ratesError);
-    }
+    if (ratesError) console.error("Error fetching commission rates:", ratesError);
 
-    // Find the best matching rate
-    let commissionRate = 50; // Default fallback
+    let commissionRate = 50;
     if (rates && rates.length > 0) {
-      // Priority: fighter+product > fighter only > product only > global
       const specificRate = rates.find(r => r.fighter_id && r.product_id);
       const fighterRate = rates.find(r => r.fighter_id && !r.product_id);
       const productRate = rates.find(r => !r.fighter_id && r.product_id);
       const globalRate = rates.find(r => !r.fighter_id && !r.product_id);
-      
       const selectedRate = specificRate || fighterRate || productRate || globalRate;
-      if (selectedRate) {
-        commissionRate = Number(selectedRate.rate_percentage);
-      }
+      if (selectedRate) commissionRate = Number(selectedRate.rate_percentage);
     }
 
-    console.log("Using commission rate:", commissionRate, "%");
-
-    // Calculate fighter commission
     const networkCommission = Number(payload.commission);
     const fighterCommission = (networkCommission * commissionRate) / 100;
 
-    console.log("Commission breakdown:", {
-      network: networkCommission,
-      fighter: fighterCommission,
-      rate: commissionRate
-    });
+    console.log("Commission:", { network: networkCommission, fighter: fighterCommission, rate: commissionRate });
 
-    // Insert the sale record
     const { data: sale, error: saleError } = await supabase
       .from("sales")
       .insert({
@@ -177,8 +207,8 @@ serve(async (req: Request) => {
         fighter_commission: fighterCommission,
         commission_rate_used: commissionRate,
         status: "pending",
-        affiliate_network: payload.affiliate_network || null,
-        raw_payload: payload,
+        affiliate_network: payload.affiliate_network,
+        raw_payload: rawPayload,
         sale_date: payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString(),
       })
       .select()
@@ -192,18 +222,18 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log("Sale recorded successfully:", sale.id);
+    console.log("Sale recorded:", sale.id);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         sale_id: sale.id,
         fighter_commission: fighterCommission,
-        message: `Sale attributed to ${fighter.full_name}`
+        affiliate_network: payload.affiliate_network,
+        message: `Sale attributed to ${fighter.full_name}`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
     console.error("Webhook processing error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

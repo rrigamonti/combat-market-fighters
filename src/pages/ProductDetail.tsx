@@ -8,7 +8,7 @@ import { ProductSchema } from "@/components/StructuredData";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getCanonicalUrl } from "@/lib/config";
-import { getSovrnAffiliateUrl } from "@/lib/affiliate";
+import { getAffiliateUrl } from "@/lib/affiliate";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -47,12 +47,16 @@ export default function ProductDetail() {
     fetchProduct();
   }, [slug]);
 
-  // Fetch Sovrn affiliate URL when product is loaded
+  // Fetch affiliate URL when product is loaded
   useEffect(() => {
     if (product?.external_url) {
-      getSovrnAffiliateUrl(product.external_url).then(setAffiliateUrl);
+      getAffiliateUrl(product.external_url, undefined, {
+        productId: product.id,
+        affiliateNetwork: product.affiliate_network || undefined,
+        networkProductId: product.network_product_id || undefined,
+      }).then(setAffiliateUrl);
     }
-  }, [product?.external_url]);
+  }, [product?.external_url, product?.id]);
 
   if (loading) {
     return (
