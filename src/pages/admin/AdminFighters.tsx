@@ -98,6 +98,7 @@ const sports = [
   "Judo",
   "Taekwondo",
   "Personal Trainer",
+  "Coach",
 ];
 
 const countries = [
