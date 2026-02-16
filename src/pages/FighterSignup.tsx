@@ -53,6 +53,7 @@ const sports = [
   "Karate",
   "Judo",
   "Taekwondo",
+  "Personal Trainer",
 ];
 
 const countries = [
