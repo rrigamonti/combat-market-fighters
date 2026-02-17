@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, MapPin } from "lucide-react";
+import { Search, Users, MapPin, ArrowUpDown } from "lucide-react";
 
 type Fighter = {
   id: string;
@@ -32,6 +32,7 @@ export default function FighterDirectory() {
   const [search, setSearch] = useState("");
   const [sportFilter, setSportFilter] = useState("all");
   const [countryFilter, setCountryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name-asc");
 
   const { data: fighters, isLoading } = useQuery({
     queryKey: ["fighters-directory"],
@@ -59,13 +60,26 @@ export default function FighterDirectory() {
   const filtered = useMemo(() => {
     if (!fighters) return [];
     const q = search.toLowerCase();
-    return fighters.filter(f => {
+    const result = fighters.filter(f => {
       if (q && !(f.full_name?.toLowerCase().includes(q) || f.short_bio?.toLowerCase().includes(q))) return false;
       if (sportFilter !== "all" && f.sport !== sportFilter) return false;
       if (countryFilter !== "all" && f.country !== countryFilter) return false;
       return true;
     });
-  }, [fighters, search, sportFilter, countryFilter]);
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "name-desc":
+          return (b.full_name || "").localeCompare(a.full_name || "");
+        case "sport":
+          return (a.sport || "").localeCompare(b.sport || "");
+        case "country":
+          return (a.country || "").localeCompare(b.country || "");
+        default:
+          return (a.full_name || "").localeCompare(b.full_name || "");
+      }
+    });
+    return result;
+  }, [fighters, search, sportFilter, countryFilter, sortBy]);
 
   return (
     <>
@@ -122,6 +136,20 @@ export default function FighterDirectory() {
                   {countries.map(c => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Sort by" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Name A–Z</SelectItem>
+                  <SelectItem value="name-desc">Name Z–A</SelectItem>
+                  <SelectItem value="sport">Sport</SelectItem>
+                  <SelectItem value="country">Country</SelectItem>
                 </SelectContent>
               </Select>
             </div>
