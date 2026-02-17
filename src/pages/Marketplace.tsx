@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Grid3X3, LayoutGrid, Sparkles } from "lucide-react";
+import { Search, Grid3X3, LayoutGrid, Sparkles, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Brand {
@@ -34,6 +34,7 @@ export default function Marketplace() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name-asc");
 
   useEffect(() => {
     async function fetchData() {
@@ -71,7 +72,7 @@ export default function Marketplace() {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    const result = products.filter((product) => {
       const matchesSearch =
         searchQuery === "" ||
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -85,7 +86,26 @@ export default function Marketplace() {
 
       return matchesSearch && matchesCategory && matchesBrand;
     });
-  }, [products, searchQuery, selectedCategory, selectedBrand]);
+
+    // Apply product-level sorting
+    const parsePrice = (p: string) => parseFloat(p.replace(/[^0-9.]/g, "")) || 0;
+    switch (sortBy) {
+      case "name-desc":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "price-asc":
+        result.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
+        break;
+      case "price-desc":
+        result.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+        break;
+      default:
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+    }
+
+    return result;
+  }, [products, searchQuery, selectedCategory, selectedBrand, sortBy]);
 
   const productsByBrand = useMemo(() => {
     const grouped: Record<string, { brand: Brand | null; products: Product[] }> = {};
@@ -99,12 +119,31 @@ export default function Marketplace() {
       grouped[brandId].products.push(product);
     });
 
-    return Object.values(grouped).sort((a, b) => {
-      const nameA = a.brand?.name || a.products[0]?.brand || "Other";
-      const nameB = b.brand?.name || b.products[0]?.brand || "Other";
-      return nameA.localeCompare(nameB);
-    });
-  }, [filteredProducts, brands]);
+    const groups = Object.values(grouped);
+
+    // Apply brand-level sorting
+    switch (sortBy) {
+      case "brand-desc":
+        groups.sort((a, b) => {
+          const nameA = a.brand?.name || a.products[0]?.brand || "Other";
+          const nameB = b.brand?.name || b.products[0]?.brand || "Other";
+          return nameB.localeCompare(nameA);
+        });
+        break;
+      case "product-count":
+        groups.sort((a, b) => b.products.length - a.products.length);
+        break;
+      default:
+        groups.sort((a, b) => {
+          const nameA = a.brand?.name || a.products[0]?.brand || "Other";
+          const nameB = b.brand?.name || b.products[0]?.brand || "Other";
+          return nameA.localeCompare(nameB);
+        });
+        break;
+    }
+
+    return groups;
+  }, [filteredProducts, brands, sortBy]);
 
   if (loading) {
     return (
@@ -183,6 +222,21 @@ export default function Marketplace() {
                     </SelectContent>
                   </Select>
                 )}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-10 flex-1 bg-card/50 backdrop-blur-sm border-border/50 text-xs sm:h-12 sm:w-[180px] sm:text-sm">
+                    <ArrowUpDown className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4 shrink-0" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name-asc">Name A–Z</SelectItem>
+                    <SelectItem value="name-desc">Name Z–A</SelectItem>
+                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                    <SelectItem value="brand-asc">Brand A–Z</SelectItem>
+                    <SelectItem value="brand-desc">Brand Z–A</SelectItem>
+                    <SelectItem value="product-count">Product Count</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             
