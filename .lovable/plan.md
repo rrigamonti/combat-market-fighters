@@ -1,50 +1,29 @@
 
 
-# Fighter Directory Page
+# Add Sort Options to the Marketplace Page
 
 ## Overview
-Replace the current "Coming Soon" placeholder at `/fighter-directory` with a real directory page that displays all approved fighters in a searchable, filterable grid.
+Add a "Sort by" dropdown to the existing Marketplace page, matching the pattern already used on the Fighter Directory. This includes standard sorting options plus a "Product Count" sort that orders brand groups by how many products each brand has.
 
-## What It Will Look Like
-- A page header with title "Fighter Directory" and a subtitle
-- Search bar to filter fighters by name
-- Filter dropdown for sport/discipline (e.g., MMA, Boxing, Muay Thai, etc.)
-- Filter dropdown for country
-- A responsive card grid showing each fighter with:
-  - Profile image (with initials fallback)
-  - Full name
-  - Sport badge
-  - Country
-  - Short bio (truncated)
-  - Link to their storefront (`/:handle`)
+## Changes
 
-## Data Source
-- Query the `fighters` table filtered by `status = 'approved'` (already publicly readable via RLS)
-- No database changes needed
+### File: `src/pages/Marketplace.tsx`
 
-## Technical Details
+1. **Add state**: New `sortBy` state variable (default: `"name-asc"`)
+2. **Add sort dropdown**: A new `<Select>` component in the filter bar with an `ArrowUpDown` icon, offering these options:
+   - Name A-Z (default)
+   - Name Z-A
+   - Price: Low to High
+   - Price: High to Low
+   - Brand A-Z
+   - Brand Z-A
+   - Product Count (sorts brand groups by number of products, most first)
+3. **Update sorting logic**:
+   - For product-level sorts (name, price), apply sorting to `filteredProducts` before grouping
+   - For brand-level sorts (brand name, product count), apply sorting to the `productsByBrand` grouping step
+   - "Product Count" sort orders brand sections so brands with the most products appear first
 
-### File: `src/pages/ComingSoon.tsx` -- Replace with Fighter Directory
-
-This file currently serves as a placeholder. It will be rewritten as a full directory page:
-
-- Fetch all approved fighters from the `fighters` table
-- Client-side search filtering on `full_name` and `short_bio`
-- Client-side filtering by `sport` and `country` (derived from the data itself)
-- Responsive grid: 1 column on mobile, 2 on tablet, 3 on desktop
-- Each card links to `/${fighter.handle}`
-- Loading skeleton state while data loads
-- Empty state if no fighters match filters
-
-### File: `src/App.tsx` -- No changes needed
-The route `/fighter-directory` already points to the `ComingSoon` component, so renaming/rewriting it in place keeps routing intact.
-
-### Patterns to Follow
-- Same search/filter pattern as the existing Marketplace page (`src/pages/Marketplace.tsx`)
-- Same Navbar + Footer layout wrapper
-- Uses existing UI components: Input, Select, Badge, Avatar, Card, Skeleton
-- Dark theme compatible using existing design tokens
-
-### No Database or Migration Changes
-All approved fighters are already publicly queryable via the existing RLS policy "Anyone can view approved fighters".
+### No other files need changes
+- No database changes
+- No new routes or components
 
