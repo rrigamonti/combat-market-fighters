@@ -20,6 +20,9 @@ import step2Brands from "@/assets/landing/step-2-brands.png";
 import step3Earn from "@/assets/landing/step-3-earn.png";
 import fighterTraining from "@/assets/landing/fighter-training.png";
 import boxingGym from "@/assets/landing/boxing-gym.png";
+import kickboxingAction from "@/assets/landing/kickboxing-action.jpg";
+import bareknuckleAction from "@/assets/landing/bareknuckle-action.jpg";
+import wrestlingAction from "@/assets/landing/wrestling-action.jpg";
 
 const faqItems = [
   {
@@ -45,8 +48,9 @@ const sportsCategories = [
   { name: "BOXING", image: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=80" },
   { name: "MUAY THAI", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80" },
   { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
-  { name: "WRESTLING", image: "https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=600&q=80" },
-  { name: "FUNCTIONAL FITNESS", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80" }
+  { name: "KICK BOXING", image: kickboxingAction },
+  { name: "BARE KNUCKLE", image: bareknuckleAction },
+  { name: "WRESTLING", image: wrestlingAction },
 ];
 
 const featurePills = [
