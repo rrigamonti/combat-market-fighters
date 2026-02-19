@@ -40,7 +40,7 @@ export function Navbar({ variant = "default" }: NavbarProps) {
   const landingNavItems = [
     { label: "HOME", action: () => { closeMobileMenu(); navigate("/"); window.scrollTo({ top: 0, behavior: "smooth" }); } },
     { label: "FEATURES", action: () => scrollToSection("features") },
-    { label: "BRANDS", action: () => scrollToSection("brands") },
+    { label: "SPORTS", action: () => scrollToSection("brands") },
     { label: "FAQS", action: () => scrollToSection("faq") },
     { label: "FIGHTER DIRECTORY", href: "/fighter-directory" },
   ];
