@@ -46,7 +46,7 @@ const sportsCategories = [
   { name: "MUAY THAI", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80" },
   { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
   { name: "KICK BOXING", image: "https://images.unsplash.com/photo-1615117972428-28de67cda58e?w=600&q=80" },
-  { name: "BARE KNUCKLE", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80" }
+  { name: "BARE KNUCKLE", image: "https://images.unsplash.com/photo-1591117207239-788bf8de6c3b?w=600&q=80" }
 ];
 
 const featurePills = [
