@@ -47,20 +47,24 @@ export default function FighterDirectory() {
     },
   });
 
-  const sports = useMemo(() => {
+  // Filter out Personal Trainer from directory listings
+  const directoryFighters = useMemo(() => {
     if (!fighters) return [];
-    return [...new Set(fighters.map(f => f.sport).filter(Boolean))].sort() as string[];
+    return fighters.filter(f => f.sport?.toLowerCase() !== "personal trainer");
   }, [fighters]);
+
+  const sports = useMemo(() => {
+    return [...new Set(directoryFighters.map(f => f.sport).filter(Boolean))].sort() as string[];
+  }, [directoryFighters]);
 
   const countries = useMemo(() => {
-    if (!fighters) return [];
-    return [...new Set(fighters.map(f => f.country).filter(Boolean))].sort() as string[];
-  }, [fighters]);
+    return [...new Set(directoryFighters.map(f => f.country).filter(Boolean))].sort() as string[];
+  }, [directoryFighters]);
 
   const filtered = useMemo(() => {
-    if (!fighters) return [];
+    if (!directoryFighters) return [];
     const q = search.toLowerCase();
-    const result = fighters.filter(f => {
+    const result = directoryFighters.filter(f => {
       if (q && !(f.full_name?.toLowerCase().includes(q) || f.short_bio?.toLowerCase().includes(q))) return false;
       if (sportFilter !== "all" && f.sport !== sportFilter) return false;
       if (countryFilter !== "all" && f.country !== countryFilter) return false;
@@ -79,7 +83,7 @@ export default function FighterDirectory() {
       }
     });
     return result;
-  }, [fighters, search, sportFilter, countryFilter, sortBy]);
+  }, [directoryFighters, search, sportFilter, countryFilter, sortBy]);
 
   return (
     <>
