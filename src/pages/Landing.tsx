@@ -15,6 +15,7 @@ import { Zap, Package, Wallet, Users, Check, ChevronRight } from "lucide-react";
 
 // Assets
 import heroPhoneGloves from "@/assets/landing/hero-phone-gloves.jpg";
+import mmaAction from "@/assets/landing/mma-action.jpg";
 import step1Storefront from "@/assets/landing/step-1-storefront.png";
 import step2Brands from "@/assets/landing/step-2-brands.png";
 import step3Earn from "@/assets/landing/step-3-earn.png";
@@ -41,7 +42,7 @@ const faqItems = [
 ];
 
 const sportsCategories = [
-  { name: "MMA", image: "https://images.unsplash.com/photo-1555597673-b21d5c935865?w=600&q=80" },
+  { name: "MMA", image: mmaAction },
   { name: "BOXING", image: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=80" },
   { name: "MUAY THAI", image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80" },
   { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
