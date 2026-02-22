@@ -61,7 +61,7 @@ const sportsCategories = [
   { name: "BOXING", image: boxingActionReal },
   { name: "MUAY THAI", image: muaythaiReal },
   { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
-  { name: "KICK BOXING", image: kickboxingReal },
+  { name: "WRESTLING", image: kickboxingReal },
   { name: "BARE KNUCKLE", image: bareknuckleReal }
 ];
 
@@ -96,9 +96,9 @@ const howItWorksSteps = [
 ];
 
 const whyCombatMarketBullets = [
-  "Fighters influence $20B+ in annual gear purchases",
-  "Your audience trusts your recommendations more than any ad",
-  "Combat Market turns that trust into income you own"
+  "Combat athletes influence thousands of purchasing decisions every year.",
+  "Most of that influence goes unpaid.",
+  "Combat Market gives fighters a structured way to earn from the brands they already trust."
 ];
 
 const forBrandsBullets = [
