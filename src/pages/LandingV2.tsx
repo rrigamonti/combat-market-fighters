@@ -30,11 +30,11 @@ import { getCountryFlag } from "@/lib/countryFlags";
 
 // Hardcoded featured fighter for the hero
 const heroFighter = {
-  name: "Jono Carroll",
+  name: "Paul Weir",
   sport: "Boxing",
-  country: "Ireland",
-  handle: "jono-carroll",
-  image: "https://mhmoxwmxnojljehbigtp.supabase.co/storage/v1/object/public/fighter-heroes/8cdfd911-9804-4e2b-91f3-e00a84a02e8d-1771324823588.jpg",
+  country: "United Kingdom",
+  handle: "paul-weir",
+  image: "https://mhmoxwmxnojljehbigtp.supabase.co/storage/v1/object/public/fighter-heroes/10d60cc6-e871-408b-bbbf-751a1685b7a3-1769584107991.jpg",
 };
 
 const faqItems = [

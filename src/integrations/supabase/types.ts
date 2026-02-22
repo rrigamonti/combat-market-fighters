@@ -129,6 +129,7 @@ export type Database = {
           handle: string | null
           hero_image_url: string | null
           id: string
+          is_featured: boolean
           pending_changes: Json | null
           profile_image_url: string | null
           short_bio: string | null
@@ -154,6 +155,7 @@ export type Database = {
           handle?: string | null
           hero_image_url?: string | null
           id?: string
+          is_featured?: boolean
           pending_changes?: Json | null
           profile_image_url?: string | null
           short_bio?: string | null
@@ -179,6 +181,7 @@ export type Database = {
           handle?: string | null
           hero_image_url?: string | null
           id?: string
+          is_featured?: boolean
           pending_changes?: Json | null
           profile_image_url?: string | null
           short_bio?: string | null
