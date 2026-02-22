@@ -9,6 +9,7 @@ import { OrganizationSchema, WebSiteSchema, FAQSchema } from "@/components/Struc
 import { useScrollToHash } from "@/hooks/useScrollToHash";
 import { PlatformStatsStrip } from "@/components/landing/PlatformStatsStrip";
 import { FeaturedFightersCarousel } from "@/components/landing/FeaturedFightersCarousel";
+import { FighterCard } from "@/components/landing/FighterCard";
 import { JoinCTA } from "@/components/landing/JoinCTA";
 import {
   Accordion,
@@ -172,33 +173,18 @@ export default function LandingV2() {
                 </Button>
               </div>
 
-              {/* Right - Featured Fighter Image */}
+              {/* Right - Featured Fighter Card (matches directory style) */}
               <div className="flex justify-center lg:justify-end">
-                <Link
-                  to={`/${heroFighter.handle}`}
-                  className="group relative block w-full max-w-md lg:max-w-lg overflow-hidden rounded-2xl aspect-[3/4]"
-                >
-                  <img
-                    src={heroFighter.image}
-                    alt={heroFighter.name}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                <div className="w-full max-w-md lg:max-w-lg">
+                  <FighterCard
+                    handle={heroFighter.handle}
+                    full_name={heroFighter.name}
+                    sport={heroFighter.sport}
+                    country={heroFighter.country}
+                    profile_image_url={heroFighter.image}
+                    variant="featured"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="font-display text-2xl uppercase tracking-tight text-white mb-1">
-                      {heroFighter.name}
-                    </h3>
-                    <p className="text-sm text-white/70 mb-4">
-                      {heroFighter.sport} · {getCountryFlag(heroFighter.country)} {heroFighter.country}
-                    </p>
-                    <div className="flex items-center justify-between rounded-lg bg-white/10 backdrop-blur-md border border-white/20 px-4 py-3 transition-colors group-hover:bg-primary/80 group-hover:border-primary/60">
-                      <span className="text-sm font-medium text-white">
-                        {heroFighter.name.split(" ")[0]}'s Store
-                      </span>
-                      <ArrowRight className="h-4 w-4 text-white transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </div>
-                </Link>
+                </div>
               </div>
             </div>
           </div>
