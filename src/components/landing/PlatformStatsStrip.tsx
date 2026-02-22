@@ -5,16 +5,31 @@ const stats = [
   { value: "150+", label: "Countries" },
 ];
 
-const brandLogos = [
-  { name: "Venum", src: "/brand-logos/venum.png" },
-  { name: "Everlast", src: "/brand-logos/everlast.png" },
-  { name: "Fairtex", src: "/brand-logos/fairtex.png" },
-  { name: "Sanabul", src: "/brand-logos/sanabul.svg" },
-  { name: "Scramble", src: "/brand-logos/scramble.png" },
-  { name: "COROS", src: "/brand-logos/coros.png" },
+const brandNames = [
+  "Venum",
+  "Nike",
+  "Everlast",
+  "RDX",
+  "Adidas",
+  "Hayabusa",
+  "Kong",
+  "WHOOP",
+  "Onnit",
+  "Under Armour",
+  "Gymshark",
+  "Therabody",
 ];
 
+// Map of brands that have logo files
+const brandLogos: Record<string, string> = {
+  Venum: "/brand-logos/venum.png",
+  Everlast: "/brand-logos/everlast.png",
+};
+
 export function PlatformStatsStrip() {
+  // Double the list for seamless infinite scroll
+  const doubled = [...brandNames, ...brandNames];
+
   return (
     <section className="bg-card border-y border-border">
       {/* Stats */}
@@ -33,21 +48,33 @@ export function PlatformStatsStrip() {
         </div>
       </div>
 
-      {/* Brand logos */}
+      {/* Brand logos — infinite scroll */}
       <div className="border-t border-border">
-        <div className="container mx-auto px-4 py-8">
+        <div className="py-8 overflow-hidden">
           <p className="text-center text-xs uppercase tracking-widest text-muted-foreground mb-6">
             Trusted Brands
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-            {brandLogos.map((brand) => (
-              <img
-                key={brand.name}
-                src={brand.src}
-                alt={brand.name}
-                className="h-8 md:h-10 object-contain opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300"
-              />
-            ))}
+          <div className="relative">
+            <div className="flex animate-scroll-brands whitespace-nowrap gap-12 md:gap-16 w-max">
+              {doubled.map((name, i) => {
+                const logo = brandLogos[name];
+                return logo ? (
+                  <img
+                    key={`${name}-${i}`}
+                    src={logo}
+                    alt={name}
+                    className="h-8 md:h-10 object-contain opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-300 flex-shrink-0"
+                  />
+                ) : (
+                  <span
+                    key={`${name}-${i}`}
+                    className="font-display text-lg md:text-xl uppercase tracking-wider text-muted-foreground/50 hover:text-foreground transition-colors duration-300 flex-shrink-0 select-none"
+                  >
+                    {name}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
