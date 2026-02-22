@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
 import Landing from "./pages/Landing";
+import LandingV2 from "./pages/LandingV2";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import FighterSignup from "./pages/FighterSignup";
@@ -46,6 +47,7 @@ const App = () => (
           <AuthProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/v2" element={<LandingV2 />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
