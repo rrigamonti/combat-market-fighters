@@ -5,16 +5,18 @@ import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
 import { OrganizationSchema, WebSiteSchema, FAQSchema } from "@/components/StructuredData";
 import { useScrollToHash } from "@/hooks/useScrollToHash";
+import { PlatformStatsStrip } from "@/components/landing/PlatformStatsStrip";
+import { FeaturedFightersCarousel } from "@/components/landing/FeaturedFightersCarousel";
+import { JoinCTA } from "@/components/landing/JoinCTA";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Zap, Package, Wallet, Users, Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, ArrowRight } from "lucide-react";
 
 // Assets
-import heroPhoneGloves from "@/assets/landing/hero-phone-gloves.jpg";
 import mmaAction from "@/assets/landing/mma-action.jpg";
 import boxingActionReal from "@/assets/landing/boxing-action-real.jpg";
 import muaythaiReal from "@/assets/landing/muaythai-real.jpg";
@@ -24,7 +26,16 @@ import step1Storefront from "@/assets/landing/step-1-storefront.png";
 import step2Brands from "@/assets/landing/step-2-brands.png";
 import step3Earn from "@/assets/landing/step-3-earn.png";
 import fighterTraining from "@/assets/landing/fighter-training.png";
-import boxingGym from "@/assets/landing/boxing-gym.png";
+import { getCountryFlag } from "@/lib/countryFlags";
+
+// Hardcoded featured fighter for the hero
+const heroFighter = {
+  name: "Jono Carroll",
+  sport: "Boxing",
+  country: "Ireland",
+  handle: "jono-carroll",
+  image: "https://mhmoxwmxnojljehbigtp.supabase.co/storage/v1/object/public/fighter-heroes/8cdfd911-9804-4e2b-91f3-e00a84a02e8d-1771324823588.jpg",
+};
 
 const faqItems = [
   {
@@ -52,13 +63,6 @@ const sportsCategories = [
   { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
   { name: "KICK BOXING", image: kickboxingReal },
   { name: "BARE KNUCKLE", image: bareknuckleReal }
-];
-
-const featurePills = [
-  { icon: Zap, label: "Instant Set-Up" },
-  { icon: Package, label: "Exclusive Products" },
-  { icon: Wallet, label: "Direct Payments" },
-  { icon: Users, label: "Grow Your Fans" }
 ];
 
 const howItWorksSteps = [
@@ -91,18 +95,17 @@ const howItWorksSteps = [
   }
 ];
 
-const builtForFightersBullets = [
-  "No chasing sponsors",
-  "No fake discount codes",
-  "No begging for deals",
-  "Just fighters owning the upside"
+const whyCombatMarketBullets = [
+  "Fighters influence $20B+ in annual gear purchases",
+  "Your audience trusts your recommendations more than any ad",
+  "Combat Market turns that trust into income you own"
 ];
 
-const moreThanAffiliateBullets = [
-  "Earn commissions on direct sales",
-  "Get royalties when fighters you refer make sales",
-  "Build passive income as your network grows",
-  "Own your audience and income stream for life"
+const forBrandsBullets = [
+  "Access a network of verified combat athletes",
+  "Authentic product promotion from real users",
+  "Performance-based partnerships with transparent tracking",
+  "Reach engaged combat sports audiences globally"
 ];
 
 export default function LandingV2() {
@@ -126,11 +129,11 @@ export default function LandingV2() {
       <div className="min-h-screen bg-background">
         <Navbar variant="landing" />
 
-        {/* Hero Section */}
+        {/* ── SECTION 1: Hero (Split Layout) ── */}
         <section className="relative pt-16 overflow-hidden cm-hero-surface">
           <div className="container mx-auto px-4 py-20 lg:py-32">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              {/* Left Column - Text */}
+              {/* Left - Text */}
               <div className="text-center lg:text-left">
                 <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight leading-none text-white mb-6">
                   Turn Your Routine Into Revenue
@@ -138,85 +141,94 @@ export default function LandingV2() {
                 <p className="text-lg lg:text-xl text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0">
                   Claim your personal Combat Market storefront and earn from the brands you already use.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Button asChild size="lg" className="text-base px-8">
-                    <Link to="/fighter-signup">
-                      Claim Your Storefront
-                      <ChevronRight className="ml-2 h-5 w-5" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline-primary" size="lg" className="text-base px-8">
-                    <Link to="/paul-weir">
-                      View Demo Storefront
-                    </Link>
-                  </Button>
-                </div>
+                <Button asChild size="lg" className="text-base px-8">
+                  <Link to="/fighter-signup">
+                    Claim Your Storefront
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
               </div>
 
-              {/* Right Column - Hero Image */}
+              {/* Right - Featured Fighter Image */}
               <div className="flex justify-center lg:justify-end">
-                <img
-                  src={heroPhoneGloves}
-                  alt="Combat Market storefront on mobile with boxing gloves"
-                  className="w-full max-w-md lg:max-w-lg xl:max-w-xl"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Feature Pills */}
-        <section className="bg-background border-y border-border">
-          <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-              {featurePills.map((feature) => (
-                <div key={feature.label} className="flex items-center justify-center gap-3 py-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <feature.icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-sm font-medium text-foreground">{feature.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Sports Categories Grid */}
-        <section id="brands" className="bg-background py-20 lg:py-28">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-4">
-                Built For Every Combat Sport
-              </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                From MMA to Boxing to BJJ, we support athletes across all combat disciplines.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
-              {sportsCategories.map((sport) => (
-                <div
-                  key={sport.name}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer"
+                <Link
+                  to={`/${heroFighter.handle}`}
+                  className="group relative block w-full max-w-md lg:max-w-lg overflow-hidden rounded-2xl aspect-[3/4]"
                 >
                   <img
-                    src={sport.image}
-                    alt={sport.name}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    src={heroFighter.image}
+                    alt={heroFighter.name}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-6">
-                    <h3 className="font-display text-xl lg:text-2xl uppercase tracking-wide text-white">
-                      {sport.name}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h3 className="font-display text-2xl uppercase tracking-tight text-white mb-1">
+                      {heroFighter.name}
                     </h3>
+                    <p className="text-sm text-white/70 mb-4">
+                      {heroFighter.sport} · {getCountryFlag(heroFighter.country)} {heroFighter.country}
+                    </p>
+                    <div className="flex items-center justify-between rounded-lg bg-white/10 backdrop-blur-md border border-white/20 px-4 py-3 transition-colors group-hover:bg-primary/80 group-hover:border-primary/60">
+                      <span className="text-sm font-medium text-white">
+                        {heroFighter.name.split(" ")[0]}'s Store
+                      </span>
+                      <ArrowRight className="h-4 w-4 text-white transition-transform group-hover:translate-x-1" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                </Link>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* How It Works */}
-        <section id="features" className="bg-card py-20 lg:py-28">
+        {/* ── SECTION 2: Platform Scale Strip ── */}
+        <PlatformStatsStrip />
+
+        {/* ── SECTION 3: Featured Fighters Carousel ── */}
+        <section className="bg-background py-20 lg:py-28">
+          <div className="container mx-auto px-4">
+            <FeaturedFightersCarousel showDirectoryLink />
+          </div>
+        </section>
+
+        {/* ── SECTION 4: Why Combat Market ── */}
+        <section className="bg-card py-20 lg:py-28">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              <div className="order-2 lg:order-1">
+                <img
+                  src={fighterTraining}
+                  alt="Fighter training in gym"
+                  className="w-full rounded-lg"
+                />
+              </div>
+              <div className="order-1 lg:order-2">
+                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-6">
+                  Why Combat Market?
+                </h2>
+                <ul className="space-y-4 mb-8">
+                  {whyCombatMarketBullets.map((bullet) => (
+                    <li key={bullet} className="flex items-center gap-4 text-lg text-foreground">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 flex-shrink-0">
+                        <Check className="h-4 w-4 text-primary" />
+                      </div>
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild size="lg">
+                  <Link to="/fighter-signup">
+                    Claim Your Storefront
+                    <ChevronRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 5: How It Works ── */}
+        <section id="features" className="bg-background py-20 lg:py-28">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-4">
@@ -256,77 +268,76 @@ export default function LandingV2() {
           </div>
         </section>
 
-        {/* Built for Fighters */}
+        {/* ── SECTION 6: Built For Every Discipline ── */}
+        <section id="brands" className="bg-card py-20 lg:py-28">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-4">
+                Built For Every Discipline
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                From MMA to Boxing to BJJ, we support athletes across all combat disciplines.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-6">
+              {sportsCategories.map((sport) => (
+                <div
+                  key={sport.name}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer"
+                >
+                  <img
+                    src={sport.image}
+                    alt={sport.name}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-6">
+                    <h3 className="font-display text-xl lg:text-2xl uppercase tracking-wide text-white">
+                      {sport.name}
+                    </h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 7: For Brands ── */}
         <section className="bg-background py-20 lg:py-28">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              {/* Image */}
-              <div className="order-2 lg:order-1">
-                <img
-                  src={fighterTraining}
-                  alt="Fighter training in gym"
-                  className="w-full rounded-lg"
-                />
-              </div>
-              {/* Content */}
-              <div className="order-1 lg:order-2">
-                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-6">
-                  Built for Fighters, Not Advertisers
-                </h2>
-                <ul className="space-y-4 mb-8">
-                  {builtForFightersBullets.map((bullet) => (
-                    <li key={bullet} className="flex items-center gap-4 text-lg text-foreground">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">
-                        <Check className="h-4 w-4 text-primary" />
-                      </div>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild size="lg">
-                  <Link to="/fighter-signup">
-                    Claim Your Storefront
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-              </div>
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="text-center mb-10">
+              <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-4">
+                For Brands
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                Partner with real athletes who genuinely use and recommend your products.
+              </p>
+            </div>
+            <ul className="grid sm:grid-cols-2 gap-4 mb-10 max-w-2xl mx-auto">
+              {forBrandsBullets.map((bullet) => (
+                <li key={bullet} className="flex items-start gap-3 text-foreground">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 flex-shrink-0 mt-0.5">
+                    <Check className="h-4 w-4 text-primary" />
+                  </div>
+                  {bullet}
+                </li>
+              ))}
+            </ul>
+            <div className="text-center">
+              <Button asChild variant="outline-primary" size="lg">
+                <Link to="/fighter-signup">
+                  Partner With Fighters
+                  <ChevronRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
 
-        {/* More Than Affiliate Links */}
-        <section className="bg-card py-20 lg:py-28">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              {/* Content */}
-              <div>
-                <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-6">
-                  More Than Affiliate Links
-                </h2>
-                <ul className="space-y-4 mb-8">
-                  {moreThanAffiliateBullets.map((bullet) => (
-                    <li key={bullet} className="flex items-center gap-4 text-lg text-foreground">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20">
-                        <Check className="h-4 w-4 text-primary" />
-                      </div>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {/* Image */}
-              <div>
-                <img
-                  src={boxingGym}
-                  alt="Boxing gym with equipment"
-                  className="w-full rounded-lg"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* ── SECTION 8: Final CTA ── */}
+        <JoinCTA />
 
-        {/* FAQ Section */}
+        {/* ── SECTION 9: FAQ ── */}
         <section id="faq" className="bg-background py-20 lg:py-28">
           <div className="container mx-auto px-4 max-w-3xl">
             <div className="text-center mb-12">
@@ -346,24 +357,6 @@ export default function LandingV2() {
                 </AccordionItem>
               ))}
             </Accordion>
-          </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="bg-card py-20 lg:py-28">
-          <div className="container mx-auto px-4 text-center max-w-3xl">
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl uppercase tracking-tight text-foreground mb-6">
-              Don't Promote Brands. Build Income.
-            </h2>
-            <p className="text-lg lg:text-xl text-muted-foreground mb-8">
-              Claim your Combat Market storefront and start earning from your fight life.
-            </p>
-            <Button asChild size="lg" className="text-base px-8">
-              <Link to="/fighter-signup">
-                Claim Your Storefront
-                <ChevronRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
           </div>
         </section>
 
