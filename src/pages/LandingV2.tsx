@@ -131,7 +131,7 @@ export default function LandingV2() {
     sport: heroData?.sport || defaultHeroFighter.sport,
     country: heroData?.country || defaultHeroFighter.country,
     handle: heroData?.handle || defaultHeroFighter.handle,
-    image: heroData?.hero_image_url || heroData?.profile_image_url || defaultHeroFighter.image,
+    image: heroData?.profile_image_url || heroData?.hero_image_url || defaultHeroFighter.image,
   };
 
   return (
