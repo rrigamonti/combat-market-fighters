@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -28,13 +30,13 @@ import step3Earn from "@/assets/landing/step-3-earn.png";
 import fighterTraining from "@/assets/landing/fighter-training.png";
 import { getCountryFlag } from "@/lib/countryFlags";
 
-// Hardcoded featured fighter for the hero
-const heroFighter = {
+// Default hero fighter fallback
+const defaultHeroFighter = {
   name: "Paul Weir",
   sport: "Boxing",
   country: "United Kingdom",
   handle: "paul-weir",
-  image: "https://mhmoxwmxnojljehbigtp.supabase.co/storage/v1/object/public/fighter-heroes/10d60cc6-e871-408b-bbbf-751a1685b7a3-1769584107991.jpg",
+  image: "",
 };
 
 const faqItems = [
@@ -110,6 +112,27 @@ const forBrandsBullets = [
 
 export default function LandingV2() {
   useScrollToHash();
+
+  const { data: heroData } = useQuery({
+    queryKey: ["hero-fighter", "paul-weir"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("fighters")
+        .select("full_name, sport, country, handle, hero_image_url, profile_image_url")
+        .eq("handle", "paul-weir")
+        .eq("status", "approved")
+        .single();
+      return data;
+    },
+  });
+
+  const heroFighter = {
+    name: heroData?.full_name || defaultHeroFighter.name,
+    sport: heroData?.sport || defaultHeroFighter.sport,
+    country: heroData?.country || defaultHeroFighter.country,
+    handle: heroData?.handle || defaultHeroFighter.handle,
+    image: heroData?.hero_image_url || heroData?.profile_image_url || defaultHeroFighter.image,
+  };
 
   return (
     <>
