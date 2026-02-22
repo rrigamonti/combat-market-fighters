@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,12 +6,14 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, MapPin, ArrowUpDown } from "lucide-react";
+import { FighterCard } from "@/components/landing/FighterCard";
+import { FeaturedFightersCarousel } from "@/components/landing/FeaturedFightersCarousel";
+import { JoinCTA } from "@/components/landing/JoinCTA";
+import { Search, ChevronRight } from "lucide-react";
+import heroImage from "@/assets/landing/mma-action.jpg";
 
 type Fighter = {
   id: string;
@@ -20,26 +22,23 @@ type Fighter = {
   sport: string | null;
   country: string | null;
   profile_image_url: string | null;
-  short_bio: string | null;
+  hero_image_url: string | null;
 };
 
-function getInitials(name: string | null) {
-  if (!name) return "?";
-  return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
-}
+const PAGE_SIZE = 12;
 
 export default function FighterDirectory() {
   const [search, setSearch] = useState("");
   const [sportFilter, setSportFilter] = useState("all");
   const [countryFilter, setCountryFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("name-asc");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const { data: fighters, isLoading } = useQuery({
     queryKey: ["fighters-directory"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("fighters")
-        .select("id, handle, full_name, sport, country, profile_image_url, short_bio")
+        .select("id, handle, full_name, sport, country, profile_image_url, hero_image_url")
         .eq("status", "approved")
         .order("full_name");
       if (error) throw error;
@@ -47,7 +46,7 @@ export default function FighterDirectory() {
     },
   });
 
-  // Filter out Personal Trainer from directory listings
+  // Exclude Personal Trainers
   const directoryFighters = useMemo(() => {
     if (!fighters) return [];
     return fighters.filter(f => f.sport?.toLowerCase() !== "personal trainer");
@@ -64,26 +63,20 @@ export default function FighterDirectory() {
   const filtered = useMemo(() => {
     if (!directoryFighters) return [];
     const q = search.toLowerCase();
-    const result = directoryFighters.filter(f => {
-      if (q && !(f.full_name?.toLowerCase().includes(q) || f.short_bio?.toLowerCase().includes(q))) return false;
+    return directoryFighters.filter(f => {
+      if (q && !f.full_name?.toLowerCase().includes(q)) return false;
       if (sportFilter !== "all" && f.sport !== sportFilter) return false;
       if (countryFilter !== "all" && f.country !== countryFilter) return false;
       return true;
     });
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case "name-desc":
-          return (b.full_name || "").localeCompare(a.full_name || "");
-        case "sport":
-          return (a.sport || "").localeCompare(b.sport || "");
-        case "country":
-          return (a.country || "").localeCompare(b.country || "");
-        default:
-          return (a.full_name || "").localeCompare(b.full_name || "");
-      }
-    });
-    return result;
-  }, [directoryFighters, search, sportFilter, countryFilter, sortBy]);
+  }, [directoryFighters, search, sportFilter, countryFilter]);
+
+  const visible = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < filtered.length;
+
+  const loadMore = useCallback(() => {
+    setVisibleCount(prev => prev + PAGE_SIZE);
+  }, []);
 
   return (
     <>
@@ -94,135 +87,136 @@ export default function FighterDirectory() {
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
 
-        <main className="flex-1 pt-24 pb-16 px-4">
-          <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <div className="text-center mb-10">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
-                <Users className="h-8 w-8 text-primary" />
-              </div>
-              <h1 className="font-display text-4xl md:text-5xl uppercase tracking-tight text-foreground mb-3">
-                Fighter Directory
-              </h1>
-              <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                Browse verified combat athletes and discover their curated gear storefronts.
-              </p>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search fighters..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={sportFilter} onValueChange={setSportFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Sport" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sports</SelectItem>
-                  {sports.map(s => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={countryFilter} onValueChange={setCountryFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Countries</SelectItem>
-                  {countries.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <div className="flex items-center gap-2">
-                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Sort by" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name-asc">Name A–Z</SelectItem>
-                  <SelectItem value="name-desc">Name Z–A</SelectItem>
-                  <SelectItem value="sport">Sport</SelectItem>
-                  <SelectItem value="country">Country</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <CardContent className="p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <Skeleton className="h-14 w-14 rounded-full" />
-                        <div className="space-y-2 flex-1">
-                          <Skeleton className="h-5 w-3/4" />
-                          <Skeleton className="h-4 w-1/2" />
-                        </div>
-                      </div>
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-2/3 mt-2" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-16">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-1">No fighters found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filters.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filtered.map(fighter => (
-                  <Link key={fighter.id} to={`/${fighter.handle}`} className="group">
-                    <Card className="overflow-hidden transition-colors group-hover:border-primary/50">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-4 mb-3">
-                          <Avatar className="h-14 w-14">
-                            {fighter.profile_image_url && (
-                              <AvatarImage src={fighter.profile_image_url} alt={fighter.full_name || ""} />
-                            )}
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                              {getInitials(fighter.full_name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                              {fighter.full_name || "Unknown Fighter"}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              {fighter.sport && <Badge variant="secondary" className="text-xs">{fighter.sport}</Badge>}
-                              {fighter.country && (
-                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                  <MapPin className="h-3 w-3" />
-                                  {fighter.country}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        {fighter.short_bio && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{fighter.short_bio}</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
+        {/* ── Directory Hero ── */}
+        <section className="relative pt-16 overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={heroImage}
+              alt="Combat athletes"
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/70" />
           </div>
+          <div className="relative container mx-auto px-4 py-24 lg:py-36 text-center">
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl uppercase tracking-tight text-white mb-4">
+              Find Your Fighter.
+            </h1>
+            <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto mb-8">
+              Discover professional and rising combat athletes building their storefronts on Combat Market.
+            </p>
+            <Button asChild size="lg" className="text-base px-8">
+              <Link to="/fighter-signup">
+                Claim Your Storefront
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
+        </section>
+
+        <main className="flex-1">
+          {/* ── Featured Fighters ── */}
+          <section className="bg-background py-16 lg:py-24">
+            <div className="container mx-auto px-4">
+              <FeaturedFightersCarousel
+                showBadge
+                heading="FEATURED FIGHTERS"
+                subtitle="Athletes building their storefronts on Combat Market."
+                showDirectoryLink={false}
+              />
+            </div>
+          </section>
+
+          {/* ── Filter Bar ── */}
+          <section className="bg-card border-y border-border sticky top-16 z-30">
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name..."
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setVisibleCount(PAGE_SIZE); }}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={sportFilter} onValueChange={v => { setSportFilter(v); setVisibleCount(PAGE_SIZE); }}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Discipline" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Disciplines</SelectItem>
+                    {sports.map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={countryFilter} onValueChange={v => { setCountryFilter(v); setVisibleCount(PAGE_SIZE); }}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Countries</SelectItem>
+                    {countries.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Fighter Grid ── */}
+          <section className="bg-background py-12 lg:py-20">
+            <div className="container mx-auto px-4">
+              {isLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
+                  ))}
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-20">
+                  <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-1">No fighters found</h3>
+                  <p className="text-muted-foreground">Try adjusting your search or filters.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {visible.map(fighter => (
+                      <FighterCard
+                        key={fighter.id}
+                        handle={fighter.handle}
+                        full_name={fighter.full_name}
+                        sport={fighter.sport}
+                        country={fighter.country}
+                        profile_image_url={fighter.profile_image_url}
+                        hero_image_url={fighter.hero_image_url}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Load More */}
+                  {hasMore && (
+                    <div className="text-center mt-12">
+                      <Button variant="outline-primary" size="lg" onClick={loadMore}>
+                        Load More Fighters
+                        <ChevronRight className="ml-2 h-5 w-5" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Count */}
+                  <p className="text-center text-sm text-muted-foreground mt-6">
+                    Showing {visible.length} of {filtered.length} fighters
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* ── Join CTA ── */}
+          <JoinCTA />
         </main>
 
         <Footer />
