@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { getCountryFlag } from "@/lib/countryFlags";
+import { getCountryFlagUrl } from "@/lib/countryFlags";
 
 type FighterCardProps = {
   handle: string | null;
@@ -24,7 +24,7 @@ export function FighterCard({
   variant = "directory",
 }: FighterCardProps) {
   const imageUrl = hero_image_url || profile_image_url;
-  const flag = getCountryFlag(country);
+  const flagUrl = getCountryFlagUrl(country);
   const isFeatured = variant === "featured";
 
   return (
@@ -72,8 +72,15 @@ export function FighterCard({
           {sport && <span>{sport}</span>}
           {sport && country && <span>·</span>}
           {country && (
-            <span className="flex items-center gap-1">
-              {flag} {country}
+            <span className="flex items-center gap-1.5">
+              {flagUrl && (
+                <img
+                  src={flagUrl}
+                  alt={`${country} flag`}
+                  className="h-3.5 w-5 object-cover rounded-[2px] shadow-sm"
+                />
+              )}
+              {country}
             </span>
           )}
         </div>

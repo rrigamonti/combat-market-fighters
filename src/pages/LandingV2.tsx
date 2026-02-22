@@ -29,7 +29,7 @@ import step1Storefront from "@/assets/landing/step-1-storefront.png";
 import step2Brands from "@/assets/landing/step-2-brands.png";
 import step3Earn from "@/assets/landing/step-3-earn.png";
 import fighterTraining from "@/assets/landing/fighter-training.png";
-import { getCountryFlag } from "@/lib/countryFlags";
+
 
 // Default hero fighter fallback
 const defaultHeroFighter = {
