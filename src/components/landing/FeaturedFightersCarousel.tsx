@@ -34,6 +34,7 @@ export function FeaturedFightersCarousel({
         .select("id, handle, full_name, sport, country, profile_image_url, hero_image_url")
         .eq("status", "approved")
         .not("hero_image_url", "is", null)
+        .filter("hero_image_url", "neq", "profile_image_url")
         .order("full_name")
         .limit(6);
       if (error) throw error;
