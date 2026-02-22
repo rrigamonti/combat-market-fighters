@@ -10,51 +10,65 @@ type FighterCardProps = {
   profile_image_url: string | null;
   hero_image_url?: string | null;
   badge?: string;
+  variant?: "directory" | "featured";
 };
 
-export function FighterCard({ handle, full_name, sport, country, profile_image_url, hero_image_url, badge }: FighterCardProps) {
+export function FighterCard({
+  handle,
+  full_name,
+  sport,
+  country,
+  profile_image_url,
+  hero_image_url,
+  badge,
+  variant = "directory",
+}: FighterCardProps) {
   const imageUrl = hero_image_url || profile_image_url;
-  const firstName = full_name?.split(" ")[0] || "Fighter";
   const flag = getCountryFlag(country);
+  const isFeatured = variant === "featured";
 
   return (
     <Link
       to={`/${handle}`}
-      className="group relative block aspect-[3/4] overflow-hidden rounded-xl bg-muted"
+      className="group relative block overflow-hidden rounded-lg border border-white/10 bg-card"
     >
       {/* Image */}
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={full_name || "Fighter"}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-secondary">
-          <span className="text-4xl font-display text-muted-foreground">
-            {full_name?.charAt(0) || "?"}
-          </span>
-        </div>
-      )}
+      <div className={`relative overflow-hidden ${isFeatured ? "aspect-[3/4]" : "aspect-[16/10]"}`}>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={full_name || "Fighter"}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+            <span className="text-4xl font-display text-muted-foreground">
+              {full_name?.charAt(0) || "?"}
+            </span>
+          </div>
+        )}
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+        {/* Badge */}
+        {badge && (
+          <div className="absolute top-3 left-3 z-10">
+            <span className="inline-block rounded bg-primary/90 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground border border-primary/60">
+              {badge}
+            </span>
+          </div>
+        )}
 
-      {/* Badge */}
-      {badge && (
-        <div className="absolute top-3 left-3 z-10">
-          <span className="inline-block rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground">
-            {badge}
-          </span>
-        </div>
-      )}
+        {/* Subtle gradient at bottom of image for featured */}
+        {isFeatured && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        )}
+      </div>
 
-      {/* Bottom content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 lg:p-5">
-        <h3 className="font-display text-lg lg:text-xl uppercase tracking-tight text-white mb-1">
+      {/* Info below image */}
+      <div className="p-3 lg:p-4">
+        <h3 className="font-display text-base lg:text-lg uppercase tracking-tight text-foreground mb-0.5 leading-tight">
           {full_name || "Unknown Fighter"}
         </h3>
-        <div className="flex items-center gap-2 text-sm text-white/70 mb-3">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
           {sport && <span>{sport}</span>}
           {sport && country && <span>·</span>}
           {country && (
@@ -64,12 +78,12 @@ export function FighterCard({ handle, full_name, sport, country, profile_image_u
           )}
         </div>
 
-        {/* Frosted store button */}
-        <div className="flex items-center justify-between rounded-lg bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2.5 transition-colors group-hover:bg-primary/80 group-hover:border-primary/60">
-          <span className="text-sm font-medium text-white">
-            {firstName}'s Store
+        {/* VIEW STOREFRONT button + arrow */}
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center rounded border border-primary/60 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary transition-colors group-hover:bg-primary/20">
+            View Storefront
           </span>
-          <ArrowRight className="h-4 w-4 text-white transition-transform group-hover:translate-x-1" />
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
         </div>
       </div>
     </Link>

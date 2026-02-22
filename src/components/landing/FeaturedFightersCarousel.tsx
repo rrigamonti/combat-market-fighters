@@ -118,6 +118,7 @@ export function FeaturedFightersCarousel({
                   profile_image_url={fighter.profile_image_url}
                   hero_image_url={fighter.hero_image_url}
                   badge={showBadge ? "JUST JOINED" : undefined}
+                  variant="featured"
                 />
               </div>
             ))}
