@@ -55,10 +55,7 @@ export function FeaturedFightersCarousel({
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
 
-    // Auto-rotate every 5s
-    const interval = setInterval(() => emblaApi.scrollNext(), 5000);
     return () => {
-      clearInterval(interval);
       emblaApi.off("select", onSelect);
     };
   }, [emblaApi, onSelect]);
