@@ -50,6 +50,27 @@ function buildRakutenUrl(url: string, networkProductId: string | undefined, figh
   return `https://click.linksynergy.com/deeplink?${params.toString()}`;
 }
 
+function buildImpactUrl(url: string, fighterHandle?: string): string {
+  const accountSid = Deno.env.get('IMPACT_ACCOUNT_SID');
+  const mediaId = Deno.env.get('IMPACT_MEDIA_ID');
+  if (!accountSid || !mediaId) throw new Error('IMPACT_ACCOUNT_SID and IMPACT_MEDIA_ID are not configured');
+
+  const params = new URLSearchParams({ url });
+  if (fighterHandle) params.set('subId1', fighterHandle);
+  return `https://app.impact.com/ad/click/${accountSid}/${mediaId}?${params.toString()}`;
+}
+
+function buildCJUrl(url: string, fighterHandle?: string): string {
+  const websiteId = Deno.env.get('CJ_WEBSITE_ID');
+  if (!websiteId) throw new Error('CJ_WEBSITE_ID is not configured');
+
+  const encodedUrl = encodeURIComponent(url);
+  const params = new URLSearchParams();
+  if (fighterHandle) params.set('sid', fighterHandle);
+  const suffix = params.toString() ? `?${params.toString()}` : '';
+  return `https://www.anrdoezrs.net/links/${websiteId}/type/dlg/${encodedUrl}${suffix}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -96,9 +117,15 @@ serve(async (req) => {
       case 'rakuten':
         affiliateUrl = buildRakutenUrl(url, networkProductId, fighter_handle);
         break;
+      case 'impact':
+        affiliateUrl = buildImpactUrl(url, fighter_handle);
+        break;
+      case 'cj':
+      case 'cj affiliate':
+        affiliateUrl = buildCJUrl(url, fighter_handle);
+        break;
       case 'sovrn':
       default:
-        // Default to Sovrn for backwards compatibility
         affiliateUrl = buildSovrnUrl(url, fighter_handle);
         break;
     }
