@@ -46,8 +46,8 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
           <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/v2" element={<LandingV2 />} />
+            <Route path="/" element={<LandingV2 />} />
+            <Route path="/v1" element={<Landing />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
