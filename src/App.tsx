@@ -8,7 +8,6 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
-import Landing from "./pages/Landing";
 import LandingV2 from "./pages/LandingV2";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -47,7 +46,6 @@ const App = () => (
           <AuthProvider>
           <Routes>
             <Route path="/" element={<LandingV2 />} />
-            <Route path="/v1" element={<Landing />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
