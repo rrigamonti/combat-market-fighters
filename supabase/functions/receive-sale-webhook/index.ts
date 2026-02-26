@@ -58,12 +58,40 @@ function normalizeRakuten(raw: Record<string, unknown>): NormalizedSale {
   };
 }
 
+function normalizeImpact(raw: Record<string, unknown>): NormalizedSale {
+  return {
+    order_id: (raw.actionId || raw.action_id || raw.oid || raw.order_id) as string | undefined,
+    sub_id: (raw.subId1 || raw.SharedId || raw.sub_id) as string | undefined,
+    product_sku: (raw.sku || raw.productId || raw.product_sku) as string | undefined,
+    sale_amount: Number(raw.amount || raw.saleAmount || raw.sale_amount || 0),
+    commission: Number(raw.payout || raw.commission || 0),
+    currency: (raw.currency || "USD") as string,
+    timestamp: (raw.actionDate || raw.eventDate || raw.timestamp) as string | undefined,
+    affiliate_network: "impact",
+  };
+}
+
+function normalizeCJ(raw: Record<string, unknown>): NormalizedSale {
+  return {
+    order_id: (raw.commission_id || raw.original_action_id || raw.order_id) as string | undefined,
+    sub_id: (raw.sid || raw.website_id || raw.sub_id) as string | undefined,
+    product_sku: (raw.item_id || raw.sku || raw.product_sku) as string | undefined,
+    sale_amount: Number(raw.sale_amount || raw.order_amount || 0),
+    commission: Number(raw.commission_amount || raw.publisher_commission || raw.commission || 0),
+    currency: (raw.currency || "USD") as string,
+    timestamp: (raw.event_date || raw.posting_date || raw.timestamp) as string | undefined,
+    affiliate_network: "cj",
+  };
+}
+
 function detectAndNormalize(raw: Record<string, unknown>, networkHint?: string): NormalizedSale {
   const hint = (networkHint || "").toLowerCase();
 
   // Explicit network hint from query param
   if (hint === "awin") return normalizeAwin(raw);
   if (hint === "rakuten") return normalizeRakuten(raw);
+  if (hint === "impact") return normalizeImpact(raw);
+  if (hint === "cj") return normalizeCJ(raw);
   if (hint === "sovrn") return normalizeSovrn(raw);
 
   // Auto-detect by payload shape
@@ -74,6 +102,14 @@ function detectAndNormalize(raw: Record<string, unknown>, networkHint?: string):
   if (raw.u1 !== undefined || raw.etransaction_id !== undefined || raw.commissions !== undefined) {
     console.log("Auto-detected Rakuten payload");
     return normalizeRakuten(raw);
+  }
+  if (raw.subId1 !== undefined || raw.SharedId !== undefined || raw.actionId !== undefined || raw.payout !== undefined) {
+    console.log("Auto-detected Impact payload");
+    return normalizeImpact(raw);
+  }
+  if (raw.sid !== undefined || raw.commission_id !== undefined || raw.publisher_commission !== undefined) {
+    console.log("Auto-detected CJ payload");
+    return normalizeCJ(raw);
   }
   if (raw.subId !== undefined || raw.subid !== undefined || raw.publisherCommission !== undefined || raw.merchantName !== undefined) {
     console.log("Auto-detected Sovrn payload");

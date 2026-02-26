@@ -235,6 +235,10 @@ export default function AdminSales() {
               <SelectItem value="all">All Networks</SelectItem>
               <SelectItem value="Sovrn">Sovrn</SelectItem>
               <SelectItem value="FMTC">FMTC</SelectItem>
+              <SelectItem value="awin">Awin</SelectItem>
+              <SelectItem value="rakuten">Rakuten</SelectItem>
+              <SelectItem value="impact">Impact</SelectItem>
+              <SelectItem value="cj">CJ Affiliate</SelectItem>
             </SelectContent>
           </Select>
         </div>
