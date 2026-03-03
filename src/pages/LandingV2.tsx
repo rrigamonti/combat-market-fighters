@@ -42,20 +42,72 @@ const defaultHeroFighter = {
 
 const faqItems = [
   {
-    question: "How do I get invited to Combat Market?",
-    answer: "Combat Market is currently invite-only for verified combat sports athletes. Apply through our signup form and we'll review your profile. We're looking for active fighters, coaches, and combat sports professionals with an engaged audience."
+    question: "What is Combat Market?",
+    answer: "Combat Market gives fighters their own online storefront featuring the products they already use — gloves, wraps, supplements, recovery tools, apparel, and training gear. When someone buys through your page, you earn commission."
+  },
+  {
+    question: "How do I get invited?",
+    answer: "Combat Market is invite-only for professional fighters, amateur competitors, coaches, gym owners, and combat influencers. If you compete, coach, or influence buying decisions in combat sports, you can apply. Once approved, we help build your storefront."
   },
   {
     question: "What brands can I add to my storefront?",
-    answer: "You can promote any brand from our curated catalog of combat sports equipment, apparel, and supplements. We partner with trusted brands that fighters actually use. You can also request brands to be added to the platform."
+    answer: "The brands you already use. We work with over 20,000 retailers and brands globally. If we have a commission agreement in place, we activate it instantly. If not, we contact the brand and negotiate a deal on your behalf."
   },
   {
     question: "How do earnings work?",
-    answer: "You earn a commission on every sale made through your storefront. Payments are processed monthly once you reach the minimum threshold. You also earn royalties when fighters you refer make sales, creating passive income as your network grows."
+    answer: "When someone buys through your storefront, you earn commission based on what the brand offers. Every sale is tracked automatically, and your earnings from multiple brands are combined into one dashboard and one payout system."
+  },
+  {
+    question: "How do I get paid?",
+    answer: "Sales are tracked, the retailer confirms the order after the return window closes, commission is approved, and you receive payout. Most retailers operate on a 30–60 day confirmation cycle. No invoicing, no chasing brands, no multiple affiliate logins."
+  },
+  {
+    question: "Do I need to change the products I use?",
+    answer: "No. Your storefront is built around your real training setup. If you already use it and believe in it, we add it. If a product isn't monetised yet, we approach the brand and try to secure commission for you."
   },
   {
     question: "Is this just another affiliate program?",
-    answer: "No. Combat Market is built specifically for fighters, not influencers. You own your storefront, control what you promote, and earn from both direct sales and referrals. It's designed to give fighters financial independence, not just one-off commissions."
+    answer: "No. Traditional affiliate programs mean one brand at a time, multiple logins, and you negotiate yourself. Combat Market gives you one storefront, multiple brands, one dashboard, one payout — and we negotiate deals for you."
+  },
+  {
+    question: "Can I refer other fighters and earn commission?",
+    answer: "Yes, on selected Level 1 brands. If you introduce another fighter and they start earning, you earn a percentage from their activity. This allows you to build a multi-tier earning structure. Referral is optional — you can earn purely from your own storefront."
+  },
+  {
+    question: "How do I promote my storefront?",
+    answer: "Add it to your Instagram bio, replace random links with combat.market/yourname, pin a post about your fight gear, or share stories during fight camp about the products you're using. It works because it's built around what you already talk about."
+  },
+  {
+    question: "Do I need to constantly sell to make money?",
+    answer: "No. Share your storefront consistently, mention it naturally, and keep it updated. When people ask what gloves, supplements, or gear you use, just direct them to your store link in your bio."
+  },
+  {
+    question: "Who handles brand negotiations?",
+    answer: "We do. If you use a brand that isn't yet monetised, we reach out, negotiate commission, and add it to your storefront once agreed. You shouldn't have to chase sponsors just to earn from your influence."
+  },
+  {
+    question: "Do I get ongoing support?",
+    answer: "Yes. Every fighter has an assigned account manager who helps with setting up your storefront, adding products, approaching brands, promotion ideas, tracking performance, and maximising your earnings."
+  },
+  {
+    question: "Do I receive products?",
+    answer: "No. Combat Market does not supply, handle, or ship any products. Your storefront is a clean, professional page that showcases the products you use. When someone purchases through it, you earn commission without managing stock or fulfilment."
+  },
+  {
+    question: "How much does it cost to join?",
+    answer: "Nothing. Joining Combat Market is completely free. There are no setup fees, monthly fees, or hidden costs."
+  },
+  {
+    question: "How do you know what products I use?",
+    answer: "Once your application is approved, you can request the products you use directly through your dashboard. You can also message Combat Market on WhatsApp or via Instagram, and our team will assist with adding them to your storefront."
+  },
+  {
+    question: "Is Combat Market a sponsorship?",
+    answer: "No. Combat Market gives you your own personal storefront where you earn commission from the products you already use. You don't need to switch brands or promote anything you don't believe in."
+  },
+  {
+    question: "Can I still work with other brands and sponsors?",
+    answer: "Yes. Combat Market is not exclusive, and you are free to work with any brands, sponsors, or partnerships you choose. There is no cost, no contract, and no obligation."
   }
 ];
 
