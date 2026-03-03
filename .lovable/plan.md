@@ -1,47 +1,34 @@
 
 
-# Add Impact and Commission Junction (CJ) Affiliate Networks
+## Update FAQ Section with Official Content
 
-## Overview
-Extend the existing multi-network affiliate system to support **Impact** and **Commission Junction (CJ Affiliate)**, following the same pattern used for AWIN and Rakuten.
+Replace the current 4 FAQ items in `src/pages/LandingV2.tsx` with all 17 questions from the uploaded PDF document.
 
-## Changes
+### Changes
 
-### 1. Edge Function: `get-affiliate-link/index.ts`
-- Add `buildImpactUrl()` function that constructs Impact tracking links using an `IMPACT_ACCOUNT_SID` and `IMPACT_MEDIA_ID` secret, with the fighter handle mapped to a `SubId1` parameter.
-- Add `buildCJUrl()` function that constructs CJ deep links using a `CJ_WEBSITE_ID` secret, with the fighter handle mapped to a `sid` parameter.
-- Add `case 'impact':` and `case 'cj':` to the network switch statement.
+**File: `src/pages/LandingV2.tsx`** (lines 43-60)
 
-### 2. Edge Function: `receive-sale-webhook/index.ts`
-- Add `normalizeImpact()` function to parse Impact's webhook payload format into the standard `NormalizedSale` shape.
-- Add `normalizeCJ()` function to parse CJ's webhook payload format.
-- Update `detectAndNormalize()` to recognize Impact and CJ payloads.
+Replace the `faqItems` array with 17 items extracted from the PDF:
 
-### 3. Admin UI Updates
-- **`AdminProducts.tsx`** and **`ProductImportDialog.tsx`**: Add "Impact" and "CJ" to any affiliate network dropdown/select options so admins can tag products with these networks.
-- **`AdminSales.tsx`**: Add "Impact" and "CJ" to the network filter dropdown so sales from these networks are filterable.
+1. What is Combat Market?
+2. How do I get invited?
+3. What brands can I add to my storefront?
+4. How do earnings work?
+5. How do I get paid?
+6. Do I need to change the products I use?
+7. Is this just another affiliate program?
+8. Can I refer other fighters and earn commission?
+9. How do I promote my storefront?
+10. Do I need to constantly sell to make money?
+11. Who handles brand negotiations?
+12. Do I get ongoing support?
+13. Do I receive products?
+14. How much does it cost to join?
+15. How do you know what products I use?
+16. Is Combat Market a sponsorship?
+17. Can I still work with other brands and sponsors?
 
-### 4. Secrets Required
-Before deployment, two new sets of secrets will need to be configured:
-- **Impact**: `IMPACT_ACCOUNT_SID` and `IMPACT_MEDIA_ID`
-- **CJ**: `CJ_WEBSITE_ID`
+Each answer will be condensed into a clean 1-3 sentence format suitable for the accordion UI, preserving the key message from the PDF while keeping it scannable. The `FAQSchema` structured data will automatically pick up the new items since it already reads from this array.
 
-These will be requested from you before proceeding with the implementation.
-
-### 5. No Database Changes
-The existing `affiliate_network` text column on `products` and `sales` tables already supports arbitrary network names -- no schema migration needed.
-
-## Technical Details
-
-**Impact deep link format:**
-```
-https://app.impact.com/ad/click/{ACCOUNT_SID}/{MEDIA_ID}?url={encoded_url}&subId1={fighter_handle}
-```
-
-**CJ deep link format:**
-```
-https://www.anrdoezrs.net/links/{WEBSITE_ID}/type/dlg/{encoded_url}?sid={fighter_handle}
-```
-
-Both formats follow industry-standard patterns and mirror how AWIN/Rakuten are already handled in the codebase.
+No new files or database changes needed.
 
