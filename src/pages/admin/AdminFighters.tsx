@@ -94,6 +94,7 @@ const sports = [
   "Brazilian Jiu-Jitsu",
   "Wrestling",
   "Kickboxing",
+  "Bare Knuckle",
   "Karate",
   "Judo",
   "Taekwondo",
