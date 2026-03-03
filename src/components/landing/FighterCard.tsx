@@ -24,9 +24,11 @@ export const FighterCard = React.forwardRef<HTMLAnchorElement, FighterCardProps>
   badge,
   variant = "directory",
 }, ref) => {
-  const imageUrl = hero_image_url || profile_image_url;
   const flagUrl = getCountryFlagUrl(country);
   const isFeatured = variant === "featured";
+  const imageUrl = isFeatured
+    ? (hero_image_url || profile_image_url)
+    : (profile_image_url || hero_image_url);
 
   return (
     <Link
