@@ -211,6 +211,39 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
+            {/* Merchant routes */}
+            <Route
+              path="/merchant"
+              element={
+                <MerchantRoute>
+                  <MerchantDashboard />
+                </MerchantRoute>
+              }
+            />
+            <Route
+              path="/merchant/missions"
+              element={
+                <MerchantRoute>
+                  <MerchantMissions />
+                </MerchantRoute>
+              }
+            />
+            <Route
+              path="/merchant/submissions"
+              element={
+                <MerchantRoute>
+                  <MerchantSubmissions />
+                </MerchantRoute>
+              }
+            />
+            <Route
+              path="/merchant/billing"
+              element={
+                <MerchantRoute>
+                  <MerchantBilling />
+                </MerchantRoute>
+              }
+            />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             {/* Fighter Directory - Coming Soon */}
