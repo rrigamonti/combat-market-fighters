@@ -189,6 +189,23 @@ const App = () => {
                 </AdminRoute>
               }
             />
+            {/* Fighter mission routes */}
+            <Route
+              path="/missions"
+              element={
+                <ProtectedRoute>
+                  <FighterMissions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/missions/:id"
+              element={
+                <ProtectedRoute>
+                  <FighterMissionDetail />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             {/* Fighter Directory - Coming Soon */}
