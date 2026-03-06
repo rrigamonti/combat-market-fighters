@@ -32,6 +32,8 @@ import AdminSovrn from "./pages/admin/AdminSovrn";
 import AdminMerchants from "./pages/admin/AdminMerchants";
 import AdminMissions from "./pages/admin/AdminMissions";
 import AdminMissionDetail from "./pages/admin/AdminMissionDetail";
+import FighterMissions from "./pages/FighterMissions";
+import FighterMissionDetail from "./pages/FighterMissionDetail";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ComingSoon from "./pages/ComingSoon";
@@ -185,6 +187,23 @@ const App = () => {
                 <AdminRoute>
                   <AdminMissionDetail />
                 </AdminRoute>
+              }
+            />
+            {/* Fighter mission routes */}
+            <Route
+              path="/missions"
+              element={
+                <ProtectedRoute>
+                  <FighterMissions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/missions/:id"
+              element={
+                <ProtectedRoute>
+                  <FighterMissionDetail />
+                </ProtectedRoute>
               }
             />
             <Route path="/terms" element={<Terms />} />
