@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck, BarChart3, Tags, DollarSign, Percent, MessageSquarePlus, Store } from "lucide-react";
+import { LayoutDashboard, Users, Package, LinkIcon, LogOut, ShieldCheck, BarChart3, Tags, DollarSign, Percent, MessageSquarePlus, Store, Target, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,8 @@ interface AdminLayoutProps {
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/admin/merchants", label: "Merchants", icon: Building2 },
+  { to: "/admin/missions", label: "Missions", icon: Target },
   { to: "/admin/fighters", label: "Fighters", icon: Users },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/brands", label: "Brands", icon: Tags },
