@@ -21,7 +21,7 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
@@ -34,7 +34,7 @@ export function useNotifications() {
   }, [user]);
 
   const markAsRead = useCallback(async (id: string) => {
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
+    await (supabase as any).from("notifications").update({ read: true }).eq("id", id);
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
@@ -43,7 +43,7 @@ export function useNotifications() {
 
   const markAllAsRead = useCallback(async () => {
     if (!user) return;
-    await supabase
+    await (supabase as any)
       .from("notifications")
       .update({ read: true })
       .eq("user_id", user.id)
@@ -62,7 +62,6 @@ export function useNotifications() {
 
     fetchNotifications();
 
-    // Subscribe to realtime inserts
     const channel = supabase
       .channel(`notifications-${user.id}`)
       .on(

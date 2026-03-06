@@ -9,7 +9,7 @@ interface CreateNotificationParams {
 }
 
 export async function createNotification(params: CreateNotificationParams) {
-  const { error } = await supabase.from("notifications").insert({
+  const { error } = await (supabase as any).from("notifications").insert({
     user_id: params.userId,
     title: params.title,
     message: params.message,
@@ -21,7 +21,6 @@ export async function createNotification(params: CreateNotificationParams) {
   }
 }
 
-/** Helper to notify a fighter by their fighter record ID (looks up user_id) */
 export async function notifyFighter(
   fighterId: string,
   title: string,
@@ -39,7 +38,6 @@ export async function notifyFighter(
   }
 }
 
-/** Notify all users with a merchant role for a given merchant_id */
 export async function notifyMerchant(
   merchantId: string,
   title: string,
