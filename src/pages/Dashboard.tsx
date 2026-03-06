@@ -106,6 +106,14 @@ export default function Dashboard() {
         country: data.country,
         short_bio: data.short_bio || "",
       });
+
+      // Fetch active mission participations count
+      const { count } = await supabase
+        .from("mission_participations")
+        .select("*", { count: "exact", head: true })
+        .eq("fighter_id", data.id)
+        .in("status", ["joined", "started", "submitted"]);
+      setActiveMissionsCount(count || 0);
     }
   };
 
@@ -440,6 +448,30 @@ export default function Dashboard() {
                 Your storefront will be accessible once your application is approved.
               </p>
             )}
+          </div>
+
+          {/* Missions Card */}
+          <div className="mt-6 rounded-lg border border-border bg-card p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Target className="h-6 w-6 text-primary" />
+                <div>
+                  <h2 className="font-display text-2xl">Missions</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {activeMissionsCount > 0
+                      ? `${activeMissionsCount} active mission${activeMissionsCount !== 1 ? "s" : ""}`
+                      : "Earn rewards by completing brand missions"}
+                  </p>
+                </div>
+              </div>
+              <Button asChild>
+                <Link to="/missions">
+                  <Target className="mr-2 h-4 w-4" />
+                  View Missions
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
 
           {/* Product Request Section */}
