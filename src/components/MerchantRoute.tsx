@@ -2,12 +2,12 @@ import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-interface AdminRouteProps {
+interface MerchantRouteProps {
   children: ReactNode;
 }
 
-export function AdminRoute({ children }: AdminRouteProps) {
-  const { user, isAdmin, loading } = useAuth();
+export function MerchantRoute({ children }: MerchantRouteProps) {
+  const { user, isMerchant, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -21,7 +21,8 @@ export function AdminRoute({ children }: AdminRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!isAdmin) {
+  // Admins can also access merchant routes
+  if (!isMerchant && !isAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background">
         <h1 className="font-display text-4xl text-primary">Access Denied</h1>
