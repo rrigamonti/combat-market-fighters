@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { Menu, Shield, Store, Swords } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { NotificationBell } from "@/components/NotificationBell";
 import logo from "@/assets/combat-market-logo.svg";
 
 interface NavbarProps {
@@ -132,6 +133,7 @@ export function Navbar({ variant = "default" }: NavbarProps) {
                   Admin
                 </Link>
               )}
+              <NotificationBell />
               <Button variant="outline-primary" onClick={handleSignOut}>
                 Logout
               </Button>
@@ -152,6 +154,7 @@ export function Navbar({ variant = "default" }: NavbarProps) {
 
         {/* Mobile navigation */}
         <div className="md:hidden">
+          {user && <NotificationBell />}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
