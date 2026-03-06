@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Target, DollarSign, Calendar, Users, Upload, CheckCircle, Clock, XCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { notifyMerchant } from "@/lib/createNotification";
 
 type Mission = Database["public"]["Tables"]["missions"]["Row"];
 type Participation = Database["public"]["Tables"]["mission_participations"]["Row"];
@@ -94,6 +95,10 @@ export default function FighterMissionDetail() {
       .eq("id", participation.id);
 
     toast({ title: "Evidence Submitted", description: "Your submission is now under review." });
+    // Notify the merchant
+    if (mission?.merchant_id) {
+      notifyMerchant(mission.merchant_id, "New Submission Received", `A fighter submitted evidence for mission: ${mission.name}`, "submission_received", `/merchant/submissions`);
+    }
     setEvidenceUrl("");
     setEvidenceNotes("");
     setEvidenceType("");
