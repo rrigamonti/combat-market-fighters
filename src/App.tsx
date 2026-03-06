@@ -9,6 +9,11 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { MerchantRoute } from "@/components/MerchantRoute";
+import MerchantDashboard from "./pages/merchant/MerchantDashboard";
+import MerchantMissions from "./pages/merchant/MerchantMissions";
+import MerchantSubmissions from "./pages/merchant/MerchantSubmissions";
+import MerchantBilling from "./pages/merchant/MerchantBilling";
 import LandingV2 from "./pages/LandingV2";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
@@ -204,6 +209,39 @@ const App = () => {
                 <ProtectedRoute>
                   <FighterMissionDetail />
                 </ProtectedRoute>
+              }
+            />
+            {/* Merchant routes */}
+            <Route
+              path="/merchant"
+              element={
+                <MerchantRoute>
+                  <MerchantDashboard />
+                </MerchantRoute>
+              }
+            />
+            <Route
+              path="/merchant/missions"
+              element={
+                <MerchantRoute>
+                  <MerchantMissions />
+                </MerchantRoute>
+              }
+            />
+            <Route
+              path="/merchant/submissions"
+              element={
+                <MerchantRoute>
+                  <MerchantSubmissions />
+                </MerchantRoute>
+              }
+            />
+            <Route
+              path="/merchant/billing"
+              element={
+                <MerchantRoute>
+                  <MerchantBilling />
+                </MerchantRoute>
               }
             />
             <Route path="/terms" element={<Terms />} />
