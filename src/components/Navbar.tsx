@@ -154,6 +154,7 @@ export function Navbar({ variant = "default" }: NavbarProps) {
 
         {/* Mobile navigation */}
         <div className="md:hidden">
+          {user && <NotificationBell />}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
