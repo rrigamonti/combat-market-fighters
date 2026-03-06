@@ -119,12 +119,18 @@ export default function AdminMissionDetail() {
         current_participants: (mission?.current_participants || 0) + 1,
       }).eq("id", id!);
     },
-    onSuccess: () => {
+    onSuccess: (_data, fighterId) => {
       queryClient.invalidateQueries({ queryKey: ["admin-mission-participations", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-available-fighters", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-mission", id] });
       setAssignFighterId("");
       toast({ title: "Fighter assigned" });
+      // Notify fighter
+      notifyFighter(fighterId, "New Mission Assigned", `You've been assigned to mission: ${mission?.name}`, "mission_assigned", `/missions/${id}`);
+      // Notify merchant
+      if (mission?.merchant_id) {
+        notifyMerchant(mission.merchant_id, "Fighter Assigned", `A fighter has been assigned to your mission: ${mission.name}`, "fighter_joined", `/merchant/submissions`);
+      }
     },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
@@ -147,10 +153,22 @@ export default function AdminMissionDetail() {
         .update({ status: status === "approved" ? "approved" as const : "rejected" as const })
         .eq("id", participationId);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-mission-submissions", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-mission-participations", id] });
       toast({ title: "Submission reviewed" });
+      // Find the submission to get fighter_id
+      const sub = submissions.find((s: any) => s.id === variables.submissionId);
+      if (sub) {
+        const statusLabel = variables.status === "approved" ? "approved ✅" : "rejected";
+        notifyFighter(
+          sub.fighter_id,
+          `Submission ${statusLabel}`,
+          `Your submission for "${mission?.name}" has been ${statusLabel}.${variables.status === "approved" && mission?.reward_per_participant ? ` Payout: $${mission.reward_per_participant}` : ""}`,
+          variables.status === "approved" ? "submission_approved" : "submission_rejected",
+          `/missions/${id}`
+        );
+      }
     },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
