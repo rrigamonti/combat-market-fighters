@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, UserPlus, Target, DollarSign, Users, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { notifyFighter, notifyMerchant } from "@/lib/createNotification";
 
 export default function AdminMissionDetail() {
   const { id } = useParams<{ id: string }>();
