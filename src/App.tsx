@@ -29,6 +29,9 @@ import AdminSales from "./pages/admin/AdminSales";
 import AdminCommissions from "./pages/admin/AdminCommissions";
 import AdminProductRequests from "./pages/admin/AdminProductRequests";
 import AdminSovrn from "./pages/admin/AdminSovrn";
+import AdminMerchants from "./pages/admin/AdminMerchants";
+import AdminMissions from "./pages/admin/AdminMissions";
+import AdminMissionDetail from "./pages/admin/AdminMissionDetail";
 import Terms from "./pages/Terms";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ComingSoon from "./pages/ComingSoon";
@@ -157,6 +160,30 @@ const App = () => {
               element={
                 <AdminRoute>
                   <AdminSovrn />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/merchants"
+              element={
+                <AdminRoute>
+                  <AdminMerchants />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/missions"
+              element={
+                <AdminRoute>
+                  <AdminMissions />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/missions/:id"
+              element={
+                <AdminRoute>
+                  <AdminMissionDetail />
                 </AdminRoute>
               }
             />
