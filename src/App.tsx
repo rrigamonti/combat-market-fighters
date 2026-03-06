@@ -163,6 +163,30 @@ const App = () => {
                 </AdminRoute>
               }
             />
+            <Route
+              path="/admin/merchants"
+              element={
+                <AdminRoute>
+                  <AdminMerchants />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/missions"
+              element={
+                <AdminRoute>
+                  <AdminMissions />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/missions/:id"
+              element={
+                <AdminRoute>
+                  <AdminMissionDetail />
+                </AdminRoute>
+              }
+            />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             {/* Fighter Directory - Coming Soon */}
