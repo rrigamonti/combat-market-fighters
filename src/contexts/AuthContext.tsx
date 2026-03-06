@@ -2,11 +2,20 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+interface UserRole {
+  role: string;
+  merchant_id: string | null;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  roles: UserRole[];
   isAdmin: boolean;
+  isFighter: boolean;
+  isMerchant: boolean;
+  merchantId: string | null;
   signOut: () => Promise<void>;
 }
 
@@ -16,28 +25,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [roles, setRoles] = useState<UserRole[]>([]);
+
+  const fetchRoles = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role, merchant_id")
+      .eq("user_id", userId);
+    setRoles((data as UserRole[]) || []);
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Check admin role after auth state change
         if (session?.user) {
-          setTimeout(() => {
-            supabase.rpc("has_role", {
-              _user_id: session.user.id,
-              _role: "admin",
-            }).then(({ data }) => {
-              setIsAdmin(data === true);
-            });
-          }, 0);
+          // Use setTimeout to avoid potential deadlock with Supabase client
+          setTimeout(() => fetchRoles(session.user.id), 0);
         } else {
-          setIsAdmin(false);
+          setRoles([]);
         }
       }
     );
@@ -49,25 +59,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
 
       if (session?.user) {
-        supabase.rpc("has_role", {
-          _user_id: session.user.id,
-          _role: "admin",
-        }).then(({ data }) => {
-          setIsAdmin(data === true);
-        });
+        fetchRoles(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const isAdmin = roles.some((r) => r.role === "admin");
+  const isFighter = roles.some((r) => r.role === "fighter");
+  const isMerchant = roles.some((r) => r.role === "merchant");
+  const merchantId = roles.find((r) => r.role === "merchant")?.merchant_id ?? null;
+
   const signOut = async () => {
     await supabase.auth.signOut();
-    setIsAdmin(false);
+    setRoles([]);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signOut }}>
+    <AuthContext.Provider
+      value={{ user, session, loading, roles, isAdmin, isFighter, isMerchant, merchantId, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, Shield } from "lucide-react";
+import { Menu, Shield, Store, Swords } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import logo from "@/assets/combat-market-logo.svg";
 
@@ -11,7 +11,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ variant = "default" }: NavbarProps) {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isFighter, isMerchant, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -57,6 +57,21 @@ export function Navbar({ variant = "default" }: NavbarProps) {
 
   const linkClasses = "text-xs font-medium uppercase tracking-widest text-white transition-colors hover:text-primary";
 
+  // Determine dashboard link based on role
+  const getDashboardLink = () => {
+    if (isAdmin) return "/admin";
+    if (isMerchant) return "/merchant";
+    if (isFighter) return "/dashboard";
+    return "/dashboard";
+  };
+
+  const getDashboardLabel = () => {
+    if (isAdmin) return "Admin";
+    if (isMerchant) return "Merchant Portal";
+    if (isFighter) return "Dashboard";
+    return "Dashboard";
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -89,8 +104,8 @@ export function Navbar({ variant = "default" }: NavbarProps) {
           
           {user && variant === "default" && (
             <>
-              <Link to="/dashboard" className={linkClasses}>
-                Dashboard
+              <Link to={getDashboardLink()} className={linkClasses}>
+                {getDashboardLabel()}
               </Link>
               {isAdmin && (
                 <Link to="/admin" className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-widest text-primary transition-colors hover:text-primary/80">
@@ -107,8 +122,8 @@ export function Navbar({ variant = "default" }: NavbarProps) {
           {user ? (
             <>
               {variant === "landing" && (
-                <Link to="/dashboard" className={linkClasses}>
-                  Dashboard
+                <Link to={getDashboardLink()} className={linkClasses}>
+                  {getDashboardLabel()}
                 </Link>
               )}
               {isAdmin && variant === "landing" && (
@@ -169,12 +184,32 @@ export function Navbar({ variant = "default" }: NavbarProps) {
                 {user ? (
                   <>
                     <Link 
-                      to="/dashboard" 
+                      to={getDashboardLink()} 
                       onClick={closeMobileMenu}
                       className="text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
                     >
-                      Dashboard
+                      {getDashboardLabel()}
                     </Link>
+                    {isMerchant && (
+                      <Link 
+                        to="/merchant" 
+                        onClick={closeMobileMenu}
+                        className="flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
+                      >
+                        <Store className="h-5 w-5" />
+                        Merchant Portal
+                      </Link>
+                    )}
+                    {isFighter && (
+                      <Link 
+                        to="/dashboard" 
+                        onClick={closeMobileMenu}
+                        className="flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-foreground transition-colors hover:text-primary"
+                      >
+                        <Swords className="h-5 w-5" />
+                        Fighter Dashboard
+                      </Link>
+                    )}
                     {isAdmin && (
                       <Link 
                         to="/admin" 
