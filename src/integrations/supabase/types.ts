@@ -200,6 +200,234 @@ export type Database = {
         }
         Relationships: []
       }
+      float_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"]
+          id: string
+          idempotency_key: string | null
+          merchant_id: string
+          mission_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["ledger_entry_status"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_type: Database["public"]["Enums"]["ledger_entry_type"]
+          id?: string
+          idempotency_key?: string | null
+          merchant_id: string
+          mission_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["ledger_entry_status"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_type?: Database["public"]["Enums"]["ledger_entry_type"]
+          id?: string
+          idempotency_key?: string | null
+          merchant_id?: string
+          mission_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["ledger_entry_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "float_ledger_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "float_ledger_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchants: {
+        Row: {
+          created_at: string
+          currency: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          status: Database["public"]["Enums"]["merchant_status"]
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          status?: Database["public"]["Enums"]["merchant_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          status?: Database["public"]["Enums"]["merchant_status"]
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      mission_participations: {
+        Row: {
+          assigned_by: string | null
+          fighter_id: string
+          id: string
+          joined_at: string
+          mission_id: string
+          status: Database["public"]["Enums"]["participation_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          fighter_id: string
+          id?: string
+          joined_at?: string
+          mission_id: string
+          status?: Database["public"]["Enums"]["participation_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          fighter_id?: string
+          id?: string
+          joined_at?: string
+          mission_id?: string
+          status?: Database["public"]["Enums"]["participation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_participations_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_participations_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missions: {
+        Row: {
+          assignment_mode: string
+          budget: number | null
+          created_at: string
+          created_by: string | null
+          current_participants: number | null
+          description: string | null
+          end_date: string | null
+          evidence_type: Database["public"]["Enums"]["evidence_type"] | null
+          id: string
+          image_url: string | null
+          instructions: string | null
+          max_participants: number | null
+          merchant_id: string
+          mission_type: Database["public"]["Enums"]["mission_type"]
+          name: string
+          reward_per_participant: number | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["mission_status"]
+          targeting_criteria: Json | null
+          updated_at: string
+          validation_mode: Database["public"]["Enums"]["validation_mode"] | null
+        }
+        Insert: {
+          assignment_mode?: string
+          budget?: number | null
+          created_at?: string
+          created_by?: string | null
+          current_participants?: number | null
+          description?: string | null
+          end_date?: string | null
+          evidence_type?: Database["public"]["Enums"]["evidence_type"] | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          max_participants?: number | null
+          merchant_id: string
+          mission_type?: Database["public"]["Enums"]["mission_type"]
+          name: string
+          reward_per_participant?: number | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["mission_status"]
+          targeting_criteria?: Json | null
+          updated_at?: string
+          validation_mode?:
+            | Database["public"]["Enums"]["validation_mode"]
+            | null
+        }
+        Update: {
+          assignment_mode?: string
+          budget?: number | null
+          created_at?: string
+          created_by?: string | null
+          current_participants?: number | null
+          description?: string | null
+          end_date?: string | null
+          evidence_type?: Database["public"]["Enums"]["evidence_type"] | null
+          id?: string
+          image_url?: string | null
+          instructions?: string | null
+          max_participants?: number | null
+          merchant_id?: string
+          mission_type?: Database["public"]["Enums"]["mission_type"]
+          name?: string
+          reward_per_participant?: number | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["mission_status"]
+          targeting_criteria?: Json | null
+          updated_at?: string
+          validation_mode?:
+            | Database["public"]["Enums"]["validation_mode"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_clicks: {
         Row: {
           clicked_at: string
@@ -588,26 +816,110 @@ export type Database = {
           },
         ]
       }
+      submissions: {
+        Row: {
+          created_at: string
+          evidence_notes: string | null
+          evidence_type: Database["public"]["Enums"]["evidence_type"] | null
+          evidence_url: string | null
+          fighter_id: string
+          id: string
+          mission_id: string
+          paid_at: string | null
+          participation_id: string
+          payout_amount: number | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["submission_status"]
+        }
+        Insert: {
+          created_at?: string
+          evidence_notes?: string | null
+          evidence_type?: Database["public"]["Enums"]["evidence_type"] | null
+          evidence_url?: string | null
+          fighter_id: string
+          id?: string
+          mission_id: string
+          paid_at?: string | null
+          participation_id: string
+          payout_amount?: number | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+        }
+        Update: {
+          created_at?: string
+          evidence_notes?: string | null
+          evidence_type?: Database["public"]["Enums"]["evidence_type"] | null
+          evidence_url?: string | null
+          fighter_id?: string
+          id?: string
+          mission_id?: string
+          paid_at?: string | null
+          participation_id?: string
+          payout_amount?: number | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["submission_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_fighter_id_fkey"
+            columns: ["fighter_id"]
+            isOneToOne: false
+            referencedRelation: "fighters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_participation_id_fkey"
+            columns: ["participation_id"]
+            isOneToOne: false
+            referencedRelation: "mission_participations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
           id: string
+          merchant_id: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          merchant_id?: string | null
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          merchant_id?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "merchants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -615,6 +927,15 @@ export type Database = {
     }
     Functions: {
       generate_storefront_password: { Args: never; Returns: string }
+      get_merchant_balance: {
+        Args: { _merchant_id: string }
+        Returns: {
+          available_balance: number
+          reserved_balance: number
+          total_balance: number
+        }[]
+      }
+      get_user_merchant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -622,10 +943,51 @@ export type Database = {
         }
         Returns: boolean
       }
+      publish_mission: {
+        Args: { _idempotency_key: string; _mission_id: string }
+        Returns: boolean
+      }
+      user_belongs_to_merchant: {
+        Args: { _merchant_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      app_role: "fighter" | "admin"
+      app_role: "fighter" | "admin" | "merchant"
+      evidence_type:
+        | "photo"
+        | "video"
+        | "receipt"
+        | "screenshot"
+        | "link"
+        | "text"
       fighter_status: "pending" | "approved" | "rejected"
+      ledger_entry_status: "pending" | "posted" | "rejected"
+      ledger_entry_type:
+        | "topup"
+        | "reserve"
+        | "release"
+        | "payout"
+        | "adjustment"
+        | "fee"
+      merchant_status: "pending" | "active" | "suspended"
+      mission_status: "draft" | "scheduled" | "active" | "paused" | "closed"
+      mission_type:
+        | "purchase"
+        | "review"
+        | "social"
+        | "event"
+        | "referral"
+        | "custom"
+      participation_status:
+        | "joined"
+        | "started"
+        | "submitted"
+        | "approved"
+        | "rejected"
+        | "paid"
+      submission_status: "pending" | "approved" | "rejected"
+      validation_mode: "manual" | "auto" | "hybrid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -753,8 +1115,45 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["fighter", "admin"],
+      app_role: ["fighter", "admin", "merchant"],
+      evidence_type: [
+        "photo",
+        "video",
+        "receipt",
+        "screenshot",
+        "link",
+        "text",
+      ],
       fighter_status: ["pending", "approved", "rejected"],
+      ledger_entry_status: ["pending", "posted", "rejected"],
+      ledger_entry_type: [
+        "topup",
+        "reserve",
+        "release",
+        "payout",
+        "adjustment",
+        "fee",
+      ],
+      merchant_status: ["pending", "active", "suspended"],
+      mission_status: ["draft", "scheduled", "active", "paused", "closed"],
+      mission_type: [
+        "purchase",
+        "review",
+        "social",
+        "event",
+        "referral",
+        "custom",
+      ],
+      participation_status: [
+        "joined",
+        "started",
+        "submitted",
+        "approved",
+        "rejected",
+        "paid",
+      ],
+      submission_status: ["pending", "approved", "rejected"],
+      validation_mode: ["manual", "auto", "hybrid"],
     },
   },
 } as const
