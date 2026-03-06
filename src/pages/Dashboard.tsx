@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
-import { CheckCircle, Clock, XCircle, ExternalLink, Pencil, FileText } from "lucide-react";
+import { CheckCircle, Clock, XCircle, ExternalLink, Pencil, FileText, Target, ChevronRight, DollarSign } from "lucide-react";
 import { getStorefrontUrl } from "@/lib/config";
 import { ProductRequestSection } from "@/components/dashboard/ProductRequestSection";
 import type { Database } from "@/integrations/supabase/types";
@@ -70,6 +71,7 @@ export default function Dashboard() {
     country: "",
     short_bio: "",
   });
+  const [activeMissionsCount, setActiveMissionsCount] = useState(0);
 
   useEffect(() => {
     if (user) {
