@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select("role, merchant_id")
       .eq("user_id", userId);
     setRoles((data as UserRole[]) || []);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -41,13 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
 
         if (session?.user) {
           // Use setTimeout to avoid potential deadlock with Supabase client
           setTimeout(() => fetchRoles(session.user.id), 0);
         } else {
           setRoles([]);
+          setLoading(false);
         }
       }
     );
@@ -56,10 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
 
       if (session?.user) {
         fetchRoles(session.user.id);
+      } else {
+        setLoading(false);
       }
     });
 
