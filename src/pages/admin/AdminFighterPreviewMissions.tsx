@@ -213,7 +213,13 @@ export default function AdminFighterPreviewMissions() {
                       {mission.reward_per_participant && (
                         <span className="text-primary font-semibold">${mission.reward_per_participant}</span>
                       )}
-                      <Button size="sm" disabled>Join Mission</Button>
+                      <Button
+                        size="sm"
+                        disabled={joiningId === mission.id || (mission.max_participants != null && (mission.current_participants || 0) >= mission.max_participants)}
+                        onClick={() => handleJoin(mission.id)}
+                      >
+                        {joiningId === mission.id ? "Joining…" : "Join Mission"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
