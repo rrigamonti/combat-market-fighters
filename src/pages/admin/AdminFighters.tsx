@@ -31,7 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search, ChevronLeft, ChevronRight, Trash2, Square, CheckSquare, Minus } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Pencil, FileText, ArrowRight, Upload, X, Image, Plus, Copy, Search, ChevronLeft, ChevronRight, Trash2, Square, CheckSquare, Minus, Eye } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
@@ -1118,6 +1118,16 @@ export default function AdminFighters() {
                               {fighter.status === "approved" ? "Copy URL" : "Copy Credentials"}
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            asChild
+                          >
+                            <a href={`/admin/fighters/${fighter.id}/preview`}>
+                              <Eye className="h-3 w-3 mr-1" />
+                              Preview
+                            </a>
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
