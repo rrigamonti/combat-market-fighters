@@ -7,6 +7,7 @@ import { PageMeta } from "@/components/PageMeta";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle, Clock, XCircle, Target, ChevronRight, Users, Calendar,
   DollarSign,
@@ -33,7 +34,8 @@ export default function AdminFighterPreviewMissions() {
   const [loading, setLoading] = useState(true);
   const [missions, setMissions] = useState<MissionWithMerchant[]>([]);
   const [participations, setParticipations] = useState<Participation[]>([]);
-
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const { toast } = useToast();
   useEffect(() => {
     if (fighterId) fetchAll();
   }, [fighterId]);
@@ -53,6 +55,23 @@ export default function AdminFighterPreviewMissions() {
     setLoading(false);
   };
 
+  const handleJoin = async (missionId: string) => {
+    if (!fighterId) return;
+    setJoiningId(missionId);
+    const { error } = await supabase.from("mission_participations").insert({
+      fighter_id: fighterId,
+      mission_id: missionId,
+      status: "joined",
+      assigned_by: (await supabase.auth.getUser()).data.user?.id || null,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Joined", description: "Fighter enrolled in mission." });
+      await fetchAll();
+    }
+    setJoiningId(null);
+  };
   const getParticipation = (missionId: string) =>
     participations.find((p) => p.mission_id === missionId);
 
@@ -194,7 +213,13 @@ export default function AdminFighterPreviewMissions() {
                       {mission.reward_per_participant && (
                         <span className="text-primary font-semibold">${mission.reward_per_participant}</span>
                       )}
-                      <Button size="sm" disabled>Join Mission</Button>
+                      <Button
+                        size="sm"
+                        disabled={joiningId === mission.id || (mission.max_participants != null && (mission.current_participants || 0) >= mission.max_participants)}
+                        onClick={() => handleJoin(mission.id)}
+                      >
+                        {joiningId === mission.id ? "Joining…" : "Join Mission"}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
