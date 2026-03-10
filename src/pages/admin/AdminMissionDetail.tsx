@@ -207,6 +207,9 @@ export default function AdminMissionDetail() {
               {(mission as any).merchants?.name} · {mission.mission_type} · {mission.assignment_mode}
             </p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4 mr-1" /> Edit
+          </Button>
           <Select value={mission.status} onValueChange={(v) => statusMutation.mutate(v)}>
             <SelectTrigger className="w-[140px]">
               <Badge variant={statusColor(mission.status)}>{mission.status}</Badge>
