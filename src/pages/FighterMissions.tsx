@@ -82,6 +82,22 @@ export default function FighterMissions() {
       return;
     }
 
+    // Increment current_participants
+    const mission = missions.find((m) => m.id === missionId);
+    await supabase
+      .from("missions")
+      .update({ current_participants: (mission?.current_participants || 0) + 1 })
+      .eq("id", missionId);
+
+    // Notify merchant
+    notifyMerchant(
+      mission!.merchant_id,
+      "Fighter Joined Mission",
+      `${fighter.full_name || "A fighter"} joined "${mission?.name}"`,
+      "mission",
+      `/merchant/missions`
+    );
+
     toast({ title: "Joined!", description: "You've joined this mission." });
     fetchData();
   };

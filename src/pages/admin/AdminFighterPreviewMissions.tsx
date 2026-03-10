@@ -79,6 +79,22 @@ export default function AdminFighterPreviewMissions() {
         .update({ current_participants: (mission?.current_participants || 0) + 1 })
         .eq("id", missionId);
 
+      // Notify fighter and merchant
+      notifyFighter(
+        fighterId,
+        "Mission Assignment",
+        `You've been enrolled in "${mission?.name}"`,
+        "mission",
+        `/missions/${missionId}`
+      );
+      notifyMerchant(
+        mission!.merchant_id,
+        "Fighter Assigned",
+        `${fighter?.full_name || "A fighter"} was assigned to "${mission?.name}"`,
+        "mission",
+        `/merchant/missions`
+      );
+
       toast({ title: "Joined", description: "Fighter enrolled in mission." });
       await fetchAll();
     }
