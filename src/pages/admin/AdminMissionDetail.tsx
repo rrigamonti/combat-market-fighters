@@ -438,6 +438,8 @@ export default function AdminMissionDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <MissionEditDialog open={editOpen} onOpenChange={setEditOpen} mission={mission} />
       </div>
     </AdminLayout>
   );
