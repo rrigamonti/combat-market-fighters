@@ -258,12 +258,75 @@ export default function AdminMissionDetail() {
           </Card>
         </div>
 
-        {mission.description && (
-          <Card>
-            <CardHeader><CardTitle className="text-lg">Description</CardTitle></CardHeader>
-            <CardContent><p className="text-muted-foreground">{mission.description}</p></CardContent>
+        {/* Mission details */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {mission.image_url && (
+            <Card className="md:col-span-1">
+              <CardContent className="p-3">
+                <img src={mission.image_url} alt={mission.name} className="w-full rounded-lg object-cover max-h-48" />
+              </CardContent>
+            </Card>
+          )}
+          <Card className={mission.image_url ? "md:col-span-2" : "md:col-span-3"}>
+            <CardHeader><CardTitle className="text-lg">Details</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {mission.description && <p className="text-muted-foreground">{mission.description}</p>}
+              {mission.instructions && (
+                <div>
+                  <p className="text-sm font-medium text-foreground">Instructions</p>
+                  <p className="text-sm text-muted-foreground">{mission.instructions}</p>
+                </div>
+              )}
+              {mission.evidence_type && (
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-foreground">Proof method:</p>
+                  <Badge variant="outline" className="capitalize">{mission.evidence_type}</Badge>
+                </div>
+              )}
+            </CardContent>
           </Card>
-        )}
+        </div>
+
+        {/* Fighter completion overview */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5" /> Fighter Completion Tracker
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {participations.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No fighters assigned yet</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {participations.map((p: any) => {
+                  const sub = submissions.find((s: any) => s.fighter_id === p.fighter_id);
+                  const isCompleted = ["approved", "paid"].includes(p.status);
+                  const isSubmitted = p.status === "submitted" || sub?.status === "pending";
+                  const isRejected = p.status === "rejected";
+
+                  return (
+                    <div
+                      key={p.id}
+                      className={`rounded-lg border p-3 text-center space-y-1 ${
+                        isCompleted ? "border-primary/50 bg-primary/5" :
+                        isRejected ? "border-destructive/50 bg-destructive/5" :
+                        isSubmitted ? "border-yellow-500/50 bg-yellow-500/5" :
+                        "border-border"
+                      }`}
+                    >
+                      <div className="text-2xl">
+                        {isCompleted ? "✅" : isRejected ? "❌" : isSubmitted ? "⏳" : "🔲"}
+                      </div>
+                      <p className="text-sm font-medium truncate">{p.fighters?.full_name || p.fighters?.handle || "Unknown"}</p>
+                      <Badge variant={statusColor(p.status)} className="text-xs">{p.status}</Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Tabs defaultValue="fighters">
           <TabsList>
