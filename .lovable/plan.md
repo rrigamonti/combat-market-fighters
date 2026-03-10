@@ -1,34 +1,62 @@
 
 
-## Update FAQ Section with Official Content
+## Findings: Missing and Broken Flows Across the Project
 
-Replace the current 4 FAQ items in `src/pages/LandingV2.tsx` with all 17 questions from the uploaded PDF document.
+### Critical: Submission Approval Does NOT Create a Payout Ledger Entry
 
-### Changes
+When an admin approves a fighter's submission in `AdminMissionDetail.tsx` (line 140-156), it:
+- Updates `submissions.payout_amount` and `submissions.status`
+- Updates `mission_participations.status` to "approved"
+- Notifies the fighter
 
-**File: `src/pages/LandingV2.tsx`** (lines 43-60)
+But it **never inserts a `float_ledger` record** of type `payout`. This means:
+- The merchant's reserved budget is never actually debited
+- The merchant billing page (`MerchantBilling.tsx`) never shows the payout transaction
+- The `get_merchant_balance()` RPC returns incorrect balances — reserved money stays reserved forever after approval
 
-Replace the `faqItems` array with 17 items extracted from the PDF:
+**Fix:** After approving a submission, insert a `float_ledger` row with `entry_type: 'payout'` and the reward amount, debiting from the merchant's reserved balance.
 
-1. What is Combat Market?
-2. How do I get invited?
-3. What brands can I add to my storefront?
-4. How do earnings work?
-5. How do I get paid?
-6. Do I need to change the products I use?
-7. Is this just another affiliate program?
-8. Can I refer other fighters and earn commission?
-9. How do I promote my storefront?
-10. Do I need to constantly sell to make money?
-11. Who handles brand negotiations?
-12. Do I get ongoing support?
-13. Do I receive products?
-14. How much does it cost to join?
-15. How do you know what products I use?
-16. Is Combat Market a sponsorship?
-17. Can I still work with other brands and sponsors?
+---
 
-Each answer will be condensed into a clean 1-3 sentence format suitable for the accordion UI, preserving the key message from the PDF while keeping it scannable. The `FAQSchema` structured data will automatically pick up the new items since it already reads from this array.
+### Missing: Mission Close Does NOT Release Unspent Budget
 
-No new files or database changes needed.
+When an admin changes a mission status to "closed" or "paused" via the status dropdown, there is no logic to release unspent reserved budget back to the merchant's available balance. The `publish_mission` RPC correctly reserves budget on activation, but there is no corresponding `release` ledger entry when a mission ends.
+
+**Fix:** When closing a mission, calculate unspent budget (budget minus total approved payouts) and insert a `float_ledger` `release` entry for the remainder.
+
+---
+
+### Duplicated Constants: `sports` and `countries` Arrays
+
+The `sports` and `countries` arrays are copy-pasted identically in:
+- `src/pages/FighterSignup.tsx` (lines 46-77)
+- `src/pages/Dashboard.tsx` (lines 29-60)
+- `src/pages/admin/AdminFighters.tsx`
+
+Any addition (e.g. a new sport) must be updated in 3+ places.
+
+**Fix:** Extract to `src/lib/constants.ts` and import everywhere.
+
+---
+
+### Minor: `statusColor` Helper Duplicated in 4 Files
+
+Local `statusColor()` functions with slightly different mappings exist in:
+- `AdminMissionDetail.tsx`
+- `AdminMissions.tsx`
+- `MerchantMissions.tsx`
+- `MerchantSubmissions.tsx`
+
+Already centralized `missionHelpers.tsx` for participation/submission badges, but mission-level status color is still local. Could be added to the same helper file.
+
+---
+
+### Summary of Proposed Changes
+
+| Priority | Issue | Files Affected |
+|----------|-------|---------------|
+| **Critical** | Add payout ledger entry on submission approval | `AdminMissionDetail.tsx` |
+| **High** | Add budget release on mission close | `AdminMissionDetail.tsx` |
+| **Medium** | Extract `sports`/`countries` to shared constants | `constants.ts`, 3 consumers |
+| **Low** | Centralize `statusColor` for mission statuses | `missionHelpers.tsx`, 4 consumers |
 
