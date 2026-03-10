@@ -43,38 +43,7 @@ const signupSchema = z.object({
   socialTapology: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
-const sports = [
-  "MMA",
-  "Boxing",
-  "Muay Thai",
-  "Brazilian Jiu-Jitsu",
-  "Wrestling",
-  "Kickboxing",
-  "Bare Knuckle",
-  "Karate",
-  "Judo",
-  "Taekwondo",
-  "Personal Trainer",
-  "Coach",
-];
-
-const countries = [
-  "United States",
-  "Brazil",
-  "United Kingdom",
-  "Ireland",
-  "Russia",
-  "Thailand",
-  "Japan",
-  "Australia",
-  "Canada",
-  "Mexico",
-  "Netherlands",
-  "France",
-  "Germany",
-  "Poland",
-  "Other",
-];
+import { SPORTS as sports, COUNTRIES as countries } from "@/lib/constants";
 
 export default function FighterSignup() {
   const navigate = useNavigate();

@@ -225,15 +225,7 @@ export default function AdminMissionDetail() {
     return <AdminLayout><div className="flex items-center justify-center py-20 text-muted-foreground">Mission not found</div></AdminLayout>;
   }
 
-  const statusColor = (s: string) => {
-    switch (s) {
-      case "active": case "approved": case "paid": return "default";
-      case "draft": case "joined": case "started": return "secondary";
-      case "closed": case "submitted": return "outline";
-      case "paused": case "rejected": return "destructive";
-      default: return "secondary";
-    }
-  };
+  const statusColor = getMissionStatusVariant;
 
   return (
     <AdminLayout>

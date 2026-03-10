@@ -74,14 +74,7 @@ export default function MerchantSubmissions() {
     fetch();
   }, [merchantId]);
 
-  const statusColor = (s: string) => {
-    const map: Record<string, string> = {
-      pending: "bg-amber-500/10 text-amber-500",
-      approved: "bg-green-500/10 text-green-500",
-      rejected: "bg-red-500/10 text-red-500",
-    };
-    return map[s] || "bg-muted text-muted-foreground";
-  };
+  const statusColor = getSubmissionStatusColor;
 
   return (
     <MerchantLayout>

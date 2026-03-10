@@ -41,16 +41,7 @@ export default function MerchantMissions() {
     fetch();
   }, [merchantId]);
 
-  const statusColor = (s: string) => {
-    const map: Record<string, string> = {
-      active: "bg-green-500/10 text-green-500",
-      draft: "bg-muted text-muted-foreground",
-      scheduled: "bg-blue-500/10 text-blue-500",
-      paused: "bg-amber-500/10 text-amber-500",
-      closed: "bg-red-500/10 text-red-500",
-    };
-    return map[s] || "bg-muted text-muted-foreground";
-  };
+  const statusColor = getMissionStatusColor;
 
   return (
     <MerchantLayout>

@@ -99,15 +99,7 @@ export default function AdminMissions() {
     return { total: parts.length, completed, pending, approved, submissionCount: subs.length };
   };
 
-  const statusColor = (s: string) => {
-    switch (s) {
-      case "active": return "default";
-      case "draft": return "secondary";
-      case "closed": return "outline";
-      case "paused": return "destructive";
-      default: return "secondary";
-    }
-  };
+  const statusColor = getMissionStatusVariant;
 
   const missionTypeLabel = (t: string) => {
     const labels: Record<string, string> = { purchase: "Purchase", review: "Review", social: "Social", event: "Event", referral: "Referral", custom: "Custom" };
