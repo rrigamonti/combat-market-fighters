@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { notifyMerchant } from "@/lib/createNotification";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,7 +23,7 @@ export default function FighterMissions() {
   const { toast } = useToast();
   const [missions, setMissions] = useState<MissionWithMerchant[]>([]);
   const [participations, setParticipations] = useState<Participation[]>([]);
-  const [fighter, setFighter] = useState<{ id: string } | null>(null);
+  const [fighter, setFighter] = useState<{ id: string; full_name: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
 
@@ -35,7 +36,7 @@ export default function FighterMissions() {
 
     const { data: fighterData } = await supabase
       .from("fighters")
-      .select("id")
+      .select("id, full_name")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -81,6 +82,22 @@ export default function FighterMissions() {
       toast({ variant: "destructive", title: "Error", description: error.message });
       return;
     }
+
+    // Increment current_participants
+    const mission = missions.find((m) => m.id === missionId);
+    await supabase
+      .from("missions")
+      .update({ current_participants: (mission?.current_participants || 0) + 1 })
+      .eq("id", missionId);
+
+    // Notify merchant
+    notifyMerchant(
+      mission!.merchant_id,
+      "Fighter Joined Mission",
+      `${fighter.full_name || "A fighter"} joined "${mission?.name}"`,
+      "mission",
+      `/merchant/missions`
+    );
 
     toast({ title: "Joined!", description: "You've joined this mission." });
     fetchData();

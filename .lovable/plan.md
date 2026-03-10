@@ -1,26 +1,34 @@
 
 
-## Findings: Evident Flaws and Missing Parts
+## Update FAQ Section with Official Content
 
-### 1. Bug: Fighter join does NOT increment `current_participants`
-In `FighterMissions.tsx` (line 72-76), when a fighter joins a mission via their own dashboard, `handleJoin` inserts into `mission_participations` but **never updates** `missions.current_participants`. This means the "spots left" counter drifts out of sync. The admin preview (`AdminFighterPreviewMissions.tsx`) was fixed, but the actual fighter-facing page was not.
+Replace the current 4 FAQ items in `src/pages/LandingV2.tsx` with all 17 questions from the uploaded PDF document.
 
-### 2. Missing: No notifications when admin joins fighter from preview
-In `AdminMissionDetail.tsx`, the `assignMutation` sends notifications to both the fighter ("You've been assigned to mission X") and the merchant ("A fighter has been assigned"). In `AdminFighterPreviewMissions.tsx`, `handleJoin` does neither — the fighter and merchant are never notified.
+### Changes
 
-### 3. Missing: No notification when fighter self-joins
-In `FighterMissions.tsx`, `handleJoin` inserts the participation but sends no notification to the merchant that a fighter has joined their mission.
+**File: `src/pages/LandingV2.tsx`** (lines 43-60)
 
----
+Replace the `faqItems` array with 17 items extracted from the PDF:
 
-### Fix Plan
+1. What is Combat Market?
+2. How do I get invited?
+3. What brands can I add to my storefront?
+4. How do earnings work?
+5. How do I get paid?
+6. Do I need to change the products I use?
+7. Is this just another affiliate program?
+8. Can I refer other fighters and earn commission?
+9. How do I promote my storefront?
+10. Do I need to constantly sell to make money?
+11. Who handles brand negotiations?
+12. Do I get ongoing support?
+13. Do I receive products?
+14. How much does it cost to join?
+15. How do you know what products I use?
+16. Is Combat Market a sponsorship?
+17. Can I still work with other brands and sponsors?
 
-**Task 1: Fix `FighterMissions.tsx` — increment participants + notify merchant**
-- After successful insert, update `missions.current_participants` (same pattern as admin preview).
-- Call `notifyMerchant(mission.merchant_id, ...)` to inform the brand a fighter joined.
+Each answer will be condensed into a clean 1-3 sentence format suitable for the accordion UI, preserving the key message from the PDF while keeping it scannable. The `FAQSchema` structured data will automatically pick up the new items since it already reads from this array.
 
-**Task 2: Fix `AdminFighterPreviewMissions.tsx` — add notifications**
-- After successful join, call `notifyFighter(fighterId, ...)` and `notifyMerchant(mission.merchant_id, ...)` matching the pattern in `AdminMissionDetail.tsx`.
-
-Both are small, surgical changes — ~5-10 lines each.
+No new files or database changes needed.
 
