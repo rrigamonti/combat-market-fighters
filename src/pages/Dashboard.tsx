@@ -26,38 +26,7 @@ interface PendingChanges {
   submitted_at?: string;
 }
 
-const sports = [
-  "MMA",
-  "Boxing",
-  "Muay Thai",
-  "Brazilian Jiu-Jitsu",
-  "Wrestling",
-  "Kickboxing",
-  "Bare Knuckle",
-  "Karate",
-  "Judo",
-  "Taekwondo",
-  "Personal Trainer",
-  "Coach",
-];
-
-const countries = [
-  "United States",
-  "Brazil",
-  "United Kingdom",
-  "Ireland",
-  "Russia",
-  "Thailand",
-  "Japan",
-  "Australia",
-  "Canada",
-  "Mexico",
-  "Netherlands",
-  "France",
-  "Germany",
-  "Poland",
-  "Other",
-];
+import { SPORTS as sports, COUNTRIES as countries } from "@/lib/constants";
 
 export default function Dashboard() {
   const { user } = useAuth();

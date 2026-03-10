@@ -15,6 +15,7 @@ import { MissionEditDialog } from "@/components/admin/MissionEditDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notifyFighter, notifyMerchant } from "@/lib/createNotification";
+import { getMissionStatusVariant } from "@/lib/missionHelpers";
 
 export default function AdminMissionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -98,6 +99,31 @@ export default function AdminMissionDetail() {
           .update({ status: newStatus as any })
           .eq("id", id!);
         if (error) throw error;
+
+        // Release unspent budget when closing a mission
+        if (newStatus === "closed" && mission) {
+          const { data: approvedSubs } = await supabase
+            .from("submissions")
+            .select("payout_amount")
+            .eq("mission_id", id!)
+            .eq("status", "approved");
+          const totalPaid = (approvedSubs || []).reduce(
+            (sum, s) => sum + (Number(s.payout_amount) || 0), 0
+          );
+          const unspent = (mission.budget || 0) - totalPaid;
+          if (unspent > 0) {
+            await supabase.from("float_ledger").insert({
+              merchant_id: mission.merchant_id,
+              mission_id: id!,
+              entry_type: "release" as const,
+              amount: unspent,
+              status: "posted" as const,
+              description: `Unspent budget released for closed mission: ${mission.name}`,
+              posted_at: new Date().toISOString(),
+              created_by: user?.id,
+            });
+          }
+        }
       }
     },
     onSuccess: () => {
@@ -139,13 +165,14 @@ export default function AdminMissionDetail() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ submissionId, status, participationId }: { submissionId: string; status: string; participationId: string }) => {
+      const payoutAmount = status === "approved" ? mission?.reward_per_participant : null;
       const { error } = await supabase
         .from("submissions")
         .update({
           status: status as any,
           reviewed_by: user?.id,
           reviewed_at: new Date().toISOString(),
-          payout_amount: status === "approved" ? mission?.reward_per_participant : null,
+          payout_amount: payoutAmount,
         })
         .eq("id", submissionId);
       if (error) throw error;
@@ -154,6 +181,21 @@ export default function AdminMissionDetail() {
       await supabase.from("mission_participations")
         .update({ status: status === "approved" ? "approved" as const : "rejected" as const })
         .eq("id", participationId);
+
+      // Record payout in float ledger so merchant balance is correctly debited
+      if (status === "approved" && payoutAmount && mission) {
+        await supabase.from("float_ledger").insert({
+          merchant_id: mission.merchant_id,
+          mission_id: id!,
+          entry_type: "payout" as const,
+          amount: payoutAmount,
+          status: "posted" as const,
+          description: `Payout for submission on mission: ${mission.name}`,
+          reference: submissionId,
+          posted_at: new Date().toISOString(),
+          created_by: user?.id,
+        });
+      }
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-mission-submissions", id] });
@@ -183,15 +225,7 @@ export default function AdminMissionDetail() {
     return <AdminLayout><div className="flex items-center justify-center py-20 text-muted-foreground">Mission not found</div></AdminLayout>;
   }
 
-  const statusColor = (s: string) => {
-    switch (s) {
-      case "active": case "approved": case "paid": return "default";
-      case "draft": case "joined": case "started": return "secondary";
-      case "closed": case "submitted": return "outline";
-      case "paused": case "rejected": return "destructive";
-      default: return "secondary";
-    }
-  };
+  const statusColor = getMissionStatusVariant;
 
   return (
     <AdminLayout>

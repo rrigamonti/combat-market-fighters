@@ -87,38 +87,7 @@ const statusConfig: Record<FighterStatus, { label: string; variant: "default" | 
   rejected: { label: "Rejected", variant: "destructive", icon: XCircle },
 };
 
-const sports = [
-  "MMA",
-  "Boxing",
-  "Muay Thai",
-  "Brazilian Jiu-Jitsu",
-  "Wrestling",
-  "Kickboxing",
-  "Bare Knuckle",
-  "Karate",
-  "Judo",
-  "Taekwondo",
-  "Personal Trainer",
-  "Coach",
-];
-
-const countries = [
-  "United States",
-  "Brazil",
-  "United Kingdom",
-  "Ireland",
-  "Russia",
-  "Thailand",
-  "Japan",
-  "Australia",
-  "Canada",
-  "Mexico",
-  "Netherlands",
-  "France",
-  "Germany",
-  "Poland",
-  "Other",
-];
+import { SPORTS as sports, COUNTRIES as countries } from "@/lib/constants";
 
 const ITEMS_PER_PAGE = 20;
 
