@@ -34,7 +34,8 @@ export default function AdminFighterPreviewMissions() {
   const [loading, setLoading] = useState(true);
   const [missions, setMissions] = useState<MissionWithMerchant[]>([]);
   const [participations, setParticipations] = useState<Participation[]>([]);
-
+  const [joiningId, setJoiningId] = useState<string | null>(null);
+  const { toast } = useToast();
   useEffect(() => {
     if (fighterId) fetchAll();
   }, [fighterId]);
