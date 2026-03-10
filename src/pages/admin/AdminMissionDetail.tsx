@@ -15,6 +15,7 @@ import { MissionEditDialog } from "@/components/admin/MissionEditDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notifyFighter, notifyMerchant } from "@/lib/createNotification";
+import { getMissionStatusVariant } from "@/lib/missionHelpers";
 
 export default function AdminMissionDetail() {
   const { id } = useParams<{ id: string }>();
