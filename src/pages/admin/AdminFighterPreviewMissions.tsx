@@ -55,6 +55,23 @@ export default function AdminFighterPreviewMissions() {
     setLoading(false);
   };
 
+  const handleJoin = async (missionId: string) => {
+    if (!fighterId) return;
+    setJoiningId(missionId);
+    const { error } = await supabase.from("mission_participations").insert({
+      fighter_id: fighterId,
+      mission_id: missionId,
+      status: "joined",
+      assigned_by: (await supabase.auth.getUser()).data.user?.id || null,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Joined", description: "Fighter enrolled in mission." });
+      await fetchAll();
+    }
+    setJoiningId(null);
+  };
   const getParticipation = (missionId: string) =>
     participations.find((p) => p.mission_id === missionId);
 
