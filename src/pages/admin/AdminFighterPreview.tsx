@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  CheckCircle, Clock, XCircle, ExternalLink, Target, ChevronRight,
+  CheckCircle, ExternalLink, Target,
   DollarSign, FileText, Package
 } from "lucide-react";
 import { getStorefrontUrl } from "@/lib/config";
 import type { Database } from "@/integrations/supabase/types";
+import { getParticipationStatusBadge } from "@/lib/missionHelpers";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
 
