@@ -165,13 +165,14 @@ export default function AdminMissionDetail() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ submissionId, status, participationId }: { submissionId: string; status: string; participationId: string }) => {
+      const payoutAmount = status === "approved" ? mission?.reward_per_participant : null;
       const { error } = await supabase
         .from("submissions")
         .update({
           status: status as any,
           reviewed_by: user?.id,
           reviewed_at: new Date().toISOString(),
-          payout_amount: status === "approved" ? mission?.reward_per_participant : null,
+          payout_amount: payoutAmount,
         })
         .eq("id", submissionId);
       if (error) throw error;
@@ -180,6 +181,21 @@ export default function AdminMissionDetail() {
       await supabase.from("mission_participations")
         .update({ status: status === "approved" ? "approved" as const : "rejected" as const })
         .eq("id", participationId);
+
+      // Record payout in float ledger so merchant balance is correctly debited
+      if (status === "approved" && payoutAmount && mission) {
+        await supabase.from("float_ledger").insert({
+          merchant_id: mission.merchant_id,
+          mission_id: id!,
+          entry_type: "payout" as const,
+          amount: payoutAmount,
+          status: "posted" as const,
+          description: `Payout for submission on mission: ${mission.name}`,
+          reference: submissionId,
+          posted_at: new Date().toISOString(),
+          created_by: user?.id,
+        });
+      }
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-mission-submissions", id] });
