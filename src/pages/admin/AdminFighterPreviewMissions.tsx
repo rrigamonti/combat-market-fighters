@@ -1,25 +1,20 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FighterPreviewLayout } from "@/components/admin/FighterPreviewLayout";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { PageMeta } from "@/components/PageMeta";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import {
-  CheckCircle, Clock, XCircle, Target, ChevronRight, Users, Calendar,
-  DollarSign,
-} from "lucide-react";
+import { Target, Users, Calendar } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  MissionWithMerchant,
+  getParticipationStatusBadge,
+  getMissionTypeBadge,
+} from "@/lib/missionHelpers";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
-type Mission = Database["public"]["Tables"]["missions"]["Row"];
-
-interface MissionWithMerchant extends Mission {
-  merchants: { name: string; logo_url: string | null } | null;
-}
 
 interface Participation {
   id: string;
@@ -36,6 +31,7 @@ export default function AdminFighterPreviewMissions() {
   const [participations, setParticipations] = useState<Participation[]>([]);
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const { toast } = useToast();
+
   useEffect(() => {
     if (fighterId) fetchAll();
   }, [fighterId]);
@@ -45,12 +41,19 @@ export default function AdminFighterPreviewMissions() {
 
     const [fighterRes, missionsRes, partsRes] = await Promise.all([
       supabase.from("fighters").select("*").eq("id", fighterId).single(),
-      supabase.from("missions").select("*, merchants(name, logo_url)").in("status", ["active", "scheduled"]).order("created_at", { ascending: false }),
-      supabase.from("mission_participations").select("id, status, joined_at, mission_id").eq("fighter_id", fighterId),
+      supabase
+        .from("missions")
+        .select("*, merchants(name, logo_url)")
+        .in("status", ["active", "scheduled"])
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("mission_participations")
+        .select("id, status, joined_at, mission_id")
+        .eq("fighter_id", fighterId),
     ]);
 
     setFighter(fighterRes.data);
-    setMissions((missionsRes.data as any) || []);
+    setMissions((missionsRes.data as MissionWithMerchant[]) || []);
     setParticipations(partsRes.data || []);
     setLoading(false);
   };
@@ -58,56 +61,47 @@ export default function AdminFighterPreviewMissions() {
   const handleJoin = async (missionId: string) => {
     if (!fighterId) return;
     setJoiningId(missionId);
+
     const { error } = await supabase.from("mission_participations").insert({
       fighter_id: fighterId,
       mission_id: missionId,
       status: "joined",
       assigned_by: (await supabase.auth.getUser()).data.user?.id || null,
     });
+
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      // Increment current_participants to keep spots counter accurate
+      const mission = missions.find((m) => m.id === missionId);
+      await supabase
+        .from("missions")
+        .update({ current_participants: (mission?.current_participants || 0) + 1 })
+        .eq("id", missionId);
+
       toast({ title: "Joined", description: "Fighter enrolled in mission." });
       await fetchAll();
     }
     setJoiningId(null);
   };
+
   const getParticipation = (missionId: string) =>
     participations.find((p) => p.mission_id === missionId);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "joined": case "started":
-        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20"><Clock className="mr-1 h-3 w-3" /> In Progress</Badge>;
-      case "submitted":
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3" /> Submitted</Badge>;
-      case "approved": case "paid":
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle className="mr-1 h-3 w-3" /> Completed</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="mr-1 h-3 w-3" /> Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getMissionTypeBadge = (type: string) => {
-    const colors: Record<string, string> = {
-      purchase: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-      review: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      social: "bg-pink-500/10 text-pink-500 border-pink-500/20",
-      event: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-      referral: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-      custom: "bg-gray-500/10 text-gray-500 border-gray-500/20",
-    };
-    return <Badge className={colors[type] || colors.custom}>{type}</Badge>;
-  };
-
   if (loading) {
-    return <AdminLayout><div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></AdminLayout>;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
   }
 
   if (!fighter) {
-    return <AdminLayout><div className="flex items-center justify-center py-20 text-muted-foreground">Fighter not found</div></AdminLayout>;
+    return (
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
+        Fighter not found
+      </div>
+    );
   }
 
   const myMissions = missions.filter((m) => getParticipation(m.id));
@@ -146,17 +140,17 @@ export default function AdminFighterPreviewMissions() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium truncate">{mission.name}</p>
                           {getMissionTypeBadge(mission.mission_type)}
-                          {getStatusBadge(participation.status)}
+                          {getParticipationStatusBadge(participation.status)}
                         </div>
                         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                          {(mission as any).merchants?.name && (
-                            <span>by {(mission as any).merchants.name}</span>
-                          )}
+                          {mission.merchants?.name && <span>by {mission.merchants.name}</span>}
                           <span>Joined {new Date(participation.joined_at).toLocaleDateString()}</span>
                         </div>
                       </div>
                       {mission.reward_per_participant && (
-                        <span className="text-primary font-semibold ml-4">${mission.reward_per_participant}</span>
+                        <span className="text-primary font-semibold ml-4">
+                          ${mission.reward_per_participant}
+                        </span>
                       )}
                     </CardContent>
                   </Card>
@@ -189,9 +183,7 @@ export default function AdminFighterPreviewMissions() {
                         {getMissionTypeBadge(mission.mission_type)}
                       </div>
                       <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                        {(mission as any).merchants?.name && (
-                          <span>by {(mission as any).merchants.name}</span>
-                        )}
+                        {mission.merchants?.name && <span>by {mission.merchants.name}</span>}
                         {mission.max_participants && (
                           <span className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
@@ -206,16 +198,24 @@ export default function AdminFighterPreviewMissions() {
                         )}
                       </div>
                       {mission.description && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{mission.description}</p>
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                          {mission.description}
+                        </p>
                       )}
                     </div>
                     <div className="flex items-center gap-3 ml-4">
                       {mission.reward_per_participant && (
-                        <span className="text-primary font-semibold">${mission.reward_per_participant}</span>
+                        <span className="text-primary font-semibold">
+                          ${mission.reward_per_participant}
+                        </span>
                       )}
                       <Button
                         size="sm"
-                        disabled={joiningId === mission.id || (mission.max_participants != null && (mission.current_participants || 0) >= mission.max_participants)}
+                        disabled={
+                          joiningId === mission.id ||
+                          (mission.max_participants != null &&
+                            (mission.current_participants || 0) >= mission.max_participants)
+                        }
                         onClick={() => handleJoin(mission.id)}
                       >
                         {joiningId === mission.id ? "Joining…" : "Join Mission"}

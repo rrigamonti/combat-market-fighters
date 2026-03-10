@@ -4,15 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { FighterPreviewLayout } from "@/components/admin/FighterPreviewLayout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { PageMeta } from "@/components/PageMeta";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  CheckCircle, Clock, XCircle, ExternalLink, Target, ChevronRight,
+  CheckCircle, ExternalLink, Target,
   DollarSign, FileText, Package
 } from "lucide-react";
 import { getStorefrontUrl } from "@/lib/config";
 import type { Database } from "@/integrations/supabase/types";
+import { getParticipationStatusBadge } from "@/lib/missionHelpers";
 
 type Fighter = Database["public"]["Tables"]["fighters"]["Row"];
 
@@ -80,14 +80,7 @@ export default function AdminFighterPreview() {
     setLoading(false);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved": return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><CheckCircle className="mr-1 h-3 w-3" /> Approved</Badge>;
-      case "pending": return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20"><Clock className="mr-1 h-3 w-3" /> Pending</Badge>;
-      case "rejected": return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="mr-1 h-3 w-3" /> Rejected</Badge>;
-      default: return <Badge variant="outline">{status}</Badge>;
-    }
-  };
+  const getStatusBadge = getParticipationStatusBadge;
 
   if (loading) {
     return <AdminLayout><div className="flex items-center justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></AdminLayout>;

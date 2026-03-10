@@ -5,18 +5,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { PageMeta } from "@/components/PageMeta";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Target, Calendar, DollarSign, Users, ChevronRight, CheckCircle, Clock } from "lucide-react";
+import { Target, Calendar, DollarSign, Users, ChevronRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  MissionWithMerchant,
+  getParticipationStatusBadge,
+  getMissionTypeBadge,
+} from "@/lib/missionHelpers";
 
-type Mission = Database["public"]["Tables"]["missions"]["Row"];
 type Participation = Database["public"]["Tables"]["mission_participations"]["Row"];
-
-interface MissionWithMerchant extends Mission {
-  merchants: { name: string; logo_url: string | null } | null;
-}
 
 export default function FighterMissions() {
   const { user } = useAuth();
@@ -34,7 +33,6 @@ export default function FighterMissions() {
   const fetchData = async () => {
     if (!user) return;
 
-    // Get fighter profile
     const { data: fighterData } = await supabase
       .from("fighters")
       .select("id")
@@ -47,7 +45,6 @@ export default function FighterMissions() {
     }
     setFighter(fighterData);
 
-    // Fetch missions and participations in parallel
     const [missionsRes, participationsRes] = await Promise.all([
       supabase
         .from("missions")
@@ -87,29 +84,6 @@ export default function FighterMissions() {
 
     toast({ title: "Joined!", description: "You've joined this mission." });
     fetchData();
-  };
-
-  const getMissionTypeBadge = (type: string) => {
-    const colors: Record<string, string> = {
-      social: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      review: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-      purchase: "bg-green-500/10 text-green-500 border-green-500/20",
-      event: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-      referral: "bg-pink-500/10 text-pink-500 border-pink-500/20",
-      custom: "bg-muted text-muted-foreground border-border",
-    };
-    return (
-      <Badge className={colors[type] || colors.custom}>
-        {type.charAt(0).toUpperCase() + type.slice(1)}
-      </Badge>
-    );
-  };
-
-  const getStatusBadge = (status: string) => {
-    if (status === "joined") return <Badge variant="outline" className="border-blue-500/20 text-blue-500"><Clock className="mr-1 h-3 w-3" />Joined</Badge>;
-    if (status === "submitted") return <Badge variant="outline" className="border-yellow-500/20 text-yellow-500"><Clock className="mr-1 h-3 w-3" />Submitted</Badge>;
-    if (status === "approved" || status === "paid") return <Badge variant="outline" className="border-green-500/20 text-green-500"><CheckCircle className="mr-1 h-3 w-3" />{status === "paid" ? "Paid" : "Approved"}</Badge>;
-    return <Badge variant="outline">{status}</Badge>;
   };
 
   if (loading) {
@@ -152,7 +126,7 @@ export default function FighterMissions() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold truncate">{mission.name}</h3>
                           {getMissionTypeBadge(mission.mission_type)}
-                          {getStatusBadge(participation.status)}
+                          {getParticipationStatusBadge(participation.status)}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 truncate">
                           {mission.merchants?.name || "Unknown brand"}

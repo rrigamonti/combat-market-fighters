@@ -12,17 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Target, DollarSign, Calendar, Users, Upload, CheckCircle, Clock, XCircle } from "lucide-react";
+import { ArrowLeft, Target, DollarSign, Calendar, Users, Upload, CheckCircle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { notifyMerchant } from "@/lib/createNotification";
+import { MissionWithMerchant, getSubmissionStatusBadge } from "@/lib/missionHelpers";
 
-type Mission = Database["public"]["Tables"]["missions"]["Row"];
 type Participation = Database["public"]["Tables"]["mission_participations"]["Row"];
 type Submission = Database["public"]["Tables"]["submissions"]["Row"];
-
-interface MissionWithMerchant extends Mission {
-  merchants: { name: string; logo_url: string | null } | null;
-}
 
 export default function FighterMissionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -95,7 +91,6 @@ export default function FighterMissionDetail() {
       .eq("id", participation.id);
 
     toast({ title: "Evidence Submitted", description: "Your submission is now under review." });
-    // Notify the merchant
     if (mission?.merchant_id) {
       notifyMerchant(mission.merchant_id, "New Submission Received", `A fighter submitted evidence for mission: ${mission.name}`, "submission_received", `/merchant/submissions`);
     }
@@ -104,13 +99,6 @@ export default function FighterMissionDetail() {
     setEvidenceType("");
     setSubmitting(false);
     fetchData();
-  };
-
-  const getSubmissionStatusBadge = (status: string) => {
-    if (status === "pending") return <Badge variant="outline" className="border-yellow-500/20 text-yellow-500"><Clock className="mr-1 h-3 w-3" />Pending Review</Badge>;
-    if (status === "approved") return <Badge variant="outline" className="border-green-500/20 text-green-500"><CheckCircle className="mr-1 h-3 w-3" />Approved</Badge>;
-    if (status === "rejected") return <Badge variant="outline" className="border-red-500/20 text-red-500"><XCircle className="mr-1 h-3 w-3" />Rejected</Badge>;
-    return <Badge variant="outline">{status}</Badge>;
   };
 
   if (loading) {
