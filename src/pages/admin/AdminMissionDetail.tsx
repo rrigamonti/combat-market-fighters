@@ -99,6 +99,31 @@ export default function AdminMissionDetail() {
           .update({ status: newStatus as any })
           .eq("id", id!);
         if (error) throw error;
+
+        // Release unspent budget when closing a mission
+        if (newStatus === "closed" && mission) {
+          const { data: approvedSubs } = await supabase
+            .from("submissions")
+            .select("payout_amount")
+            .eq("mission_id", id!)
+            .eq("status", "approved");
+          const totalPaid = (approvedSubs || []).reduce(
+            (sum, s) => sum + (Number(s.payout_amount) || 0), 0
+          );
+          const unspent = (mission.budget || 0) - totalPaid;
+          if (unspent > 0) {
+            await supabase.from("float_ledger").insert({
+              merchant_id: mission.merchant_id,
+              mission_id: id!,
+              entry_type: "release" as const,
+              amount: unspent,
+              status: "posted" as const,
+              description: `Unspent budget released for closed mission: ${mission.name}`,
+              posted_at: new Date().toISOString(),
+              created_by: user?.id,
+            });
+          }
+        }
       }
     },
     onSuccess: () => {
