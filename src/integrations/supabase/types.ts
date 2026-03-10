@@ -959,6 +959,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fighter_has_participation: {
+        Args: { _mission_id: string; _user_id: string }
+        Returns: boolean
+      }
       generate_storefront_password: { Args: never; Returns: string }
       get_merchant_balance: {
         Args: { _merchant_id: string }
