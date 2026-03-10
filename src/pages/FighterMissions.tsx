@@ -36,7 +36,7 @@ export default function FighterMissions() {
 
     const { data: fighterData } = await supabase
       .from("fighters")
-      .select("id")
+      .select("id, full_name")
       .eq("user_id", user.id)
       .maybeSingle();
 

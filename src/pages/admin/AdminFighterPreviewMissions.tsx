@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { notifyFighter, notifyMerchant } from "@/lib/createNotification";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { FighterPreviewLayout } from "@/components/admin/FighterPreviewLayout";
