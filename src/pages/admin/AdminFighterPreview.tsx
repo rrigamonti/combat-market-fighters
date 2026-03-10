@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { FighterPreviewLayout } from "@/components/admin/FighterPreviewLayout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { PageMeta } from "@/components/PageMeta";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   CheckCircle, Clock, XCircle, ExternalLink, Target, ChevronRight,
-  DollarSign, ArrowLeft, Eye, FileText, Package
+  DollarSign, FileText, Package
 } from "lucide-react";
 import { getStorefrontUrl } from "@/lib/config";
 import type { Database } from "@/integrations/supabase/types";
@@ -102,21 +103,13 @@ export default function AdminFighterPreview() {
   const totalEarnings = sales.reduce((sum, s) => sum + (s.fighter_commission || 0), 0);
 
   return (
-    <AdminLayout>
+    <FighterPreviewLayout
+      fighterName={fighter.full_name || "Fighter"}
+      fighterHandle={fighter.handle}
+      fighterProfileImage={fighter.profile_image_url}
+    >
       <PageMeta title={`${fighter.full_name || "Fighter"} Preview | Admin`} noindex />
       <div className="space-y-6">
-        {/* Admin banner */}
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 flex items-center gap-3">
-          <Eye className="h-5 w-5 text-primary" />
-          <div className="flex-1">
-            <p className="font-medium text-primary">Admin Preview Mode</p>
-            <p className="text-sm text-muted-foreground">You are viewing <strong>{fighter.full_name}</strong>'s dashboard as they see it (read-only)</p>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/admin/fighters"><ArrowLeft className="h-4 w-4 mr-1" /> Back to Fighters</Link>
-          </Button>
-        </div>
-
         {/* Fighter header — mirrors Dashboard.tsx */}
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-primary bg-muted shrink-0">
@@ -324,6 +317,6 @@ export default function AdminFighterPreview() {
           </Card>
         )}
       </div>
-    </AdminLayout>
+    </FighterPreviewLayout>
   );
 }
