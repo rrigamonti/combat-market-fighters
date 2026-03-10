@@ -8,6 +8,7 @@ import { PageMeta } from "@/components/PageMeta";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { getMissionStatusColor } from "@/lib/missionHelpers";
 
 interface Mission {
   id: string;

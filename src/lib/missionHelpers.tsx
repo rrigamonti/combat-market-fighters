@@ -129,26 +129,3 @@ export function getSubmissionStatusColor(s: string): string {
   };
   return map[s] || "bg-muted text-muted-foreground";
 }
-  switch (status) {
-    case "pending":
-      return (
-        <Badge variant="outline" className="border-yellow-500/20 text-yellow-500">
-          <Clock className="mr-1 h-3 w-3" /> Pending Review
-        </Badge>
-      );
-    case "approved":
-      return (
-        <Badge variant="outline" className="border-green-500/20 text-green-500">
-          <CheckCircle className="mr-1 h-3 w-3" /> Approved
-        </Badge>
-      );
-    case "rejected":
-      return (
-        <Badge variant="outline" className="border-red-500/20 text-red-500">
-          <XCircle className="mr-1 h-3 w-3" /> Rejected
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
-}

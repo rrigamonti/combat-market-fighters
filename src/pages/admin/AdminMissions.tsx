@@ -11,6 +11,7 @@ import { Plus, Target, Eye, Users, DollarSign, CheckCircle, Clock } from "lucide
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { MissionCreateDialog } from "@/components/admin/MissionCreateDialog";
+import { getMissionStatusVariant } from "@/lib/missionHelpers";
 
 interface Mission {
   id: string;
