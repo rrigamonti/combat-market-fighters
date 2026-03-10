@@ -204,6 +204,14 @@ const App = () => {
                 </AdminRoute>
               }
             />
+            <Route
+              path="/admin/fighters/:fighterId/preview/missions"
+              element={
+                <AdminRoute>
+                  <AdminFighterPreviewMissions />
+                </AdminRoute>
+              }
+            />
             {/* Fighter mission routes */}
             <Route
               path="/missions"
