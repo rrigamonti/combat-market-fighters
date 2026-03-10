@@ -1,34 +1,48 @@
 
 
-## Update FAQ Section with Official Content
+## Audit Results: Post-Merge Health Check
 
-Replace the current 4 FAQ items in `src/pages/LandingV2.tsx` with all 17 questions from the uploaded PDF document.
+### Functional Issues Found
 
-### Changes
+**1. `current_participants` not incremented on admin preview join**
+In `AdminFighterPreviewMissions.tsx`, `handleJoin` inserts into `mission_participations` but does NOT increment `missions.current_participants`. Compare with `AdminMissionDetail.tsx` (line 120-122) which correctly updates the count. This means the "spots" counter becomes inaccurate when joining from preview mode.
 
-**File: `src/pages/LandingV2.tsx`** (lines 43-60)
+**2. Duplicated badge/helper functions across 5+ files**
+`getStatusBadge`, `getMissionTypeBadge`, and similar functions are copy-pasted across:
+- `AdminFighterPreviewMissions.tsx`
+- `AdminFighterPreview.tsx`
+- `FighterMissions.tsx`
+- `FighterMissionDetail.tsx`
+- `AdminMissions.tsx`
+- `AdminMissionDetail.tsx`
 
-Replace the `faqItems` array with 17 items extracted from the PDF:
+The badge color mappings are even inconsistent between files (e.g., "review" is blue in one, purple in another; "social" is pink vs blue).
 
-1. What is Combat Market?
-2. How do I get invited?
-3. What brands can I add to my storefront?
-4. How do earnings work?
-5. How do I get paid?
-6. Do I need to change the products I use?
-7. Is this just another affiliate program?
-8. Can I refer other fighters and earn commission?
-9. How do I promote my storefront?
-10. Do I need to constantly sell to make money?
-11. Who handles brand negotiations?
-12. Do I get ongoing support?
-13. Do I receive products?
-14. How much does it cost to join?
-15. How do you know what products I use?
-16. Is Combat Market a sponsorship?
-17. Can I still work with other brands and sponsors?
+**3. `MissionWithMerchant` interface duplicated in 4 files**
+The same `MissionWithMerchant` type is defined locally in `FighterMissions.tsx`, `FighterMissionDetail.tsx`, `AdminFighterPreviewMissions.tsx`, and others.
 
-Each answer will be condensed into a clean 1-3 sentence format suitable for the accordion UI, preserving the key message from the PDF while keeping it scannable. The `FAQSchema` structured data will automatically pick up the new items since it already reads from this array.
+### No Breaking Issues Found
+- Routes are correctly registered and protected
+- RLS policies are sound; admin has full access, fighters correctly scoped
+- Auth context properly handles role detection
+- Notifications flow works (fighter + merchant)
+- The `publish_mission` RPC with budget reservation is correctly called
+- `ProtectedRoute`, `AdminRoute`, `MerchantRoute` all work correctly
 
-No new files or database changes needed.
+### Optimization Plan
+
+**Task 1: Fix `current_participants` increment on preview join**
+- In `AdminFighterPreviewMissions.tsx`, after successful insert into `mission_participations`, add an update to `missions` incrementing `current_participants` (matching the pattern in `AdminMissionDetail.tsx` lines 120-122).
+
+**Task 2: Extract shared mission helpers into a utility module**
+- Create `src/lib/missionHelpers.tsx` containing:
+  - `getStatusBadge(status)` — unified participation/fighter status badge
+  - `getMissionTypeBadge(type)` — consistent color mapping
+  - `getSubmissionStatusBadge(status)` — submission status badge
+  - `MissionWithMerchant` type export
+- Update all 6 consumer files to import from this shared module instead of defining locally.
+
+**Task 3: Minor cleanup**
+- Remove `(mission as any).merchants` casts in `AdminFighterPreviewMissions.tsx` — the type already includes `merchants`.
+- Remove unused `AdminLayout` import from `AdminFighterPreviewMissions.tsx` (it's used in loading/error states but `FighterPreviewLayout` is the actual layout — the loading fallback should use the same layout or a minimal spinner).
 
