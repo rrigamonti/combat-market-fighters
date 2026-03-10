@@ -38,6 +38,7 @@ import AdminMerchants from "./pages/admin/AdminMerchants";
 import AdminMissions from "./pages/admin/AdminMissions";
 import AdminMissionDetail from "./pages/admin/AdminMissionDetail";
 import AdminFighterPreview from "./pages/admin/AdminFighterPreview";
+import AdminFighterPreviewMissions from "./pages/admin/AdminFighterPreviewMissions";
 import FighterMissions from "./pages/FighterMissions";
 import FighterMissionDetail from "./pages/FighterMissionDetail";
 import Terms from "./pages/Terms";
