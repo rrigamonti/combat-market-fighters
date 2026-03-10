@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PageMeta } from "@/components/PageMeta";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, UserPlus, Target, DollarSign, Users, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, UserPlus, Target, DollarSign, Users, CheckCircle, XCircle, Clock, Pencil } from "lucide-react";
+import { MissionEditDialog } from "@/components/admin/MissionEditDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notifyFighter, notifyMerchant } from "@/lib/createNotification";
@@ -22,6 +23,7 @@ export default function AdminMissionDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [assignFighterId, setAssignFighterId] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: mission, isLoading } = useQuery({
     queryKey: ["admin-mission", id],
@@ -205,6 +207,9 @@ export default function AdminMissionDetail() {
               {(mission as any).merchants?.name} · {mission.mission_type} · {mission.assignment_mode}
             </p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <Pencil className="h-4 w-4 mr-1" /> Edit
+          </Button>
           <Select value={mission.status} onValueChange={(v) => statusMutation.mutate(v)}>
             <SelectTrigger className="w-[140px]">
               <Badge variant={statusColor(mission.status)}>{mission.status}</Badge>
@@ -433,6 +438,8 @@ export default function AdminMissionDetail() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <MissionEditDialog open={editOpen} onOpenChange={setEditOpen} mission={mission} />
       </div>
     </AdminLayout>
   );
