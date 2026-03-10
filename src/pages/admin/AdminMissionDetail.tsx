@@ -23,6 +23,7 @@ export default function AdminMissionDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [assignFighterId, setAssignFighterId] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: mission, isLoading } = useQuery({
     queryKey: ["admin-mission", id],
