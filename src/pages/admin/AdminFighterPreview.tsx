@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FighterPreviewLayout } from "@/components/admin/FighterPreviewLayout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { PageMeta } from "@/components/PageMeta";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
