@@ -23,7 +23,7 @@ export default function FighterMissions() {
   const { toast } = useToast();
   const [missions, setMissions] = useState<MissionWithMerchant[]>([]);
   const [participations, setParticipations] = useState<Participation[]>([]);
-  const [fighter, setFighter] = useState<{ id: string } | null>(null);
+  const [fighter, setFighter] = useState<{ id: string; full_name: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
 
