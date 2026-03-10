@@ -18,7 +18,7 @@ const navItems = [
   { to: "/admin/fighters", label: "Fighters", icon: Users },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/brands", label: "Brands", icon: Tags },
-  { to: "/admin/assignments", label: "Assignments", icon: LinkIcon },
+  { to: "/admin/assignments", label: "Product Assignments", icon: LinkIcon },
   { to: "/admin/product-requests", label: "Product Requests", icon: MessageSquarePlus },
   { to: "/admin/sovrn", label: "Sovrn", icon: Store },
   { to: "/admin/sales", label: "Sales", icon: DollarSign },
