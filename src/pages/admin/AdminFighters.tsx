@@ -1121,6 +1121,16 @@ export default function AdminFighters() {
                           <Button
                             size="sm"
                             variant="outline"
+                            asChild
+                          >
+                            <a href={`/admin/fighters/${fighter.id}/preview`}>
+                              <Eye className="h-3 w-3 mr-1" />
+                              Preview
+                            </a>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => openEditDialog(fighter)}
                           >
                             <Pencil className="h-3 w-3 mr-1" />
