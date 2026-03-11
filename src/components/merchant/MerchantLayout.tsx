@@ -14,7 +14,7 @@ const navItems = [
   { to: "/merchant", label: "Dashboard", icon: LayoutDashboard },
   { to: "/merchant/missions", label: "Missions", icon: Target },
   { to: "/merchant/submissions", label: "Submissions", icon: FileText },
-  { to: "/merchant/billing", label: "Billing & Float", icon: Wallet },
+  { to: "/merchant/billing", label: "Wallet", icon: Wallet },
 ];
 
 export function MerchantLayout({ children }: MerchantLayoutProps) {
