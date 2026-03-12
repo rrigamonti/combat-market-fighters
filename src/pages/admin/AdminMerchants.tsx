@@ -210,6 +210,7 @@ export default function AdminMerchants() {
                             </Tooltip>
                           );
                         })()}
+                      </TableCell>
                       <TableCell>
                         {m.website ? (
                           <a href={m.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
