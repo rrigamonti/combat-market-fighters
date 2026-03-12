@@ -46,6 +46,30 @@ export default function AdminMerchants() {
     },
   });
 
+  // Fetch wallet balances for all merchants
+  const { data: walletBalances = {} } = useQuery({
+    queryKey: ["admin-merchant-balances", merchants.map((m) => m.id)],
+    enabled: merchants.length > 0,
+    queryFn: async () => {
+      const results: Record<string, { available: number; reserved: number; total: number }> = {};
+      await Promise.all(
+        merchants.map(async (m) => {
+          const { data } = await supabase.rpc("get_merchant_balance", { _merchant_id: m.id });
+          if (data && data.length > 0) {
+            results[m.id] = {
+              available: Number(data[0].available_balance),
+              reserved: Number(data[0].reserved_balance),
+              total: Number(data[0].total_balance),
+            };
+          } else {
+            results[m.id] = { available: 0, reserved: 0, total: 0 };
+          }
+        })
+      );
+      return results;
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: async (values: typeof form) => {
       const { error } = await supabase.from("merchants").insert({
