@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageMeta } from "@/components/PageMeta";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Building2, Globe, Pencil } from "lucide-react";
+import { Plus, Building2, Globe, Pencil, Wallet } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Merchant {
@@ -42,6 +43,30 @@ export default function AdminMerchants() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Merchant[];
+    },
+  });
+
+  // Fetch wallet balances for all merchants
+  const { data: walletBalances = {} } = useQuery({
+    queryKey: ["admin-merchant-balances", merchants.map((m) => m.id)],
+    enabled: merchants.length > 0,
+    queryFn: async () => {
+      const results: Record<string, { available: number; reserved: number; total: number }> = {};
+      await Promise.all(
+        merchants.map(async (m) => {
+          const { data } = await supabase.rpc("get_merchant_balance", { _merchant_id: m.id });
+          if (data && data.length > 0) {
+            results[m.id] = {
+              available: Number(data[0].available_balance),
+              reserved: Number(data[0].reserved_balance),
+              total: Number(data[0].total_balance),
+            };
+          } else {
+            results[m.id] = { available: 0, reserved: 0, total: 0 };
+          }
+        })
+      );
+      return results;
     },
   });
 
@@ -104,6 +129,17 @@ export default function AdminMerchants() {
     }
   };
 
+  const getWalletLight = (merchantId: string) => {
+    const bal = walletBalances[merchantId];
+    if (!bal) return { color: "bg-muted", label: "N/A", amount: 0 };
+    const available = bal.available;
+    const total = bal.total;
+    if (total === 0 && available === 0) return { color: "bg-red-500", label: "Empty", amount: available };
+    if (available <= 0) return { color: "bg-red-500", label: "Empty", amount: available };
+    if (total > 0 && available / total <= 0.25) return { color: "bg-amber-500", label: "Low", amount: available };
+    return { color: "bg-emerald-500", label: "Funded", amount: available };
+  };
+
   const statusColor = (s: string) => {
     if (s === "active") return "default";
     if (s === "suspended") return "destructive";
@@ -130,6 +166,7 @@ export default function AdminMerchants() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Wallet</TableHead>
                   <TableHead>Website</TableHead>
                   <TableHead>Currency</TableHead>
                   <TableHead>Status</TableHead>
@@ -139,7 +176,9 @@ export default function AdminMerchants() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : merchants.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No merchants yet</TableCell></TableRow>
                 ) : merchants.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No merchants yet</TableCell></TableRow>
                 ) : (
@@ -150,6 +189,27 @@ export default function AdminMerchants() {
                           <Building2 className="h-4 w-4 text-muted-foreground" />
                           {m.name}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const light = getWalletLight(m.id);
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2">
+                                  <span className={`inline-block h-3 w-3 rounded-full ${light.color} shadow-sm`} />
+                                  <span className="text-sm font-medium">
+                                    ${light.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-medium">{light.label}</p>
+                                <p className="text-xs text-muted-foreground">Available: ${light.amount.toFixed(2)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         {m.website ? (
