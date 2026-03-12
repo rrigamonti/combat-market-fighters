@@ -191,6 +191,26 @@ export default function AdminMerchants() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        {(() => {
+                          const light = getWalletLight(m.id);
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2">
+                                  <span className={`inline-block h-3 w-3 rounded-full ${light.color} shadow-sm`} />
+                                  <span className="text-sm font-medium">
+                                    ${light.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-medium">{light.label}</p>
+                                <p className="text-xs text-muted-foreground">Available: ${light.amount.toFixed(2)}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })()}
+                      <TableCell>
                         {m.website ? (
                           <a href={m.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
                             <Globe className="h-3 w-3" /> {new URL(m.website).hostname}
