@@ -129,6 +129,17 @@ export default function AdminMerchants() {
     }
   };
 
+  const getWalletLight = (merchantId: string) => {
+    const bal = walletBalances[merchantId];
+    if (!bal) return { color: "bg-muted", label: "N/A", amount: 0 };
+    const available = bal.available;
+    const total = bal.total;
+    if (total === 0 && available === 0) return { color: "bg-red-500", label: "Empty", amount: available };
+    if (available <= 0) return { color: "bg-red-500", label: "Empty", amount: available };
+    if (total > 0 && available / total <= 0.25) return { color: "bg-amber-500", label: "Low", amount: available };
+    return { color: "bg-emerald-500", label: "Funded", amount: available };
+  };
+
   const statusColor = (s: string) => {
     if (s === "active") return "default";
     if (s === "suspended") return "destructive";
