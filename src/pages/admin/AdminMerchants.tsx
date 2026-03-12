@@ -166,6 +166,7 @@ export default function AdminMerchants() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Wallet</TableHead>
                   <TableHead>Website</TableHead>
                   <TableHead>Currency</TableHead>
                   <TableHead>Status</TableHead>
@@ -175,7 +176,9 @@ export default function AdminMerchants() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : merchants.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No merchants yet</TableCell></TableRow>
                 ) : merchants.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No merchants yet</TableCell></TableRow>
                 ) : (
