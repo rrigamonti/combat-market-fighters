@@ -116,7 +116,7 @@ const sportsCategories = [
   { name: "BOXING", image: boxingActionReal },
   { name: "MUAY THAI", image: muaythaiReal },
   { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
-  { name: "WRESTLING", image: kickboxingReal },
+  { name: "KICKBOXING", image: kickboxingReal },
   { name: "BARE KNUCKLE", image: bareknuckleReal }
 ];
 
