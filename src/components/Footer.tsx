@@ -12,7 +12,7 @@ export function Footer() {
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground sm:gap-6 sm:text-sm">
             <a href="https://wa.me/971557590129" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-foreground">
-              Contact Us
+              wa.me/971557590129
             </a>
             <Link to="/terms" className="transition-colors hover:text-foreground">
               Terms of Service
