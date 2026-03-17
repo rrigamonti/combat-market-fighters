@@ -25,7 +25,6 @@ import boxingActionReal from "@/assets/landing/boxing-action-real.jpg";
 import muaythaiReal from "@/assets/landing/muaythai-real.jpg";
 import kickboxingReal from "@/assets/landing/kickboxing-real.jpg";
 import bareknuckleReal from "@/assets/landing/bareknuckle-real.jpg";
-import wrestlingAction from "@/assets/landing/wrestling-action.png";
 import step1Storefront from "@/assets/landing/step-1-storefront.png";
 import step2Brands from "@/assets/landing/step-2-brands.png";
 import step3Earn from "@/assets/landing/step-3-earn.png";
@@ -117,7 +116,7 @@ const sportsCategories = [
   { name: "BOXING", image: boxingActionReal },
   { name: "MUAY THAI", image: muaythaiReal },
   { name: "BJJ", image: "https://images.unsplash.com/photo-1564415315949-7a0c4c73aab4?w=600&q=80" },
-  { name: "WRESTLING", image: wrestlingAction },
+  { name: "WRESTLING", image: kickboxingReal },
   { name: "BARE KNUCKLE", image: bareknuckleReal }
 ];
 
