@@ -20,12 +20,19 @@ export function JoinCTA({
         <p className="text-lg lg:text-xl text-muted-foreground mb-8">
           {subtext}
         </p>
-        <Button asChild size="lg" className="text-base px-8">
-          <Link to="/fighter-signup">
-            Claim Your Storefront
-            <ChevronRight className="ml-2 h-5 w-5" />
-          </Link>
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button asChild size="lg" className="text-base px-8">
+            <Link to="/fighter-signup">
+              Claim Your Storefront
+              <ChevronRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="text-base px-8">
+            <a href="https://wa.me/971557590129" target="_blank" rel="noopener noreferrer">
+              Chat on WhatsApp
+            </a>
+          </Button>
+        </div>
       </div>
     </section>
   );

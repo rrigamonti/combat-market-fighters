@@ -10,7 +10,10 @@ export function Footer() {
             <img src={logo} alt="Combat Market" className="h-5 opacity-60 sm:h-6" />
           </div>
 
-          <div className="flex gap-4 text-xs text-muted-foreground sm:gap-6 sm:text-sm">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground sm:gap-6 sm:text-sm">
+            <a href="https://wa.me/971557590129" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-foreground">
+              Contact Us
+            </a>
             <Link to="/terms" className="transition-colors hover:text-foreground">
               Terms of Service
             </Link>
