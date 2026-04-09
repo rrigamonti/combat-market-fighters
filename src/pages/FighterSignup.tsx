@@ -119,7 +119,19 @@ export default function FighterSignup() {
       return;
     }
 
-    const result = signupSchema.safeParse(formData);
+    // Resolve country: use custom value when "Other" is selected
+    const resolvedCountry = formData.country === "Other" ? customCountry.trim() : formData.country;
+    if (formData.country === "Other" && !resolvedCountry) {
+      toast({
+        variant: "destructive",
+        title: "Country Required",
+        description: "Please enter your country name.",
+      });
+      return;
+    }
+
+    const dataToValidate = { ...formData, country: resolvedCountry };
+    const result = signupSchema.safeParse(dataToValidate);
     if (!result.success) {
       toast({
         variant: "destructive",
