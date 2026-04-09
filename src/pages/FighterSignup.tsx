@@ -238,7 +238,7 @@ export default function FighterSignup() {
         handle: formData.handle,
         full_name: formData.fullName,
         sport: formData.sport,
-        country: formData.country,
+        country: resolvedCountry,
         short_bio: formData.shortBio,
         app_username: formData.appUsername,
         profile_image_url: publicUrlData.publicUrl,
