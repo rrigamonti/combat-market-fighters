@@ -53,6 +53,7 @@ export default function FighterSignup() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showSocials, setShowSocials] = useState(false);
+  const [customCountry, setCustomCountry] = useState("");
   
   const [formData, setFormData] = useState({
     email: "",
@@ -118,7 +119,19 @@ export default function FighterSignup() {
       return;
     }
 
-    const result = signupSchema.safeParse(formData);
+    // Resolve country: use custom value when "Other" is selected
+    const resolvedCountry = formData.country === "Other" ? customCountry.trim() : formData.country;
+    if (formData.country === "Other" && !resolvedCountry) {
+      toast({
+        variant: "destructive",
+        title: "Country Required",
+        description: "Please enter your country name.",
+      });
+      return;
+    }
+
+    const dataToValidate = { ...formData, country: resolvedCountry };
+    const result = signupSchema.safeParse(dataToValidate);
     if (!result.success) {
       toast({
         variant: "destructive",
@@ -225,7 +238,7 @@ export default function FighterSignup() {
         handle: formData.handle,
         full_name: formData.fullName,
         sport: formData.sport,
-        country: formData.country,
+        country: resolvedCountry,
         short_bio: formData.shortBio,
         app_username: formData.appUsername,
         profile_image_url: publicUrlData.publicUrl,
@@ -351,7 +364,10 @@ export default function FighterSignup() {
 
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
-                <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
+                <Select value={formData.country} onValueChange={(value) => {
+                  setFormData({ ...formData, country: value });
+                  if (value !== "Other") setCustomCountry("");
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
@@ -361,6 +377,14 @@ export default function FighterSignup() {
                     ))}
                   </SelectContent>
                 </Select>
+                {formData.country === "Other" && (
+                  <Input
+                    placeholder="Enter your country"
+                    value={customCountry}
+                    onChange={(e) => setCustomCountry(e.target.value)}
+                    required
+                  />
+                )}
               </div>
             </div>
 
