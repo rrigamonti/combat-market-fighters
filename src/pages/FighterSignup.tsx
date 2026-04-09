@@ -352,7 +352,10 @@ export default function FighterSignup() {
 
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
-                <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
+                <Select value={formData.country} onValueChange={(value) => {
+                  setFormData({ ...formData, country: value });
+                  if (value !== "Other") setCustomCountry("");
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
@@ -362,6 +365,14 @@ export default function FighterSignup() {
                     ))}
                   </SelectContent>
                 </Select>
+                {formData.country === "Other" && (
+                  <Input
+                    placeholder="Enter your country"
+                    value={customCountry}
+                    onChange={(e) => setCustomCountry(e.target.value)}
+                    required
+                  />
+                )}
               </div>
             </div>
 
