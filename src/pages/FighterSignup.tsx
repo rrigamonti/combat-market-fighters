@@ -53,6 +53,7 @@ export default function FighterSignup() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showSocials, setShowSocials] = useState(false);
+  const [customCountry, setCustomCountry] = useState("");
   
   const [formData, setFormData] = useState({
     email: "",
